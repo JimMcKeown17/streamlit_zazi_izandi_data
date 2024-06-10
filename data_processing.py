@@ -2,17 +2,7 @@ import streamlit as st
 import pandas as pd
 import statsmodels.api as sm
 
-def process_data():
-    # Import Data: Baseline, Midline, Sessions
-    baseline_path = "Zazi iZandi Children's database (Baseline)7052024.xlsx"
-    sheet_name_baseline = "ZZ Childrens Database"
-    midline_path = "Zazi iZandi Midline Assessments database (1).xlsx"
-    sheet_name_midline = "Childrens database"
-    baseline = pd.read_excel(baseline_path, sheet_name=sheet_name_baseline)
-    midline = pd.read_excel(midline_path, sheet_name=sheet_name_midline)
-    sessions_path = "Zazi iZandi Children's Session Tracker-08052024.xlsx"
-    sheet_name_sessions = "ZZ sessions"
-    sessions = pd.read_excel(sessions_path, sheet_name=sheet_name_sessions)
+def process_data(baseline, midline, sessions):
 
     # Rename a couple columns
     baseline.rename(columns={'Baseline\nAssessment Score': 'EGRA Baseline'}, inplace=True)

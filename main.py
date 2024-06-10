@@ -7,7 +7,20 @@ import seaborn as sns
 import statsmodels.api as sm
 from data_processing import process_data, grade1, gradeR
 
+st.set_page_config(layout="wide")
 
+
+# Dataframes
+# Import Data: Baseline, Midline, Sessions
+baseline_path = "Zazi iZandi Children's database (Baseline)7052024.xlsx"
+sheet_name_baseline = "ZZ Childrens Database"
+midline_path = "Zazi iZandi Midline Assessments database (1).xlsx"
+sheet_name_midline = "Childrens database"
+baseline_df = pd.read_excel(baseline_path, sheet_name=sheet_name_baseline)
+midline_df = pd.read_excel(midline_path, sheet_name=sheet_name_midline)
+sessions_path = "Zazi iZandi Children's Session Tracker-08052024.xlsx"
+sheet_name_sessions = "ZZ sessions"
+sessions_df = pd.read_excel(sessions_path, sheet_name=sheet_name_sessions)
 
 #ZZ Website colours. Going to use Yellow for EGRA and Blue for Letters Known
 YELLOW = '#ffd641'
@@ -16,7 +29,7 @@ GREY = '#b3b3b3'
 GREEN = '#32c93c'
 
 
-midline, baseline = process_data()
+midline, baseline = process_data(baseline_df, midline_df, sessions_df)
 grade1 = grade1(midline)
 gradeR = gradeR(midline)
 
@@ -226,7 +239,7 @@ with st.container():
     schools = midline['School'].value_counts().index
     choice = st.selectbox('Choose a School', schools)
     data = midline[midline['School'] == choice]
-    fig = px.histogram(data_frame=data, x='Midline Letters Known', nbins=20)
+    fig = px.histogram(data_frame=data, x='Midline Letters Known', nbins=20, color_discrete_sequence=[BLUE])
     st.plotly_chart(fig, use_container_width=True)
 
 # TEACHER ASSISTANTS
@@ -355,7 +368,7 @@ st.markdown('---')
 st.header('FURTHER ANALYSIS')
 
 with st.expander('Validity of Results'):
-    st.success('The following analysis demonstrates a strong correlation between the improvements in Letters Known and the Letters EGRA assessments, reinforcing the validity of our Zazi iZandi results. Furthermore, the two metrcis were captured via different assessment methodologies, making the high correlation even more impressive. The two metrics have a Spearman CoEfficient of 0.933.')
+    st.success('The following analysis demonstrates a strong correlation between the improvements in Letters Known and the Letters EGRA assessments, reinforcing the validity of our Zazi iZandi results. The two metrcis were captured via different assessment methodologies, making the high correlation even more impressive. The two metrics have a Spearman CoEfficient of 0.933.')
     # Drop rows with NaN or infinite values
     clean_data = midline[['Letters Learned', 'Egra Improvement Agg', 'Grade']].dropna()
     x = clean_data['Letters Learned']
@@ -382,22 +395,6 @@ with st.expander('Validity of Results'):
 
     # Display the plot in Streamlit
     st.pyplot(fig)
-
-with st.expander('Percent of Children Assessed'):
-    st.success('We successfully assessed over 90% of children for both baseline & midline results.')
-    midline_assessed = midline['EGRA Midline'].notna().sum()
-    midline_assessed_percent = (midline_assessed / midline['Mcode'].count() * 100).round(1)
-
-    baseline_assessed = baseline['EGRA Baseline'].notna().sum()
-    baseline_assessed_percent = (baseline_assessed / baseline['Mcode'].count() * 100).round(1)
-
-    data = {
-        'Time Period': ['Midline Assessed', 'Baseline Assessed'],
-        '% Assessed': [midline_assessed_percent, baseline_assessed_percent]
-    }
-
-    df = pd.DataFrame(data)
-    st.dataframe(df)
 
 with st.expander('Visualizing Progress: KDE Plot'):
     st.success('The blue wave shows how many children knew zero (or few) letters to begin the programme. The orange wave illustrates the substantial change in the number of children that know many letters in the first half of 2024. ')
@@ -433,4 +430,32 @@ with st.expander('Cohort Performance'):
         ax.text(i, v + 0.1, str(v), ha='center', va='bottom')
     st.pyplot(fig)
 
+with st.expander('Letters Known Charted'):
+    st.success("This illustrates the letters the children have mastered. We teach the letter sounds in order from left to right, so we would expect the highest values on the left to slope downwards to the right. It's interesting that this isn't exactly the case.")
+    # List of letters in the correct order
+    letters = ['a', 'e', 'i', 'o', 'u', 'b', 'l', 'm', 'k', 'p', 's', 'h', 'z', 'n',
+               'd', 'y', 'f', 'w', 'v', 'x', 'g', 't', 'q', 'r', 'c', 'j']
 
+    letter_counts = midline[letters].applymap(lambda x: 1 if pd.notna(x) else 0).sum()
+
+    letter_df = pd.DataFrame({'Letter': letter_counts.index, 'Count': letter_counts.values})
+
+    fig = px.bar(letter_df, x='Letter', y='Count', title='Count of Letters Known',
+                 labels={'Count': 'Total Count of Letters Known'})
+    st.plotly_chart(fig)
+
+with st.expander('Percent of Children Assessed'):
+    st.success('We successfully assessed over 90% of children for both baseline & midline results.')
+    midline_assessed = midline['EGRA Midline'].notna().sum()
+    midline_assessed_percent = (midline_assessed / midline['Mcode'].count() * 100).round(1)
+
+    baseline_assessed = baseline['EGRA Baseline'].notna().sum()
+    baseline_assessed_percent = (baseline_assessed / baseline['Mcode'].count() * 100).round(1)
+
+    data = {
+        'Time Period': ['Midline Assessed', 'Baseline Assessed'],
+        '% Assessed': [midline_assessed_percent, baseline_assessed_percent]
+    }
+
+    df = pd.DataFrame(data)
+    st.dataframe(df)
