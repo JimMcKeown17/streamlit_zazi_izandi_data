@@ -348,7 +348,7 @@ with st.container():
         st.dataframe(df)
 
 with st.container():
-    st.subheader('Sessions per Mentor')
+    st.subheader('Sessions per Education Assistant')
     mentor_sessions = midline.groupby('EA Name')['Total Sessions'].mean().round(1).sort_values(ascending=False)
     df = mentor_sessions.reset_index()
     df.columns = ['EA Name', 'Average Total Sessions']
