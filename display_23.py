@@ -50,8 +50,7 @@ def display_2023():
     # Masi Letters Known Baseline	Masi Letters Known Midline	Masi Letters Known Endline
     with st.container():
         st.subheader('Letter EGRA Improvement')
-        st.success('On average, the children improved their Letter EGRA scores '
-                   'by 214% (17 points).')
+        st.success('On average, the Grade 1 children improved their EGRA score by 96% while the Grade Rs improved theirs by 416%')
         egra_summary = endline.groupby('Grade').agg({
             'Masi Egra Full Baseline': 'mean',
             'Masi Egra Full Endline': 'mean',
@@ -85,5 +84,125 @@ def display_2023():
         st.dataframe(egra_summary)
 
     st.markdown("---")
+    # Masi Letters Known Baseline	Masi Letters Known Midline	Masi Letters Known Endline
+    with st.container():
+        st.subheader('Letters Known Improvement')
+        st.success('Our Grade R children improved their letter knowledge by 254% and learned, while the Grade 1s improved by 61%.')
+        letter_summary = endline.groupby('Grade').agg({
+            'Masi Letters Known Baseline': 'mean',
+            'Masi Letters Known Endline': 'mean',
+        }).round(1).reset_index()
+
+        # Attempt to Melt
+        letter_summary_melted = letter_summary.melt(id_vars="Grade",
+                                                    value_vars=['Masi Letters Known Baseline', 'Masi Letters Known Endline'],
+                                                    var_name="Measurement", value_name="Letters Known")
+
+        # Create the Plotly bar graph with grouped bars
+        letter_fig = px.bar(
+            letter_summary_melted,
+            x='Grade',
+            y='Letters Known',
+            color='Measurement',
+            barmode='group',
+            labels={'Letters Known': 'Average Letter Known'},
+            color_discrete_map={'Masi Letters Known Baseline': GREY, 'Masi Letters Known Endline': BLUE}
+
+        )
+        st.plotly_chart(letter_fig, use_container_width=True)
+
+        with st.expander('Click to view data:'):
+            letter_summary = endline.groupby('Grade').agg({
+                'Masi Letters Known Baseline': 'mean',
+                'Masi Letters Known Endline': 'mean',
+            }).round(1)
+            st.dataframe(letter_summary)
+
+    st.markdown('---')
+    #Masi Egra Full Baseline	Masi Egra Full Midline	Masi Egra Full Endline
+    with st.container():
+        st.subheader("Percentage of Grade 1's On Grade Level")
+        st.success("The number of Grade 1 children 'On Grade Level' for letter knowledge increased from 22% to 74%.")
+
+        grade1 = endline[endline['Grade'] == 'Grade 1']
+        # Calculate percentages for baseline
+        baseline_40_or_more = (grade1['Masi Egra Full Baseline'] >= 40).sum()
+        baseline_less_than_40 = (grade1['Masi Egra Full Baseline'] < 40).sum()
+        total_baseline = baseline_40_or_more + baseline_less_than_40
+
+        baseline_40_or_more_percent = (baseline_40_or_more / total_baseline).round(3) * 100
+        baseline_less_than_40_percent = (baseline_less_than_40 / total_baseline).round(3) * 100
+
+        # Calculate percentages for midline
+        midline_40_or_more = (grade1['Masi Egra Full Endline'] >= 40).sum()
+        midline_less_than_40 = (grade1['Masi Egra Full Endline'] < 40).sum()
+        total_midline = midline_40_or_more + midline_less_than_40
+
+        midline_40_or_more_percent = (midline_40_or_more / total_midline).round(3) * 100
+        midline_less_than_40_percent = (midline_less_than_40 / total_midline).round(3) * 100
+
+        # Create DataFrame
+        data = {
+            'Above Grade Level': [baseline_40_or_more_percent, midline_40_or_more_percent]
+        }
+
+        df = pd.DataFrame(data, index=['Baseline', 'Endline'])
+
+        # Melt the DataFrame for Plotly
+        df_melted = df.reset_index().melt(id_vars='index', value_vars=['Above Grade Level'],
+                                          var_name='Score Category', value_name='Percentage')
+
+        # Create the Plotly bar graph
+        grade_level_fig = px.bar(
+            df_melted,
+            x='index',
+            y='Percentage',
+            color='Score Category',
+            barmode='group',
+            labels={'index': 'Assessment', 'Percentage': 'Percentage (%)'},
+            color_discrete_map={'Above Grade Level': GREEN}
+
+        )
+
+        st.plotly_chart(grade_level_fig, use_container_width=True)
+
+        with st.expander('Click to view data:'):
+            st.dataframe(df)
+
+        st.markdown('---')
+        # Masi Egra Full Baseline	Masi Egra Full Midline	Masi Egra Full Endline
+
+        st.header('SCHOOL PERFORMANCE')
+
+        with st.container():
+            st.subheader('School Level EGRA Improvement')
+
+            grade_selection = st.selectbox('Select Grade', ['All Grades', 'Grade 1', 'Grade R'], key="egra2")
+            if grade_selection == 'All Grades':
+                filtered_midline = endline
+            else:
+                filtered_midline = endline[endline['Grade'] == grade_selection]
+
+            school_egra_improvement = filtered_midline.groupby(['School']).agg({
+                'Masi Egra Full Baseline': 'mean',
+                'Masi Egra Full Endline': 'mean',
+                'Egra Improvement Endline': 'mean',
+            }).round(1).sort_values(by='Egra Improvement Endline', ascending=False).reset_index()
+
+            school_fig = px.bar(
+                school_egra_improvement,
+                x='School',
+                y='Egra Improvement Endline',
+                color_discrete_sequence=[YELLOW]
+            )
+            st.plotly_chart(school_fig, use_container_width=True)
+
+            with st.expander('Click to view data:'):
+                school_egra_improvement = filtered_midline.groupby(['School']).agg({
+                    'Masi Egra Full Baseline': 'mean',
+                    'Masi Egra Full Endline': 'mean',
+                    'Egra Improvement Endline': 'mean',
+                }).round(1).sort_values(by='Egra Improvement Endline', ascending=False)
+                st.dataframe(school_egra_improvement)
 
 
