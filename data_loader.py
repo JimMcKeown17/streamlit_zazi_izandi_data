@@ -41,7 +41,7 @@ def load_zazi_izandi_2023():
         return endline_df, sessions_df
     else:
         dir_path = os.path.dirname(os.path.abspath(__file__))
-        endline_path = os.path.join(dir_path, "data/ZZ Children's Database 2023 (Endline) 20231130.xlsx")
+        endline_path = os.path.join(dir_path, "data/ZZ Children's Database 2023 (Endline) 20231130 - anonymized.xlsx")
         sheet_name_endline = "Database"
         endline_df = pd.read_excel(endline_path, sheet_name=sheet_name_endline)
 
