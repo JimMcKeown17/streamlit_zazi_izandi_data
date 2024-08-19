@@ -167,7 +167,7 @@ def display_2024():
     st.markdown('---')
     with st.container():
         st.subheader('Gender Improvement')
-        st.success('South Africa has the highest gender disparity in the world (for countries measured in PIRLS) with our boys drastically underperforming our girls. We are very excited to see that Zazi iZandi is helping our boys to keep pace with the girls in these critical early grades.')
+        st.success('South Africa has the highest gender disparity in literacy in the world (for countries measured in PIRLS) with our boys drastically underperforming our girls. We are keeping a close eye on our boys performance and hope to contribute towards closing this gap.')
         grade_selection = st.selectbox('Select Grade', ['All Grades', 'Grade 1', 'Grade R'],key="gender", index=1)
         metric_selection = st.selectbox('Select Metric', ['Total Score', 'Improvement'], key="gender_metric", index=1)
 

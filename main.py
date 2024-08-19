@@ -2,7 +2,7 @@ import streamlit as st
 from display_24 import display_2024
 from display_23 import display_2023
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide", page_title="ZZ Data Portal")
 
 
 # Define your usernames and passwords
