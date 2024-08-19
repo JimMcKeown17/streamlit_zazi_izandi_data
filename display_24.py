@@ -489,8 +489,54 @@ def display_2024():
         with st.expander('Click to view data'):
             st.dataframe(df)
 
+    # CHECK GROUP STUFF
+    st.markdown('---')
+    st.header('GROUP ANALYSIS')
 
+    with st.container():
+        st.subheader('Group Analysis by School')
+        st.info('Children are paired into groups of 7 depending upon their assessment scores. This enables us to teach each group "at the right level." The charts below allow one to investigate performance of different groups.')
 
+        schools = midline['School'].value_counts().index
+        school_choice = st.selectbox('Choose a School', schools, key="school_choice_group")
+
+        df = midline[midline['School'] == school_choice]
+
+        grade_selection = st.selectbox('Select Grade', ['All Grades', 'Grade 1', 'Grade R'],key="group_grade")
+        if grade_selection == 'All Grades':
+            filtered_midline = df
+        else:
+            filtered_midline = df[df['Grade'] == grade_selection]
+
+        metric_selection = st.selectbox('Select Metric', ['Total Score', 'Improvement'], key="group_metric", index=1)
+
+        if metric_selection == 'Total Score':
+            metric = 'EGRA Midline'
+        else:
+            metric = 'Egra Improvement Agg'
+
+        group_egra_improvement = filtered_midline.groupby(['Group']).agg({
+            'EGRA Baseline': 'mean',
+            'EGRA Midline': 'mean',
+            'Egra Improvement Agg': 'mean',
+        }).round(1).sort_values(by=metric, ascending=False).reset_index()
+
+        school_fig = px.bar(
+            group_egra_improvement,
+            x='Group',
+            y=metric,
+            # color="EA Name"
+            color_discrete_sequence=[YELLOW]
+        )
+        st.plotly_chart(school_fig, use_container_width=True)
+
+        with st.expander('Click to view data:'):
+            group_egra_improvement = filtered_midline.groupby(['Group']).agg({
+                'EGRA Baseline': 'mean',
+                'EGRA Midline': 'mean',
+                'Egra Improvement Agg': 'mean',
+            }).round(1).sort_values(by=metric, ascending=False)
+            st.dataframe(group_egra_improvement)
     # FURTHER STATS
     st.markdown('---')
     st.header('FURTHER ANALYSIS')
