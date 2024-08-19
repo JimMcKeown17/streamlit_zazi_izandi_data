@@ -227,6 +227,27 @@ def display_2024():
             st.dataframe(letters_per_school)
 
     with st.container():
+        st.subheader("Percentage of Grade 1's On Grade Level by School")
+        threshold = st.slider('Adjust Grade Level EGRA Score', min_value=25, max_value=40, step=5, value=40)
+
+        midline_summary = grade1.groupby('School').apply(
+            lambda x: (x['EGRA Midline'] >= threshold).sum() / len(x) * 100
+        ).reset_index()
+        midline_summary.columns = ['School', 'Above Grade Level Percentage']
+        midline_summary = midline_summary.sort_values(by='Above Grade Level Percentage', ascending=False)
+
+        # Create the Plotly bar graph
+        grade_level_fig = px.bar(
+            midline_summary,
+            x='School',
+            y='Above Grade Level Percentage',
+            labels={'Above Grade Level Percentage': 'Percentage (%)'},
+            color_discrete_sequence=['green']
+        )
+
+        st.plotly_chart(grade_level_fig)
+
+    with st.container():
         st.subheader("Chart of Children's Results By School")
         schools = midline['School'].value_counts().index
         choice = st.selectbox('Choose a School', schools)
@@ -300,33 +321,33 @@ def display_2024():
         with st.expander('Click to view data:'):
             st.dataframe(df)
 
-    st.markdown("---")
-
-    # Calculate the percentage of students 'Above Grade Level' for midline for each school
-    school_data = grade1.groupby('School').apply(lambda x: pd.Series({
-        'Midline Above Grade Level (%)': (x['EGRA Midline'] >= 40).sum() / len(x) * 100
-    })).reset_index()
-
-    # Sort by 'Midline Above Grade Level (%)'
-    school_data_sorted = school_data.sort_values(by='Midline Above Grade Level (%)', ascending=False)
-
-    # Create the Plotly bar graph
-    school_fig = px.bar(
-        school_data_sorted,
-        x='School',
-        y='Midline Above Grade Level (%)',
-        color='School',
-        labels={'School': 'School', 'Midline Above Grade Level (%)': 'Percentage (%)'},
-        title='Percentage of Grade 1 Students Above Grade Level by School'
-    )
-
-    # Streamlit app
-    with st.container():
-        st.subheader("Percentage of Grade 1's Above Grade Level by School (Midline)")
-        st.plotly_chart(school_fig, use_container_width=True)
-
-        with st.expander('Click to view data:'):
-            st.dataframe(school_data_sorted)
+    # st.markdown("---")
+    #
+    # # Calculate the percentage of students 'Above Grade Level' for midline for each school
+    # school_data = grade1.groupby('School').apply(lambda x: pd.Series({
+    #     'Midline Above Grade Level (%)': (x['EGRA Midline'] >= 40).sum() / len(x) * 100
+    # })).reset_index()
+    #
+    # # Sort by 'Midline Above Grade Level (%)'
+    # school_data_sorted = school_data.sort_values(by='Midline Above Grade Level (%)', ascending=False)
+    #
+    # # Create the Plotly bar graph
+    # school_fig = px.bar(
+    #     school_data_sorted,
+    #     x='School',
+    #     y='Midline Above Grade Level (%)',
+    #     color='School',
+    #     labels={'School': 'School', 'Midline Above Grade Level (%)': 'Percentage (%)'},
+    #     title='Percentage of Grade 1 Students Above Grade Level by School'
+    # )
+    #
+    #
+    # with st.container():
+    #     st.subheader("Percentage of Grade 1's Above Grade Level by School (Midline)")
+    #     st.plotly_chart(school_fig, use_container_width=True)
+    #
+    #     with st.expander('Click to view data:'):
+    #         st.dataframe(school_data_sorted)
 
     # TEACHER ASSISTANTS
 
@@ -448,39 +469,6 @@ def display_2024():
         st.plotly_chart(mentor_sessions_fig, use_container_width=True)
         with st.expander('Click to view data'):
             st.dataframe(df)
-
-    # GENDER STATS
-    st.markdown('---')
-    with st.container():
-        st.subheader('Gender Improvement')
-
-        grade_selection = st.selectbox('Select Grade', ['All Grades', 'Grade 1', 'Grade R'],key="gender")
-        if grade_selection == 'All Grades':
-            filtered_midline = midline
-        else:
-            filtered_midline = midline[midline['Grade'] == grade_selection]
-
-        school_egra_improvement = filtered_midline.groupby(['Gender']).agg({
-            'EGRA Baseline': 'mean',
-            'EGRA Midline': 'mean',
-            'Egra Improvement Agg': 'mean',
-        }).round(1).sort_values(by='Egra Improvement Agg', ascending=False).reset_index()
-
-        school_fig = px.bar(
-            school_egra_improvement,
-            x='Gender',
-            y='Egra Improvement Agg',
-            color_discrete_sequence=[YELLOW]
-        )
-        st.plotly_chart(school_fig, use_container_width=True)
-
-        with st.expander('Click to view data:'):
-            school_egra_improvement = filtered_midline.groupby(['Gender']).agg({
-                'EGRA Baseline': 'mean',
-                'EGRA Midline': 'mean',
-                'Egra Improvement Agg': 'mean',
-            }).round(1).sort_values(by='Egra Improvement Agg', ascending=False)
-            st.dataframe(school_egra_improvement)
 
     # FURTHER STATS
     st.markdown('---')
