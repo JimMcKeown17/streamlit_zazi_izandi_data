@@ -453,34 +453,39 @@ def display_2024():
     st.markdown('---')
     with st.container():
         st.subheader('Gender Improvement')
-
+        metric_selection = st.selectbox('Select Metric', ['Total Score', 'Improvement'], key="gender_metric")
         grade_selection = st.selectbox('Select Grade', ['All Grades', 'Grade 1', 'Grade R'],key="gender")
         if grade_selection == 'All Grades':
             filtered_midline = midline
         else:
             filtered_midline = midline[midline['Grade'] == grade_selection]
 
-        school_egra_improvement = filtered_midline.groupby(['Gender']).agg({
+        if metric_selection == 'Total Score':
+            metric = 'EGRA Midline'
+        else:
+            metric = 'Egra Improvement Agg'
+
+        gender_egra_improvement = filtered_midline.groupby(['Gender']).agg({
             'EGRA Baseline': 'mean',
             'EGRA Midline': 'mean',
             'Egra Improvement Agg': 'mean',
-        }).round(1).sort_values(by='Egra Improvement Agg', ascending=False).reset_index()
+        }).round(1).sort_values(by=metric, ascending=False).reset_index()
 
         school_fig = px.bar(
-            school_egra_improvement,
+            gender_egra_improvement,
             x='Gender',
-            y='Egra Improvement Agg',
+            y=metric,
             color_discrete_sequence=[YELLOW]
         )
         st.plotly_chart(school_fig, use_container_width=True)
 
         with st.expander('Click to view data:'):
-            school_egra_improvement = filtered_midline.groupby(['Gender']).agg({
+            gender_egra_improvement = filtered_midline.groupby(['Gender']).agg({
                 'EGRA Baseline': 'mean',
                 'EGRA Midline': 'mean',
                 'Egra Improvement Agg': 'mean',
-            }).round(1).sort_values(by='Egra Improvement Agg', ascending=False)
-            st.dataframe(school_egra_improvement)
+            }).round(1).sort_values(by=metric, ascending=False)
+            st.dataframe(gender_egra_improvement)
 
     # FURTHER STATS
     st.markdown('---')
