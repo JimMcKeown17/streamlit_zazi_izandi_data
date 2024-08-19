@@ -541,6 +541,27 @@ def display_2024():
     st.markdown('---')
     st.header('FURTHER ANALYSIS')
 
+    with st.expander('Children Over 40 EGRA by School'):
+        filtered_df = midline[midline['EGRA Midline'] >= 40]
+
+        # Group by 'School' and count the number of children per school
+        result_df = filtered_df.groupby('School').size().sort_values(ascending=False).reset_index(name='Count')
+
+        # Display the resulting DataFrame
+        st.dataframe(result_df)
+
+    with st.expander('Groups Over 40 EGRA by School'):
+        grouped_means = midline.groupby(['School', 'EA Name', 'Group'])['EGRA Midline'].mean().reset_index()
+
+        # Filter for groups where the mean 'EGRA Midline' is >= 40
+        filtered_groups = grouped_means[grouped_means['EGRA Midline'] >= 40]
+
+        # Now, count how many groups per school meet the criteria
+        result_df = filtered_groups.groupby('School').size().sort_values(ascending=False).reset_index(name='Count')
+
+        # Display the resulting DataFrame
+        st.dataframe(result_df)
+
     with st.expander('Validity of Results'):
         st.success('The following analysis demonstrates a strong correlation between the improvements in Letters Known and the Letters EGRA assessments, reinforcing the validity of our Zazi iZandi results. The two metrcis were captured via different assessment methodologies, making the high correlation even more impressive. The two metrics have a Spearman CoEfficient of 0.933.')
         # Drop rows with NaN or infinite values
