@@ -686,3 +686,28 @@ def display_2024():
         # Display the histogram in Streamlit
         st.plotly_chart(fig)
 
+    st.markdown("---")
+    with st.container():
+        st.subheader("Word Reading Buckets Pie Chart")
+
+
+        df = baseline2df.copy()
+
+        # I can define buckets, labels, and then use pd.cut to group them into those buckets.
+        bins = [-1, 0, 5, 10, 15, 20, float('inf')]  # float('inf') represents 21+
+        labels = ['0', '1-5', '6-10', '11-15', '16-20', '21+']
+        df['Word Reading Group'] = pd.cut(df['B. Word reading'], bins=bins, labels=labels)
+
+        # Count occurrences in each group
+        bucket_counts = df['Word Reading Group'].value_counts().sort_index()
+
+        bucket_df = pd.DataFrame({
+            'Group': bucket_counts.index,
+            'Count': bucket_counts.values
+        })
+
+        fig = px.pie(bucket_df, values='Count', names='Group', title='B. Word Reading Distribution')
+
+        st.plotly_chart(fig)
+
+
