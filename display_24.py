@@ -10,7 +10,7 @@ import streamlit as st
 
 def display_2024():
     # Import dataframes
-    baseline_df, midline_df, sessions_df = load_zazi_izandi_2024()
+    baseline_df, midline_df, sessions_df, baseline2df = load_zazi_izandi_2024()
     base_dir = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -654,3 +654,35 @@ def display_2024():
 
         df = pd.DataFrame(data)
         st.dataframe(df)
+
+    with st.container():
+        st.title("ZZ 2.0 Quick Analysis")
+        fig = px.scatter(baseline2df,
+                         x="A.Non-word reading",
+                         y="B. Word reading",
+                         title="Non-word reading vs. Word reading Scores")
+
+        st.subheader("Non-word reading vs. Word reading Scores")
+        st.plotly_chart(fig)
+
+    st.markdown("---")
+    with st.container():
+        st.subheader("Baseline Results for ZZ 2.0")
+        st.info("The Non-Word assessment included 10 2-letter sounds to begin, so it is not comparable to the 'Real Word' assessment. You'll notice many kids in the 0-10 buckets for non-words b/c they could blend those two sounds together.")
+        # Dropdown selection for the variable
+        word_metric = st.selectbox(
+            "Select a variable for the histogram:",
+            ("Real Words", "Non-Words")
+        )
+
+        if word_metric == "Non-Words":
+            variable = "A.Non-word reading"
+        else:
+            variable = "B. Word reading"
+
+        # Create a Plotly Express histogram based on the selected variable
+        fig = px.histogram(baseline2df, x=variable, title=f"Histogram of {variable}")
+
+        # Display the histogram in Streamlit
+        st.plotly_chart(fig)
+
