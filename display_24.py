@@ -8,401 +8,387 @@ from data_loader import load_zazi_izandi_2024
 import os
 import streamlit as st
 
+
 def display_2024():
-    # Import dataframes
-    baseline_df, midline_df, sessions_df, baseline2df = load_zazi_izandi_2024()
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+    tab1, tab2 = st.tabs(["Results", "Sessions"])
+
+    with tab1:
+        # Import dataframes
+        baseline_df, midline_df, sessions_df, baseline2df = load_zazi_izandi_2024()
+        base_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-    #ZZ Website colours. Going to use Yellow for EGRA and Blue for Letters Known
-    YELLOW = '#ffd641'
-    BLUE = '#28a1ff'
-    GREY = '#b3b3b3'
-    GREEN = '#32c93c'
+        #ZZ Website colours. Going to use Yellow for EGRA and Blue for Letters Known
+        YELLOW = '#ffd641'
+        BLUE = '#28a1ff'
+        GREY = '#b3b3b3'
+        GREEN = '#32c93c'
 
 
-    midline, baseline = process_zz_data(baseline_df, midline_df, sessions_df)
-    grade1 = grade1_df(midline)
-    gradeR = gradeR_df(midline)
+        midline, baseline = process_zz_data(baseline_df, midline_df, sessions_df)
+        grade1 = grade1_df(midline)
+        gradeR = gradeR_df(midline)
 
-    # START PAGE NOW
-    col1, col2 = st.columns(2)
-    with col1:
-        st.image('assets/Zazi iZandi logo.png', width=250)
-    with col2:
-        st.title('2024 Results')
-    # FEATURE STATS
-    st.header('SUMMARY STATS')
-    c1,c2,c3 = st.columns(3)
-    with c1:
-        st.metric('Community\n Youth Jobs:', '52')
-    with c2:
-        st.metric('Children on\n Programme:', '1895')
-    with c3:
-        st.metric('Schools on\n Programme:', '12')
-    st.markdown('---')
-    st.header('HIGHLIGHTS')
+        # START PAGE NOW
 
-    with st.container():
-        st.subheader('Letter EGRA Improvement')
-        st.success('On average, the children improved their Letter EGRA scores '
-                   'by 214% (17 points).')
-        egra_summary = midline.groupby('Grade').agg({
-            'EGRA Baseline': 'mean',
-            'EGRA Midline': 'mean',
-            'Egra Improvement Agg': 'mean'
-        }).round(1).reset_index()
 
-        # Melt the DataFrame for Plotly
-        egra_summary_melted = egra_summary.melt(id_vars='Grade', value_vars=['EGRA Baseline', 'EGRA Midline'], var_name='Measurement', value_name='Score')
 
-        # Create the Plotly bar graph with grouped bars
-        egra_fig = px.bar(
-            egra_summary_melted,
-            x='Grade',
-            y='Score',
-            color='Measurement',
-            barmode='group',
-            labels={'Score': 'Average Score'},
-            color_discrete_map={'EGRA Baseline': GREY, 'EGRA Midline': YELLOW}
-        )
+        col1, col2 = st.columns(2)
+        with col1:
+            st.image('assets/Zazi iZandi logo.png', width=250)
+        with col2:
+            st.title('2024 Results')
+        # FEATURE STATS
+        st.header('SUMMARY STATS')
+        c1,c2,c3 = st.columns(3)
+        with c1:
+            st.metric('Community\n Youth Jobs:', '52')
+        with c2:
+            st.metric('Children on\n Programme:', '1895')
+        with c3:
+            st.metric('Schools on\n Programme:', '12')
+        st.markdown('---')
+        st.header('HIGHLIGHTS')
 
-        st.plotly_chart(egra_fig, use_container_width=True)
+        with st.container():
+            st.subheader('Letter EGRA Improvement')
+            st.success('On average, the children improved their Letter EGRA scores '
+                       'by 214% (17 points).')
+            egra_summary = midline.groupby('Grade').agg({
+                'EGRA Baseline': 'mean',
+                'EGRA Midline': 'mean',
+                'Egra Improvement Agg': 'mean'
+            }).round(1).reset_index()
 
-    with st.expander('Click to view data:'):
-        egra_summary = midline.groupby('Grade').agg({
-            'EGRA Baseline': 'mean',
-            'EGRA Midline': 'mean',
-            'Egra Improvement Agg': 'mean'
-        }).round(1)
-        st.dataframe(egra_summary)
+            # Melt the DataFrame for Plotly
+            egra_summary_melted = egra_summary.melt(id_vars='Grade', value_vars=['EGRA Baseline', 'EGRA Midline'], var_name='Measurement', value_name='Score')
 
-    st.markdown("---")
+            # Create the Plotly bar graph with grouped bars
+            egra_fig = px.bar(
+                egra_summary_melted,
+                x='Grade',
+                y='Score',
+                color='Measurement',
+                barmode='group',
+                labels={'Score': 'Average Score'},
+                color_discrete_map={'EGRA Baseline': GREY, 'EGRA Midline': YELLOW}
+            )
 
-    with st.container():
-        st.subheader('Letters Known Improvement')
-        st.success('Children improved their letter knowledge by 193% and learned, on average, 8.5 letters')
-        letter_summary = midline.groupby('Grade').agg({
-            'Baseline Letters Known': 'mean',
-            'Midline Letters Known': 'mean',
-        }).round(1).reset_index()
-
-        # Attempt to Melt
-        letter_summary_melted = letter_summary.melt(id_vars="Grade",
-                                                    value_vars=['Baseline Letters Known', 'Midline Letters Known'],
-                                                    var_name="Measurement", value_name="Letters Known")
-
-        # Create the Plotly bar graph with grouped bars
-        letter_fig = px.bar(
-            letter_summary_melted,
-            x='Grade',
-            y='Letters Known',
-            color='Measurement',
-            barmode='group',
-            labels={'Letters Known': 'Average Letter Known'},
-            color_discrete_map={'Baseline Letters Known': GREY, 'Midline Letters Known': BLUE}
-
-        )
-        st.plotly_chart(letter_fig, use_container_width=True)
+            st.plotly_chart(egra_fig, use_container_width=True)
 
         with st.expander('Click to view data:'):
+            egra_summary = midline.groupby('Grade').agg({
+                'EGRA Baseline': 'mean',
+                'EGRA Midline': 'mean',
+                'Egra Improvement Agg': 'mean'
+            }).round(1)
+            st.dataframe(egra_summary)
+
+        st.markdown("---")
+
+        with st.container():
+            st.subheader('Letters Known Improvement')
+            st.success('Children improved their letter knowledge by 193% and learned, on average, 8.5 letters')
             letter_summary = midline.groupby('Grade').agg({
                 'Baseline Letters Known': 'mean',
                 'Midline Letters Known': 'mean',
-            }).round(1)
-            st.dataframe(letter_summary)
+            }).round(1).reset_index()
 
-    st.markdown('---')
+            # Attempt to Melt
+            letter_summary_melted = letter_summary.melt(id_vars="Grade",
+                                                        value_vars=['Baseline Letters Known', 'Midline Letters Known'],
+                                                        var_name="Measurement", value_name="Letters Known")
 
-    with st.container():
-        st.subheader("Percentage of Grade 1's On Grade Level")
-        st.success("The number of Grade 1 children 'On Grade Level' for letter knowledge more than tripled, increasing from 13% to 45%. And we are only halfway through the year!")
+            # Create the Plotly bar graph with grouped bars
+            letter_fig = px.bar(
+                letter_summary_melted,
+                x='Grade',
+                y='Letters Known',
+                color='Measurement',
+                barmode='group',
+                labels={'Letters Known': 'Average Letter Known'},
+                color_discrete_map={'Baseline Letters Known': GREY, 'Midline Letters Known': BLUE}
 
-        # Calculate percentages for baseline
-        baseline_40_or_more = (grade1['EGRA Baseline'] >= 40).sum()
-        baseline_less_than_40 = (grade1['EGRA Baseline'] < 40).sum()
-        total_baseline = baseline_40_or_more + baseline_less_than_40
+            )
+            st.plotly_chart(letter_fig, use_container_width=True)
 
-        baseline_40_or_more_percent = (baseline_40_or_more / total_baseline).round(3) * 100
-        baseline_less_than_40_percent = (baseline_less_than_40 / total_baseline).round(3) * 100
+            with st.expander('Click to view data:'):
+                letter_summary = midline.groupby('Grade').agg({
+                    'Baseline Letters Known': 'mean',
+                    'Midline Letters Known': 'mean',
+                }).round(1)
+                st.dataframe(letter_summary)
 
-        # Calculate percentages for midline
-        midline_40_or_more = (grade1['EGRA Midline'] >= 40).sum()
-        midline_less_than_40 = (grade1['EGRA Midline'] < 40).sum()
-        total_midline = midline_40_or_more + midline_less_than_40
+        st.markdown('---')
 
-        midline_40_or_more_percent = (midline_40_or_more / total_midline).round(3) * 100
-        midline_less_than_40_percent = (midline_less_than_40 / total_midline).round(3) * 100
+        with st.container():
+            st.subheader("Percentage of Grade 1's On Grade Level")
+            st.success("The number of Grade 1 children 'On Grade Level' for letter knowledge more than tripled, increasing from 13% to 45%. And we are only halfway through the year!")
 
-        # Create DataFrame
-        data = {
-            'Below Grade Level': [baseline_less_than_40_percent, midline_less_than_40_percent],
-            'Above Grade Level': [baseline_40_or_more_percent, midline_40_or_more_percent]
-        }
+            # Calculate percentages for baseline
+            baseline_40_or_more = (grade1['EGRA Baseline'] >= 40).sum()
+            baseline_less_than_40 = (grade1['EGRA Baseline'] < 40).sum()
+            total_baseline = baseline_40_or_more + baseline_less_than_40
 
-        df = pd.DataFrame(data, index=['Baseline', 'Midline'])
+            baseline_40_or_more_percent = (baseline_40_or_more / total_baseline).round(3) * 100
+            baseline_less_than_40_percent = (baseline_less_than_40 / total_baseline).round(3) * 100
 
-        # Melt the DataFrame for Plotly
-        df_melted = df.reset_index().melt(id_vars='index', value_vars=['Below Grade Level', 'Above Grade Level'],
-                                          var_name='Score Category', value_name='Percentage')
+            # Calculate percentages for midline
+            midline_40_or_more = (grade1['EGRA Midline'] >= 40).sum()
+            midline_less_than_40 = (grade1['EGRA Midline'] < 40).sum()
+            total_midline = midline_40_or_more + midline_less_than_40
 
-        # Create the Plotly bar graph
-        grade_level_fig = px.bar(
-            df_melted,
-            x='index',
-            y='Percentage',
-            color='Score Category',
-            barmode='group',
-            labels={'index': 'Assessment', 'Percentage': 'Percentage (%)'},
-            color_discrete_map={'Below Grade Level': GREY, 'Above Grade Level': GREEN}
+            midline_40_or_more_percent = (midline_40_or_more / total_midline).round(3) * 100
+            midline_less_than_40_percent = (midline_less_than_40 / total_midline).round(3) * 100
 
-        )
+            # Create DataFrame
+            data = {
+                'Below Grade Level': [baseline_less_than_40_percent, midline_less_than_40_percent],
+                'Above Grade Level': [baseline_40_or_more_percent, midline_40_or_more_percent]
+            }
 
-        st.plotly_chart(grade_level_fig, use_container_width=True)
+            df = pd.DataFrame(data, index=['Baseline', 'Midline'])
 
-        with st.expander('Click to view data:'):
-            st.dataframe(df)
+            # Melt the DataFrame for Plotly
+            df_melted = df.reset_index().melt(id_vars='index', value_vars=['Below Grade Level', 'Above Grade Level'],
+                                              var_name='Score Category', value_name='Percentage')
 
-    # GENDER STATS
-    st.markdown('---')
-    with st.container():
-        st.subheader('Gender Improvement')
-        st.success('South Africa has the highest gender disparity in literacy in the world (for countries measured in PIRLS) with our boys drastically underperforming our girls. We are keeping a close eye on our boys performance and hope to contribute towards closing this gap.')
-        grade_selection = st.selectbox('Select Grade', ['All Grades', 'Grade 1', 'Grade R'],key="gender", index=1)
-        metric_selection = st.selectbox('Select Metric', ['Total Score', 'Improvement'], key="gender_metric", index=1)
+            # Create the Plotly bar graph
+            grade_level_fig = px.bar(
+                df_melted,
+                x='index',
+                y='Percentage',
+                color='Score Category',
+                barmode='group',
+                labels={'index': 'Assessment', 'Percentage': 'Percentage (%)'},
+                color_discrete_map={'Below Grade Level': GREY, 'Above Grade Level': GREEN}
 
-        if grade_selection == 'All Grades':
-            filtered_midline = midline
-        else:
-            filtered_midline = midline[midline['Grade'] == grade_selection]
+            )
 
-        if metric_selection == 'Total Score':
-            metric = 'EGRA Midline'
-        else:
-            metric = 'Egra Improvement Agg'
+            st.plotly_chart(grade_level_fig, use_container_width=True)
 
-        gender_egra_improvement = filtered_midline.groupby(['Gender']).agg({
-            'EGRA Baseline': 'mean',
-            'EGRA Midline': 'mean',
-            'Egra Improvement Agg': 'mean',
-        }).round(1).sort_values(by=metric, ascending=False).reset_index()
+            with st.expander('Click to view data:'):
+                st.dataframe(df)
 
-        school_fig = px.bar(
-            gender_egra_improvement,
-            x='Gender',
-            y=metric,
-            color_discrete_sequence=[YELLOW]
-        )
-        st.plotly_chart(school_fig, use_container_width=True)
+        # GENDER STATS
+        st.markdown('---')
+        with st.container():
+            st.subheader('Gender Improvement')
+            st.success('South Africa has the highest gender disparity in literacy in the world (for countries measured in PIRLS) with our boys drastically underperforming our girls. We are keeping a close eye on our boys performance and hope to contribute towards closing this gap.')
+            grade_selection = st.selectbox('Select Grade', ['All Grades', 'Grade 1', 'Grade R'],key="gender", index=1)
+            metric_selection = st.selectbox('Select Metric', ['Total Score', 'Improvement'], key="gender_metric", index=1)
 
-        with st.expander('Click to view data:'):
+            if grade_selection == 'All Grades':
+                filtered_midline = midline
+            else:
+                filtered_midline = midline[midline['Grade'] == grade_selection]
+
+            if metric_selection == 'Total Score':
+                metric = 'EGRA Midline'
+            else:
+                metric = 'Egra Improvement Agg'
+
             gender_egra_improvement = filtered_midline.groupby(['Gender']).agg({
                 'EGRA Baseline': 'mean',
                 'EGRA Midline': 'mean',
                 'Egra Improvement Agg': 'mean',
-            }).round(1).sort_values(by=metric, ascending=False)
-            st.dataframe(gender_egra_improvement)
+            }).round(1).sort_values(by=metric, ascending=False).reset_index()
 
-    # SCHOOLS
+            school_fig = px.bar(
+                gender_egra_improvement,
+                x='Gender',
+                y=metric,
+                color_discrete_sequence=[YELLOW]
+            )
+            st.plotly_chart(school_fig, use_container_width=True)
 
-    st.markdown('---')
-    st.header('SCHOOL PERFORMANCE')
+            with st.expander('Click to view data:'):
+                gender_egra_improvement = filtered_midline.groupby(['Gender']).agg({
+                    'EGRA Baseline': 'mean',
+                    'EGRA Midline': 'mean',
+                    'Egra Improvement Agg': 'mean',
+                }).round(1).sort_values(by=metric, ascending=False)
+                st.dataframe(gender_egra_improvement)
 
-    with st.container():
-        st.subheader('School Level EGRA Improvement')
+        # SCHOOLS
 
-        grade_selection = st.selectbox('Select Grade', ['All Grades', 'Grade 1', 'Grade R'],key="egra")
-        if grade_selection == 'All Grades':
-            filtered_midline = midline
-        else:
-            filtered_midline = midline[midline['Grade'] == grade_selection]
+        st.markdown('---')
+        st.header('SCHOOL PERFORMANCE')
 
-        school_egra_improvement = filtered_midline.groupby(['School']).agg({
-            'EGRA Baseline': 'mean',
-            'EGRA Midline': 'mean',
-            'Egra Improvement Agg': 'mean',
-        }).round(1).sort_values(by='Egra Improvement Agg', ascending=False).reset_index()
+        with st.container():
+            st.subheader('School Level EGRA Improvement')
 
-        school_fig = px.bar(
-            school_egra_improvement,
-            x='School',
-            y='Egra Improvement Agg',
-            color_discrete_sequence=[YELLOW]
-        )
-        st.plotly_chart(school_fig, use_container_width=True)
+            grade_selection = st.selectbox('Select Grade', ['All Grades', 'Grade 1', 'Grade R'],key="egra")
+            if grade_selection == 'All Grades':
+                filtered_midline = midline
+            else:
+                filtered_midline = midline[midline['Grade'] == grade_selection]
 
-        with st.expander('Click to view data:'):
             school_egra_improvement = filtered_midline.groupby(['School']).agg({
                 'EGRA Baseline': 'mean',
                 'EGRA Midline': 'mean',
                 'Egra Improvement Agg': 'mean',
-            }).round(1).sort_values(by='Egra Improvement Agg', ascending=False)
-            st.dataframe(school_egra_improvement)
+            }).round(1).sort_values(by='Egra Improvement Agg', ascending=False).reset_index()
 
-    with st.container():
-        st.subheader('School Level Letter Improvement')
+            school_fig = px.bar(
+                school_egra_improvement,
+                x='School',
+                y='Egra Improvement Agg',
+                color_discrete_sequence=[YELLOW]
+            )
+            st.plotly_chart(school_fig, use_container_width=True)
 
-        grade_selection = st.selectbox('Select Grade', ['All Grades', 'Grade 1', 'Grade R'], key="letters")
-        if grade_selection == 'All Grades':
-            filtered_midline = midline
-        else:
-            filtered_midline = midline[midline['Grade'] == grade_selection]
+            with st.expander('Click to view data:'):
+                school_egra_improvement = filtered_midline.groupby(['School']).agg({
+                    'EGRA Baseline': 'mean',
+                    'EGRA Midline': 'mean',
+                    'Egra Improvement Agg': 'mean',
+                }).round(1).sort_values(by='Egra Improvement Agg', ascending=False)
+                st.dataframe(school_egra_improvement)
 
-        schools_letters_learned = filtered_midline.groupby('School')['Letters Learned'].mean().round(1).sort_values(ascending=False).reset_index()
+        with st.container():
+            st.subheader('School Level Letter Improvement')
 
-        school_letters_fig = px.bar(
-            schools_letters_learned,
-            x='School',
-            y='Letters Learned',
-            color_discrete_sequence=[BLUE]
-        )
-        st.plotly_chart(school_letters_fig, use_container_width=True)
+            grade_selection = st.selectbox('Select Grade', ['All Grades', 'Grade 1', 'Grade R'], key="letters")
+            if grade_selection == 'All Grades':
+                filtered_midline = midline
+            else:
+                filtered_midline = midline[midline['Grade'] == grade_selection]
 
-        with st.expander('Click to view data:'):
-            letters_per_school = filtered_midline.groupby(['School']).agg({
-                'Baseline Letters Known': 'mean',
-                'Midline Letters Known': 'mean',
-                'Letters Learned': 'mean',
-            }).round(1).sort_values(by='Letters Learned', ascending=False)
-            st.dataframe(letters_per_school)
+            schools_letters_learned = filtered_midline.groupby('School')['Letters Learned'].mean().round(1).sort_values(ascending=False).reset_index()
 
-    with st.container():
-        st.subheader("Chart of Children's Results By School")
-        schools = midline['School'].value_counts().index
-        choice = st.selectbox('Choose a School', schools)
-        df = midline[midline['School'] == choice]
+            school_letters_fig = px.bar(
+                schools_letters_learned,
+                x='School',
+                y='Letters Learned',
+                color_discrete_sequence=[BLUE]
+            )
+            st.plotly_chart(school_letters_fig, use_container_width=True)
 
-        grade_selection = st.selectbox('Select Grade', ['All Grades', 'Grade 1', 'Grade R'], key="grade_by_School")
-        if grade_selection == 'All Grades':
-            df = df
-        else:
-            df = df[df['Grade'] == grade_selection]
+            with st.expander('Click to view data:'):
+                letters_per_school = filtered_midline.groupby(['School']).agg({
+                    'Baseline Letters Known': 'mean',
+                    'Midline Letters Known': 'mean',
+                    'Letters Learned': 'mean',
+                }).round(1).sort_values(by='Letters Learned', ascending=False)
+                st.dataframe(letters_per_school)
 
-        metric_selection = st.selectbox('Select Metric', ['Midline Letters Known', 'EGRA Midline'], key="metric_by_School")
+        with st.container():
+            st.subheader("Chart of Children's Results By School")
+            schools = midline['School'].value_counts().index
+            choice = st.selectbox('Choose a School', schools)
+            df = midline[midline['School'] == choice]
+
+            grade_selection = st.selectbox('Select Grade', ['All Grades', 'Grade 1', 'Grade R'], key="grade_by_School")
+            if grade_selection == 'All Grades':
+                df = df
+            else:
+                df = df[df['Grade'] == grade_selection]
+
+            metric_selection = st.selectbox('Select Metric', ['Midline Letters Known', 'EGRA Midline'], key="metric_by_School")
 
 
-        fig = px.histogram(data_frame=df, x=metric_selection, nbins=20, color_discrete_sequence=[BLUE])
-        st.plotly_chart(fig, use_container_width=True)
+            fig = px.histogram(data_frame=df, x=metric_selection, nbins=20, color_discrete_sequence=[BLUE])
+            st.plotly_chart(fig, use_container_width=True)
 
-    st.markdown('---')
+        st.markdown('---')
 
-    with st.container():
-        st.subheader("Percentage of Grade 1's On Grade Level by School")
-        st.success(
-            "The number of Grade 1 children 'On Grade Level' for letter knowledge more than tripled, increasing from 13% to 45%. And we are only halfway through the year!")
-        schools = midline['School'].value_counts().index
-        school_choice = st.selectbox('Choose a School', schools, key="school_choice")
+        with st.container():
+            st.subheader("Percentage of Grade 1's On Grade Level by School")
+            st.success(
+                "The number of Grade 1 children 'On Grade Level' for letter knowledge more than tripled, increasing from 13% to 45%. And we are only halfway through the year!")
+            schools = midline['School'].value_counts().index
+            school_choice = st.selectbox('Choose a School', schools, key="school_choice")
 
-        df = grade1[grade1['School'] == school_choice]
+            df = grade1[grade1['School'] == school_choice]
 
-        # Calculate percentages for baseline
-        baseline_40_or_more = (df['EGRA Baseline'] >= 40).sum()
-        baseline_less_than_40 = (df['EGRA Baseline'] < 40).sum()
-        total_baseline = baseline_40_or_more + baseline_less_than_40
+            # Calculate percentages for baseline
+            baseline_40_or_more = (df['EGRA Baseline'] >= 40).sum()
+            baseline_less_than_40 = (df['EGRA Baseline'] < 40).sum()
+            total_baseline = baseline_40_or_more + baseline_less_than_40
 
-        baseline_40_or_more_percent = (baseline_40_or_more / total_baseline).round(3) * 100
-        baseline_less_than_40_percent = (baseline_less_than_40 / total_baseline).round(3) * 100
+            baseline_40_or_more_percent = (baseline_40_or_more / total_baseline).round(3) * 100
+            baseline_less_than_40_percent = (baseline_less_than_40 / total_baseline).round(3) * 100
 
-        # Calculate percentages for midline
-        midline_40_or_more = (df['EGRA Midline'] >= 40).sum()
-        midline_less_than_40 = (df['EGRA Midline'] < 40).sum()
-        total_midline = midline_40_or_more + midline_less_than_40
+            # Calculate percentages for midline
+            midline_40_or_more = (df['EGRA Midline'] >= 40).sum()
+            midline_less_than_40 = (df['EGRA Midline'] < 40).sum()
+            total_midline = midline_40_or_more + midline_less_than_40
 
-        midline_40_or_more_percent = (midline_40_or_more / total_midline).round(3) * 100
-        midline_less_than_40_percent = (midline_less_than_40 / total_midline).round(3) * 100
+            midline_40_or_more_percent = (midline_40_or_more / total_midline).round(3) * 100
+            midline_less_than_40_percent = (midline_less_than_40 / total_midline).round(3) * 100
 
-        # Create DataFrame
-        data = {
-            'Below Grade Level': [baseline_less_than_40_percent, midline_less_than_40_percent],
-            'Above Grade Level': [baseline_40_or_more_percent, midline_40_or_more_percent]
-        }
+            # Create DataFrame
+            data = {
+                'Below Grade Level': [baseline_less_than_40_percent, midline_less_than_40_percent],
+                'Above Grade Level': [baseline_40_or_more_percent, midline_40_or_more_percent]
+            }
 
-        df = pd.DataFrame(data, index=['Baseline', 'Midline'])
+            df = pd.DataFrame(data, index=['Baseline', 'Midline'])
 
-        # Melt the DataFrame for Plotly
-        df_melted = df.reset_index().melt(id_vars='index', value_vars=['Below Grade Level', 'Above Grade Level'],
-                                          var_name='Score Category', value_name='Percentage')
+            # Melt the DataFrame for Plotly
+            df_melted = df.reset_index().melt(id_vars='index', value_vars=['Below Grade Level', 'Above Grade Level'],
+                                              var_name='Score Category', value_name='Percentage')
+
+            # Create the Plotly bar graph
+            grade_level_fig = px.bar(
+                df_melted,
+                x='index',
+                y='Percentage',
+                color='Score Category',
+                barmode='group',
+                labels={'index': 'Assessment', 'Percentage': 'Percentage (%)'},
+                color_discrete_map={'Below Grade Level': GREY, 'Above Grade Level': GREEN}
+
+            )
+
+            st.plotly_chart(grade_level_fig, use_container_width=True)
+
+            with st.expander('Click to view data:'):
+                st.dataframe(df)
+
+        st.markdown("---")
+
+        # Calculate the percentage of students 'Above Grade Level' for midline for each school
+        school_data = grade1.groupby('School').apply(lambda x: pd.Series({
+            'Midline Above Grade Level (%)': (x['EGRA Midline'] >= 40).sum() / len(x) * 100
+        })).reset_index()
+
+        # Sort by 'Midline Above Grade Level (%)'
+        school_data_sorted = school_data.sort_values(by='Midline Above Grade Level (%)', ascending=False)
 
         # Create the Plotly bar graph
-        grade_level_fig = px.bar(
-            df_melted,
-            x='index',
-            y='Percentage',
-            color='Score Category',
-            barmode='group',
-            labels={'index': 'Assessment', 'Percentage': 'Percentage (%)'},
-            color_discrete_map={'Below Grade Level': GREY, 'Above Grade Level': GREEN}
-
+        school_fig = px.bar(
+            school_data_sorted,
+            x='School',
+            y='Midline Above Grade Level (%)',
+            color='School',
+            labels={'School': 'School', 'Midline Above Grade Level (%)': 'Percentage (%)'},
+            title='Percentage of Grade 1 Students Above Grade Level by School'
         )
 
-        st.plotly_chart(grade_level_fig, use_container_width=True)
+        with st.container():
+            st.subheader("Percentage of Grade 1's Above Grade Level by School (Midline)")
+            st.plotly_chart(school_fig, use_container_width=True)
 
-        with st.expander('Click to view data:'):
-            st.dataframe(df)
+            with st.expander('Click to view data:'):
+                st.dataframe(school_data_sorted)
 
-    st.markdown("---")
+        # TEACHER ASSISTANTS
 
-    # Calculate the percentage of students 'Above Grade Level' for midline for each school
-    school_data = grade1.groupby('School').apply(lambda x: pd.Series({
-        'Midline Above Grade Level (%)': (x['EGRA Midline'] >= 40).sum() / len(x) * 100
-    })).reset_index()
+        st.markdown('---')
+        st.header('TEACHER ASSISTANT PERFORMANCE')
 
-    # Sort by 'Midline Above Grade Level (%)'
-    school_data_sorted = school_data.sort_values(by='Midline Above Grade Level (%)', ascending=False)
+        with st.container():
+            st.subheader('Top Performing Teaching Assistants')
 
-    # Create the Plotly bar graph
-    school_fig = px.bar(
-        school_data_sorted,
-        x='School',
-        y='Midline Above Grade Level (%)',
-        color='School',
-        labels={'School': 'School', 'Midline Above Grade Level (%)': 'Percentage (%)'},
-        title='Percentage of Grade 1 Students Above Grade Level by School'
-    )
+            grade_selection = st.selectbox('Select Grade', ['All Grades', 'Grade 1', 'Grade R'])
+            if grade_selection == 'All Grades':
+                filtered_midline = midline
+            else:
+                filtered_midline = midline[midline['Grade'] == grade_selection]
 
-    # Streamlit app
-    with st.container():
-        st.subheader("Percentage of Grade 1's Above Grade Level by School (Midline)")
-        st.plotly_chart(school_fig, use_container_width=True)
-
-        with st.expander('Click to view data:'):
-            st.dataframe(school_data_sorted)
-
-    # TEACHER ASSISTANTS
-
-    st.markdown('---')
-    st.header('TEACHER ASSISTANT PERFORMANCE')
-
-    with st.container():
-        st.subheader('Top Performing Teaching Assistants')
-
-        grade_selection = st.selectbox('Select Grade', ['All Grades', 'Grade 1', 'Grade R'])
-        if grade_selection == 'All Grades':
-            filtered_midline = midline
-        else:
-            filtered_midline = midline[midline['Grade'] == grade_selection]
-
-        ta_performance = filtered_midline.groupby(['School', 'EA Name']).agg({
-            'Total Sessions': 'mean',
-            'Baseline Letters Known': 'mean',
-            'Letters Known': 'mean',
-            'Letters Learned': 'mean',
-            'EGRA Baseline': 'mean',
-            'EGRA Midline': 'mean',
-            'Egra Improvement Agg': 'mean',
-        }).round(1).sort_values(by='Egra Improvement Agg', ascending=False).reset_index()
-        ta_fig = px.bar(
-            ta_performance.head(15),
-            x='EA Name',
-            y='Egra Improvement Agg',
-            color_discrete_sequence=[YELLOW]
-        )
-        st.plotly_chart(ta_fig, use_container_width=True)
-
-
-        with st.expander('Click to view data:'):
-            st.subheader('Performance of Teaching Assistants')
-            TA_performance = filtered_midline.groupby(['School', 'EA Name']).agg({
+            ta_performance = filtered_midline.groupby(['School', 'EA Name']).agg({
                 'Total Sessions': 'mean',
                 'Baseline Letters Known': 'mean',
                 'Letters Known': 'mean',
@@ -410,34 +396,33 @@ def display_2024():
                 'EGRA Baseline': 'mean',
                 'EGRA Midline': 'mean',
                 'Egra Improvement Agg': 'mean',
-            }).round(1).sort_values(by='Egra Improvement Agg', ascending=False)
-            st.dataframe(TA_performance)
+            }).round(1).sort_values(by='Egra Improvement Agg', ascending=False).reset_index()
+            ta_fig = px.bar(
+                ta_performance.head(15),
+                x='EA Name',
+                y='Egra Improvement Agg',
+                color_discrete_sequence=[YELLOW]
+            )
+            st.plotly_chart(ta_fig, use_container_width=True)
 
-    with st.container():
-        st.subheader('Teaching Assistants With Underperforming Children')
-        st.warning('The project mentors will be retraining (and potentially replacing) these Teacher Assistants.')
-        digressed = midline[midline['Egra Improvement Agg'] < 3]
-        result = digressed.groupby('EA Name').agg({
-            'Surname': 'count',
-            'Total Sessions': 'mean',
-            'Baseline Letters Known': 'mean',
-            'Midline Letters Known': 'mean',
-            'Letters Learned': 'mean',
-            'EGRA Baseline': 'mean',
-            'EGRA Midline': 'mean',
-            'Egra Improvement Agg': 'mean'
-        }).round(1).sort_values(by='Surname', ascending=False).reset_index().head(15)
-        result = result.rename(columns={'Surname': 'Number of Under-performing Children'})
 
-        digressed_fig = px.bar(
-            result,
-            x='EA Name',
-            y='Number of Under-performing Children',
-            color_discrete_sequence=['#de6f7c']
-        )
-        st.plotly_chart(digressed_fig, use_container_width=True)
+            with st.expander('Click to view data:'):
+                st.subheader('Performance of Teaching Assistants')
+                TA_performance = filtered_midline.groupby(['School', 'EA Name']).agg({
+                    'Total Sessions': 'mean',
+                    'Baseline Letters Known': 'mean',
+                    'Letters Known': 'mean',
+                    'Letters Learned': 'mean',
+                    'EGRA Baseline': 'mean',
+                    'EGRA Midline': 'mean',
+                    'Egra Improvement Agg': 'mean',
+                }).round(1).sort_values(by='Egra Improvement Agg', ascending=False)
+                st.dataframe(TA_performance)
 
-        with st.expander('Click to view data:'):
+        with st.container():
+            st.subheader('Teaching Assistants With Underperforming Children')
+            st.warning('The project mentors will be retraining (and potentially replacing) these Teacher Assistants.')
+            digressed = midline[midline['Egra Improvement Agg'] < 3]
             result = digressed.groupby('EA Name').agg({
                 'Surname': 'count',
                 'Total Sessions': 'mean',
@@ -447,267 +432,478 @@ def display_2024():
                 'EGRA Baseline': 'mean',
                 'EGRA Midline': 'mean',
                 'Egra Improvement Agg': 'mean'
-            }).round(1)
-            result = result.rename(columns={'Surname': 'Number of Children'}).sort_values(by='Number of Children', ascending=False)
-            st.dataframe(result)
+            }).round(1).sort_values(by='Surname', ascending=False).reset_index().head(15)
+            result = result.rename(columns={'Surname': 'Number of Under-performing Children'})
 
-    # SESSIONS
+            digressed_fig = px.bar(
+                result,
+                x='EA Name',
+                y='Number of Under-performing Children',
+                color_discrete_sequence=['#de6f7c']
+            )
+            st.plotly_chart(digressed_fig, use_container_width=True)
 
-    st.markdown('---')
-    st.header('SESSIONS')
+            with st.expander('Click to view data:'):
+                result = digressed.groupby('EA Name').agg({
+                    'Surname': 'count',
+                    'Total Sessions': 'mean',
+                    'Baseline Letters Known': 'mean',
+                    'Midline Letters Known': 'mean',
+                    'Letters Learned': 'mean',
+                    'EGRA Baseline': 'mean',
+                    'EGRA Midline': 'mean',
+                    'Egra Improvement Agg': 'mean'
+                }).round(1)
+                result = result.rename(columns={'Surname': 'Number of Children'}).sort_values(by='Number of Children', ascending=False)
+                st.dataframe(result)
 
-    with st.container():
-        st.subheader('Sessions per School')
-        st.info("Sessions are a good indicator of if the teacher is allowing the programme to occur. The classrooms and teacher assistants with low sessions are now priority areas of project mentors to address.")
-        sessions = midline.groupby('School')['Total Sessions'].mean().round(1).sort_values(ascending=False)
-        df = sessions.reset_index()
-        df.columns = ['School', 'Average Total Sessions']
+        # SESSIONS
 
-        sessions_fig = px.bar(
-            df,
-            x='School',
-            y='Average Total Sessions',
-            color_discrete_sequence=[GREY]
-        )
-        st.plotly_chart(sessions_fig, use_container_width=True)
-        with st.expander('Click to view data'):
-            st.dataframe(df)
+        st.markdown('---')
+        st.header('Midline Sessions')
 
-    with st.container():
-        st.subheader('Sessions per Education Assistant')
-        mentor_sessions = midline.groupby('EA Name')['Total Sessions'].mean().round(1).sort_values(ascending=False)
-        df = mentor_sessions.reset_index()
-        df.columns = ['EA Name', 'Average Total Sessions']
+        with st.container():
+            st.subheader('Sessions per School')
+            st.info("Sessions are a good indicator of if the teacher is allowing the programme to occur. The classrooms and teacher assistants with low sessions are now priority areas of project mentors to address.")
+            sessions = midline.groupby('School')['Total Sessions'].mean().round(1).sort_values(ascending=False)
+            df = sessions.reset_index()
+            df.columns = ['School', 'Average Total Sessions']
 
-        mentor_sessions_fig = px.bar(
-            df,
-            x='EA Name',
-            y='Average Total Sessions',
-            color_discrete_sequence=[GREY]
-        )
-        st.plotly_chart(mentor_sessions_fig, use_container_width=True)
-        with st.expander('Click to view data'):
-            st.dataframe(df)
+            sessions_fig = px.bar(
+                df,
+                x='School',
+                y='Average Total Sessions',
+                color_discrete_sequence=[GREY]
+            )
+            st.plotly_chart(sessions_fig, use_container_width=True)
+            with st.expander('Click to view data'):
+                st.dataframe(df)
 
-    # CHECK GROUP STUFF
-    st.markdown('---')
-    st.header('GROUP ANALYSIS')
+        with st.container():
+            st.subheader('Sessions per Education Assistant')
+            mentor_sessions = midline.groupby('EA Name')['Total Sessions'].mean().round(1).sort_values(ascending=False)
+            df = mentor_sessions.reset_index()
+            df.columns = ['EA Name', 'Average Total Sessions']
 
-    with st.container():
-        st.subheader('Group Analysis by School')
-        st.info('Children are paired into groups of 7 depending upon their assessment scores. This enables us to teach each group "at the right level." The charts below allow one to investigate performance of different groups.')
+            mentor_sessions_fig = px.bar(
+                df,
+                x='EA Name',
+                y='Average Total Sessions',
+                color_discrete_sequence=[GREY]
+            )
+            st.plotly_chart(mentor_sessions_fig, use_container_width=True)
+            with st.expander('Click to view data'):
+                st.dataframe(df)
 
-        schools = midline['School'].value_counts().index
-        school_choice = st.selectbox('Choose a School', schools, key="school_choice_group")
+        # CHECK GROUP STUFF
+        st.markdown('---')
+        st.header('GROUP ANALYSIS')
 
-        df = midline[midline['School'] == school_choice]
+        with st.container():
+            st.subheader('Group Analysis by School')
+            st.info('Children are paired into groups of 7 depending upon their assessment scores. This enables us to teach each group "at the right level." The charts below allow one to investigate performance of different groups.')
 
-        grade_selection = st.selectbox('Select Grade', ['All Grades', 'Grade 1', 'Grade R'],key="group_grade")
-        if grade_selection == 'All Grades':
-            filtered_midline = df
-        else:
-            filtered_midline = df[df['Grade'] == grade_selection]
+            schools = midline['School'].value_counts().index
+            school_choice = st.selectbox('Choose a School', schools, key="school_choice_group")
 
-        metric_selection = st.selectbox('Select Metric', ['Total Score', 'Improvement'], key="group_metric", index=1)
+            df = midline[midline['School'] == school_choice]
 
-        if metric_selection == 'Total Score':
-            metric = 'EGRA Midline'
-        else:
-            metric = 'Egra Improvement Agg'
+            grade_selection = st.selectbox('Select Grade', ['All Grades', 'Grade 1', 'Grade R'],key="group_grade")
+            if grade_selection == 'All Grades':
+                filtered_midline = df
+            else:
+                filtered_midline = df[df['Grade'] == grade_selection]
 
-        group_egra_improvement = filtered_midline.groupby(['Group']).agg({
-            'EGRA Baseline': 'mean',
-            'EGRA Midline': 'mean',
-            'Egra Improvement Agg': 'mean',
-        }).round(1).sort_values(by=metric, ascending=False).reset_index()
+            metric_selection = st.selectbox('Select Metric', ['Total Score', 'Improvement'], key="group_metric", index=1)
 
-        school_fig = px.bar(
-            group_egra_improvement,
-            x='Group',
-            y=metric,
-            # color="EA Name"
-            color_discrete_sequence=[YELLOW]
-        )
-        st.plotly_chart(school_fig, use_container_width=True)
+            if metric_selection == 'Total Score':
+                metric = 'EGRA Midline'
+            else:
+                metric = 'Egra Improvement Agg'
 
-        with st.expander('Click to view data:'):
             group_egra_improvement = filtered_midline.groupby(['Group']).agg({
                 'EGRA Baseline': 'mean',
                 'EGRA Midline': 'mean',
                 'Egra Improvement Agg': 'mean',
-            }).round(1).sort_values(by=metric, ascending=False)
-            st.dataframe(group_egra_improvement)
-    # FURTHER STATS
-    st.markdown('---')
-    st.header('FURTHER ANALYSIS')
+            }).round(1).sort_values(by=metric, ascending=False).reset_index()
 
-    with st.expander('Children Over 40 EGRA by School'):
-        filtered_df = midline[midline['EGRA Midline'] >= 40]
+            school_fig = px.bar(
+                group_egra_improvement,
+                x='Group',
+                y=metric,
+                # color="EA Name"
+                color_discrete_sequence=[YELLOW]
+            )
+            st.plotly_chart(school_fig, use_container_width=True)
 
-        # Group by 'School' and count the number of children per school
-        result_df = filtered_df.groupby('School').size().sort_values(ascending=False).reset_index(name='Count')
+            with st.expander('Click to view data:'):
+                group_egra_improvement = filtered_midline.groupby(['Group']).agg({
+                    'EGRA Baseline': 'mean',
+                    'EGRA Midline': 'mean',
+                    'Egra Improvement Agg': 'mean',
+                }).round(1).sort_values(by=metric, ascending=False)
+                st.dataframe(group_egra_improvement)
+        # FURTHER STATS
+        st.markdown('---')
+        st.header('FURTHER ANALYSIS')
 
-        # Display the resulting DataFrame
-        st.dataframe(result_df)
+        with st.expander('Children Over 40 EGRA by School'):
+            filtered_df = midline[midline['EGRA Midline'] >= 40]
 
-    with st.expander('Groups Over 40 EGRA by School'):
-        grouped_means = midline.groupby(['School', 'EA Name', 'Group'])['EGRA Midline'].mean().reset_index()
+            # Group by 'School' and count the number of children per school
+            result_df = filtered_df.groupby('School').size().sort_values(ascending=False).reset_index(name='Count')
 
-        # Filter for groups where the mean 'EGRA Midline' is >= 40
-        filtered_groups = grouped_means[grouped_means['EGRA Midline'] >= 40]
+            # Display the resulting DataFrame
+            st.dataframe(result_df)
 
-        # Now, count how many groups per school meet the criteria
-        result_df = filtered_groups.groupby('School').size().sort_values(ascending=False).reset_index(name='Count')
+        with st.expander('Groups Over 40 EGRA by School'):
+            grouped_means = midline.groupby(['School', 'EA Name', 'Group'])['EGRA Midline'].mean().reset_index()
 
-        # Display the resulting DataFrame
-        st.dataframe(result_df)
+            # Filter for groups where the mean 'EGRA Midline' is >= 40
+            filtered_groups = grouped_means[grouped_means['EGRA Midline'] >= 40]
 
-    with st.expander('Validity of Results'):
-        st.success('The following analysis demonstrates a strong correlation between the improvements in Letters Known and the Letters EGRA assessments, reinforcing the validity of our Zazi iZandi results. The two metrcis were captured via different assessment methodologies, making the high correlation even more impressive. The two metrics have a Spearman CoEfficient of 0.933.')
-        # Drop rows with NaN or infinite values
-        clean_data = midline[['Letters Learned', 'Egra Improvement Agg', 'Grade']].dropna()
-        x = clean_data['Letters Learned']
-        y = clean_data['Egra Improvement Agg']
+            # Now, count how many groups per school meet the criteria
+            result_df = filtered_groups.groupby('School').size().sort_values(ascending=False).reset_index(name='Count')
 
-        # Create scatter plot
-        fig, ax = plt.subplots(figsize=(10, 6))
-        scatter = sns.scatterplot(data=clean_data, x='Letters Learned', y='Egra Improvement Agg', hue='Grade', palette='viridis', ax=ax)
+            # Display the resulting DataFrame
+            st.dataframe(result_df)
 
-        # Fit OLS model
-        X = sm.add_constant(x)  # Add constant for OLS
-        model = sm.OLS(y, X).fit()
-        predictions = model.predict(X)
+        with st.expander('Validity of Results'):
+            st.success('The following analysis demonstrates a strong correlation between the improvements in Letters Known and the Letters EGRA assessments, reinforcing the validity of our Zazi iZandi results. The two metrcis were captured via different assessment methodologies, making the high correlation even more impressive. The two metrics have a Spearman CoEfficient of 0.933.')
+            # Drop rows with NaN or infinite values
+            clean_data = midline[['Letters Learned', 'Egra Improvement Agg', 'Grade']].dropna()
+            x = clean_data['Letters Learned']
+            y = clean_data['Egra Improvement Agg']
 
-        # Plot the OLS trendline
-        ax.plot(x, predictions, color='red', label='OLS Trendline')
+            # Create scatter plot
+            fig, ax = plt.subplots(figsize=(10, 6))
+            scatter = sns.scatterplot(data=clean_data, x='Letters Learned', y='Egra Improvement Agg', hue='Grade', palette='viridis', ax=ax)
 
-        # Update layout
-        ax.set_title('Scatter Plot of Letters Learned vs EGRA Improvement')
-        ax.set_xlabel('Letters Learned')
-        ax.set_ylabel('EGRA Improvement Agg')
-        ax.grid(False)
-        ax.legend()
+            # Fit OLS model
+            X = sm.add_constant(x)  # Add constant for OLS
+            model = sm.OLS(y, X).fit()
+            predictions = model.predict(X)
 
-        # Display the plot in Streamlit
-        st.pyplot(fig)
+            # Plot the OLS trendline
+            ax.plot(x, predictions, color='red', label='OLS Trendline')
 
-    with st.expander('Visualizing Progress: KDE Plot'):
-        st.success('The blue wave shows how many children knew zero (or few) letters to begin the programme. The orange wave illustrates the substantial change in the number of children that know many letters in the first half of 2024. ')
-        fig, ax = plt.subplots(figsize=(10, 6))
+            # Update layout
+            ax.set_title('Scatter Plot of Letters Learned vs EGRA Improvement')
+            ax.set_xlabel('Letters Learned')
+            ax.set_ylabel('EGRA Improvement Agg')
+            ax.grid(False)
+            ax.legend()
 
-        # Plot KDE for Baseline Letters Known
-        sns.kdeplot(midline['Baseline Letters Known'], fill=True, label='Beginning Letters Known', ax=ax)
+            st.pyplot(fig)
 
-        # Plot KDE for Midline Letters Known
-        sns.kdeplot(midline['Midline Letters Known'], fill=True, label='Midline Letters Known', ax=ax)
+        with st.expander('Visualizing Progress: KDE Plot'):
+            st.success('The blue wave shows how many children knew zero (or few) letters to begin the programme. The orange wave illustrates the substantial change in the number of children that know many letters in the first half of 2024. ')
+            fig, ax = plt.subplots(figsize=(10, 6))
 
-        ax.set_title('Beginning and Midline Letters Known')
-        ax.set_xlabel('Score')
-        ax.set_ylabel('Density')
-        ax.legend()
+            # Plot KDE for Baseline Letters Known
+            sns.kdeplot(midline['Baseline Letters Known'], fill=True, label='Beginning Letters Known', ax=ax)
 
-        st.pyplot(fig)
+            # Plot KDE for Midline Letters Known
+            sns.kdeplot(midline['Midline Letters Known'], fill=True, label='Midline Letters Known', ax=ax)
 
-    with st.expander('Cohort Performance'):
-        st.success("This illustrates the substaintial progress that ALL children made, regardless of their level at the baseline. Children who knew nothing progressed as fast as children who already knew some of their letters. Note that final cohort already knew 19+ letters, so there wasn't much room for improvement.")
-        fig, ax = plt.subplots(figsize=(10, 6))
-        grouped = midline.groupby('Letter Cohort_baseline')['Letters Learned'].mean().round(1)
-        cohort_order = ['0-5', '6-12', '13-18', '19+']
-        result = grouped.reindex(cohort_order)
-        ax.bar(result.index, result.values, edgecolor='black')
+            ax.set_title('Beginning and Midline Letters Known')
+            ax.set_xlabel('Score')
+            ax.set_ylabel('Density')
+            ax.legend()
 
-        ax.set_title('Average Letters Learned by Baseline Letter Cohort')
-        ax.set_xlabel('Letters Known Baseline (by Cohort)')
-        ax.set_ylabel('Average Letters Learned')
+            st.pyplot(fig)
 
-        # Annotate bars with values
-        for i, v in enumerate(result.values):
-            ax.text(i, v + 0.1, str(v), ha='center', va='bottom')
-        st.pyplot(fig)
+        with st.expander('Cohort Performance'):
+            st.success("This illustrates the substaintial progress that ALL children made, regardless of their level at the baseline. Children who knew nothing progressed as fast as children who already knew some of their letters. Note that final cohort already knew 19+ letters, so there wasn't much room for improvement.")
+            fig, ax = plt.subplots(figsize=(10, 6))
+            grouped = midline.groupby('Letter Cohort_baseline')['Letters Learned'].mean().round(1)
+            cohort_order = ['0-5', '6-12', '13-18', '19+']
+            result = grouped.reindex(cohort_order)
+            ax.bar(result.index, result.values, edgecolor='black')
 
-    with st.expander('Letters Known Charted'):
-        st.success("This illustrates the letters the children have mastered. We teach the letter sounds in order from left to right, so we would expect the highest values on the left to slope downwards to the right. It's interesting that this isn't exactly the case.")
-        # List of letters in the correct order
-        letters = ['a', 'e', 'i', 'o', 'u', 'b', 'l', 'm', 'k', 'p', 's', 'h', 'z', 'n',
-                   'd', 'y', 'f', 'w', 'v', 'x', 'g', 't', 'q', 'r', 'c', 'j']
+            ax.set_title('Average Letters Learned by Baseline Letter Cohort')
+            ax.set_xlabel('Letters Known Baseline (by Cohort)')
+            ax.set_ylabel('Average Letters Learned')
 
-        letter_counts = midline[letters].applymap(lambda x: 1 if pd.notna(x) else 0).sum()
+            # Annotate bars with values
+            for i, v in enumerate(result.values):
+                ax.text(i, v + 0.1, str(v), ha='center', va='bottom')
+            st.pyplot(fig)
 
-        letter_df = pd.DataFrame({'Letter': letter_counts.index, 'Count': letter_counts.values})
+        with st.expander('Letters Known Charted'):
+            st.success("This illustrates the letters the children have mastered. We teach the letter sounds in order from left to right, so we would expect the highest values on the left to slope downwards to the right. It's interesting that this isn't exactly the case.")
+            # List of letters in the correct order
+            letters = ['a', 'e', 'i', 'o', 'u', 'b', 'l', 'm', 'k', 'p', 's', 'h', 'z', 'n',
+                       'd', 'y', 'f', 'w', 'v', 'x', 'g', 't', 'q', 'r', 'c', 'j']
 
-        fig = px.bar(letter_df, x='Letter', y='Count', title='Count of Letters Known',
-                     labels={'Count': 'Total Count of Letters Known'})
-        st.plotly_chart(fig)
+            letter_counts = midline[letters].applymap(lambda x: 1 if pd.notna(x) else 0).sum()
 
-    with st.expander('Percent of Children Assessed'):
-        st.success('We successfully assessed over 90% of children for both baseline & midline results.')
-        midline_assessed = midline['EGRA Midline'].notna().sum()
-        midline_assessed_percent = (midline_assessed / midline['Mcode'].count() * 100).round(1)
+            letter_df = pd.DataFrame({'Letter': letter_counts.index, 'Count': letter_counts.values})
 
-        baseline_assessed = baseline['EGRA Baseline'].notna().sum()
-        baseline_assessed_percent = (baseline_assessed / baseline['Mcode'].count() * 100).round(1)
+            fig = px.bar(letter_df, x='Letter', y='Count', title='Count of Letters Known',
+                         labels={'Count': 'Total Count of Letters Known'})
+            st.plotly_chart(fig)
 
-        data = {
-            'Time Period': ['Midline Assessed', 'Baseline Assessed'],
-            '% Assessed': [midline_assessed_percent, baseline_assessed_percent]
-        }
+        with st.expander('Percent of Children Assessed'):
+            st.success('We successfully assessed over 90% of children for both baseline & midline results.')
+            midline_assessed = midline['EGRA Midline'].notna().sum()
+            midline_assessed_percent = (midline_assessed / midline['Mcode'].count() * 100).round(1)
 
-        df = pd.DataFrame(data)
-        st.dataframe(df)
+            baseline_assessed = baseline['EGRA Baseline'].notna().sum()
+            baseline_assessed_percent = (baseline_assessed / baseline['Mcode'].count() * 100).round(1)
 
-    with st.container():
+            data = {
+                'Time Period': ['Midline Assessed', 'Baseline Assessed'],
+                '% Assessed': [midline_assessed_percent, baseline_assessed_percent]
+            }
+
+            df = pd.DataFrame(data)
+            st.dataframe(df)
+
+        st.markdown("---")
         st.title("ZZ 2.0 Quick Analysis")
-        fig = px.scatter(baseline2df,
-                         x="A.Non-word reading",
-                         y="B. Word reading",
-                         title="Non-word reading vs. Word reading Scores")
+        st.success("As of Sept 17, 2024 we have 522 children on ZZ 2.0. This represents 47% of the initial Grade 1 cohort. The remaining 53% are still mastering their letter sounds on ZZ 1.0")
+        with st.container():
 
-        st.subheader("Non-word reading vs. Word reading Scores")
-        st.plotly_chart(fig)
+            st.subheader("Non-word reading vs. Word reading Scores")
 
-    st.markdown("---")
-    with st.container():
-        st.subheader("Baseline Results for ZZ 2.0")
-        st.info("The Non-Word assessment included 10 2-letter sounds to begin, so it is not comparable to the 'Real Word' assessment. You'll notice many kids in the 0-10 buckets for non-words b/c they could blend those two sounds together.")
-        # Dropdown selection for the variable
-        word_metric = st.selectbox(
-            "Select a variable for the histogram:",
-            ("Real Words", "Non-Words")
+            fig = px.scatter(baseline2df,
+                             x="A.Non-word reading",
+                             y="B. Word reading",
+                             title="Non-word reading vs. Word reading Scores")
+
+            st.plotly_chart(fig)
+
+        st.markdown("---")
+        with st.container():
+            st.subheader("Baseline Results for ZZ 2.0")
+            st.info("The Non-Word assessment included 10 2-letter sounds to begin, so it is not comparable to the 'Real Word' assessment. You'll notice many kids in the 0-10 buckets for non-words b/c they could blend those two sounds together.")
+            # Dropdown selection for the variable
+            word_metric = st.selectbox(
+                "Select a variable for the histogram:",
+                ("Real Words", "Non-Words")
+            )
+
+            if word_metric == "Non-Words":
+                variable = "A.Non-word reading"
+            else:
+                variable = "B. Word reading"
+
+            # Create a Plotly Express histogram based on the selected variable
+            fig = px.histogram(baseline2df, x=variable, title=f"Histogram of {variable}")
+
+            # Display the histogram in Streamlit
+            st.plotly_chart(fig)
+
+        st.markdown("---")
+        with st.container():
+            st.subheader("Word Reading Buckets Pie Chart")
+            st.info("The chart below buckets children's baseline assessment scores based on Word Reading.")
+
+
+            df = baseline2df.copy()
+
+            # I can define buckets, labels, and then use pd.cut to group them into those buckets.
+            bins = [-1, 0, 5, 10, 15, 20, float('inf')]  # float('inf') represents 21+
+            labels = ['0', '1-5', '6-10', '11-15', '16-20', '21+']
+            df['Word Reading Group'] = pd.cut(df['B. Word reading'], bins=bins, labels=labels)
+
+            # Count occurrences in each group
+            bucket_counts = df['Word Reading Group'].value_counts().sort_index()
+
+            bucket_df = pd.DataFrame({
+                'Group': bucket_counts.index,
+                'Count': bucket_counts.values
+            })
+
+            fig = px.pie(bucket_df, values='Count', names='Group', title='Baseline Word Reading Distribution')
+
+            st.plotly_chart(fig)
+
+    with tab2:
+        st.header("Sessions Analysis")
+
+        # Some quick data cleaning/organizing
+
+        df = pd.read_excel("data/Zazi iZandi Session Tracker 20092024.xlsx", sheet_name="Sesssions")
+        months = ['Feb', 'Mar', 'Apr', 'May', 'Jul', 'Aug', 'Sep']
+
+        # Prepare the list of 'Total Sessions' and 'Sessions per Day' columns
+        total_sessions_cols = [f'{month}: Total Sessions' for month in months]
+        sessions_per_day_cols = [f'{month}: Sessions per Day' for month in months]
+
+        # Melt the DataFrame for 'Total Sessions'
+        total_sessions_df = df.melt(
+            id_vars=['School', 'EA Name'],
+            value_vars=total_sessions_cols,
+            var_name='Month',
+            value_name='Total Sessions'
         )
 
-        if word_metric == "Non-Words":
-            variable = "A.Non-word reading"
-        else:
-            variable = "B. Word reading"
+        # Clean the 'Month' column to extract month names
+        total_sessions_df['Month'] = total_sessions_df['Month'].str.replace(': Total Sessions', '')
 
-        # Create a Plotly Express histogram based on the selected variable
-        fig = px.histogram(baseline2df, x=variable, title=f"Histogram of {variable}")
+        # Melt the DataFrame for 'Sessions per Day'
+        sessions_per_day_df = df.melt(
+            id_vars=['School', 'EA Name'],
+            value_vars=sessions_per_day_cols,
+            var_name='Month',
+            value_name='Sessions per Day'
+        )
 
-        # Display the histogram in Streamlit
-        st.plotly_chart(fig)
+        # Clean the 'Month' column to extract month names
+        sessions_per_day_df['Month'] = sessions_per_day_df['Month'].str.replace(': Sessions per Day', '')
 
-    st.markdown("---")
-    with st.container():
-        st.subheader("Word Reading Buckets Pie Chart")
+        # Merge the two DataFrames on 'School', 'EA Name', and 'Month'
+        merged_df = pd.merge(
+            total_sessions_df,
+            sessions_per_day_df,
+            on=['School', 'EA Name', 'Month']
+        )
 
+        # Set the categorical data type for 'Month' with the correct order
+        month_categories = ['Feb', 'Mar', 'Apr', 'May', 'Jul', 'Aug', 'Sep']
+        merged_df['Month'] = pd.Categorical(
+            merged_df['Month'],
+            categories=month_categories,
+            ordered=True
+        )
 
-        df = baseline2df.copy()
+        # Streamlit Code
+        with st.container():
+            st.subheader("Session Metrics per Month")
+            # Metric selection
+            metric = st.selectbox('Select Metric', ['Total Sessions', 'Sessions per Day'])
 
-        # I can define buckets, labels, and then use pd.cut to group them into those buckets.
-        bins = [-1, 0, 5, 10, 15, 20, float('inf')]  # float('inf') represents 21+
-        labels = ['0', '1-5', '6-10', '11-15', '16-20', '21+']
-        df['Word Reading Group'] = pd.cut(df['B. Word reading'], bins=bins, labels=labels)
+            # Use the entire merged_df without filtering
+            plot_df = merged_df.copy()
 
-        # Count occurrences in each group
-        bucket_counts = df['Word Reading Group'].value_counts().sort_index()
+            # Group and aggregate data
+            if metric == 'Total Sessions':
+                plot_data = plot_df.groupby('Month')[metric].sum().reset_index()
+            else:
+                plot_data = plot_df.groupby('Month')[metric].mean().reset_index()
 
-        bucket_df = pd.DataFrame({
-            'Group': bucket_counts.index,
-            'Count': bucket_counts.values
-        })
+            # Create the bar chart
+            fig = px.bar(
+                plot_data,
+                x='Month',
+                y=metric,
+                title=f'{metric} by Month'
+            )
 
-        fig = px.pie(bucket_df, values='Count', names='Group', title='B. Word Reading Distribution')
+            # Ensure months are in order
+            fig.update_xaxes(categoryorder='array', categoryarray=month_categories)
 
-        st.plotly_chart(fig)
+            # Display the chart
+            st.plotly_chart(fig)
 
+        st.markdown("---")
+        with st.container():
+            # Streamlit app
+            st.subheader('Average Sessions per Day per School')
 
+            months = ['Feb', 'Mar', 'Apr', 'May', 'Jul', 'Aug', 'Sep']
+            month_options = ['All Months'] + months
+
+            # Month selection
+            selected_month = st.selectbox('Select Month', month_options)
+
+            # Filter data based on the selected month
+            if selected_month == 'All Months':
+                filtered_df = sessions_per_day_df.copy()
+            else:
+                filtered_df = sessions_per_day_df[sessions_per_day_df['Month'] == selected_month]
+
+            # Calculate the average 'Sessions per Day' per school
+            average_sessions = filtered_df.groupby('School')['Sessions per Day'].mean().reset_index()
+
+            # Sort the schools from highest to lowest average 'Sessions per Day'
+            average_sessions = average_sessions.sort_values(by='Sessions per Day', ascending=False)
+
+            # Create the bar chart
+            fig = px.bar(
+                average_sessions,
+                x='School',
+                y='Sessions per Day',
+                title=f"Average Sessions per Day per School ({selected_month})",
+                labels={'Sessions per Day': 'Average Sessions per Day'}
+            )
+
+            # Update layout to rotate x-axis labels if needed
+            fig.update_layout(xaxis_tickangle=-45)
+
+            # Display the chart
+            st.plotly_chart(fig)
+        st.markdown("---")
+        with st.container():
+            with st.container():
+                # Streamlit app
+                st.subheader('Average Sessions per Day per School')
+
+                months = ['Feb', 'Mar', 'Apr', 'May', 'Jul', 'Aug', 'Sep']
+                month_options = ['All Months'] + months
+
+                # Month selection
+                selected_month = st.selectbox('Select Month', month_options, key="ea_month")
+
+                # Filter data based on the selected month
+                if selected_month == 'All Months':
+                    filtered_df = sessions_per_day_df.copy()
+                else:
+                    filtered_df = sessions_per_day_df[sessions_per_day_df['Month'] == selected_month]
+
+                # Calculate the average 'Sessions per Day' per school
+                average_sessions = filtered_df.groupby('EA Name')['Sessions per Day'].mean().reset_index()
+
+                # Sort the schools from highest to lowest average 'Sessions per Day'
+                average_sessions = average_sessions.sort_values(by='Sessions per Day', ascending=False)
+
+                # Create the bar chart
+                fig = px.bar(
+                    average_sessions,
+                    x='EA Name',
+                    y='Sessions per Day',
+                    title=f"Average Sessions per Day per EA for ({selected_month})",
+                    labels={'Sessions per Day': 'Average Sessions per Day'}
+                )
+
+                # Update layout to rotate x-axis labels if needed
+                fig.update_layout(xaxis_tickangle=-45)
+
+                # Display the chart
+                st.plotly_chart(fig)
+            st.markdown("---")
+            with st.container():
+                st.subheader('Sessions per Day Over Time by EA')
+
+                # Use the entire DataFrame without filtering
+                filtered_df = sessions_per_day_df.copy()
+
+                # Check if the DataFrame is not empty
+                if filtered_df.empty:
+                    st.warning('No data available.')
+                else:
+                    # Create the line chart
+                    fig = px.line(
+                        filtered_df,
+                        x='Month',
+                        y='Sessions per Day',
+                        color='EA Name',
+                        markers=True,
+                        title='Sessions per Day per EA Over Time'
+                    )
+
+                    # Ensure months are in the correct order on the x-axis
+                    fig.update_xaxes(categoryorder='array', categoryarray=months)
+
+                    # Customize layout
+                    fig.update_layout(
+                        xaxis_title='Month',
+                        yaxis_title='Sessions per Day',
+                        legend_title='EA Name',
+                        hovermode='x unified'
+                    )
+
+                    # Display the chart
+                    st.plotly_chart(fig)
