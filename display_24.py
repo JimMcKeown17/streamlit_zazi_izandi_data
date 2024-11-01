@@ -42,11 +42,11 @@ def display_2024():
         st.header('SUMMARY STATS')
         c1,c2,c3 = st.columns(3)
         with c1:
-            st.metric('Community\n Youth Jobs:', '52')
+            st.metric('Community\n Youth Jobs:', '82')
         with c2:
-            st.metric('Children on\n Programme:', '1895')
+            st.metric('Children on\n Programme:', '3490')
         with c3:
-            st.metric('Schools on\n Programme:', '12')
+            st.metric('Schools on\n Programme:', '16')
         st.markdown('---')
         st.header('HIGHLIGHTS')
 
@@ -544,29 +544,77 @@ def display_2024():
                 }).round(1).sort_values(by=metric, ascending=False)
                 st.dataframe(group_egra_improvement)
         # FURTHER STATS
-        st.markdown('---')
+    st.markdown('---')
+    st.header("Benchmarks & Research")
+    with st.container():
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader("isiXhosa National Benchmarks")
+            st.write("""
+            - Grade 1 Letter Knowledge: 40 letters per minute
+            - Grade 2 Passage Reading: 20 words per minute
+            - Grade 3 Passage Reading: 35 words per minute
+            """)
+    with st.container():
+        st.subheader('Research & Findings')
+        with st.expander("Spaull, Pretorious 2022"):
+            st.write("""
+                - Fewer than 50% of South African learners in no-fee schools know all the letters of the alphabet by the end of Grade 1 and less than 50% can reach a minimal fluency threshold in Grade 2.
+                - Being alphabetically illiterate in Grade 1 sets learners back by at least four years, reaching a Grade 3 benchmark (60 wcpm) only in Grade 7.
+                - Across different samples, large proportions of Grade 6 learners (35–46%) do not reach fluency benchmarks for African languages set for the Grade 3 level.
+                - Between 50-70% of EC learners finishing Grade 1 (or starting Grade 2) cannot pronounce a single complex consonant sound.
+                - More than 55% of Nguni and Sesotho-Setswana language learner samples assessed pre-pandemic cannot read a single word correctly from a grade-level text by the end of Grade 1.
+                - There’s a HUGE gap between boys & girls as grades go on .The gap becomes exacerbated even for the strongest 25% of girls & boys.
+                - By the end of Grade 2, 29-54% of children hit the 20 words per minute bench mark in Nguni languages.
+                """)
+            st.image("assets/EC isiXhosa Against Benchmarks.png", width=600)
+        with st.expander("DoE EFAL Technical Report (2022)"):
+            st.write("""
+                - Grade 2: 21% of learners nationally were unable to read one word correctly. Median fluency including non-readers was 11 correct words per minute (cwpm), while the benchmark is set at 30+ cwpm.
+                - Grade 3: Between 19-34% of learners nationally could not read one word. Median fluency including non-readers ranged from 13-34 cwpm, with a benchmark of 50+ cwpm.
+                - Grade 4: 8-30% of learners nationally could not read one word. Median fluency including non-readers was between 21-46 cwpm, while the benchmark was 70+ cwpm.
+                - Grade 5: Median fluency including non-readers was 62 cwpm, with a benchmark of 90+ cwpm.
+                - In the Eastern Cape, by the end of Grade 4, 8-15% of learners meet the benchmark of 90 cwpm.
+                """)
+        with st.expander("Wordworks (2023)"):
+            st.write("""
+                - Only 27% of EC Grade 1 children hit the Grade 1 benchmark of 40lpm by end of the year.
+                - 51% of EC Grade 1 children knew zero letter sounds to begin the year.
+                - Only 23% of EC Grade 1 children could identify the first sounds of 3 words correctly (phonelogical awareness).
+                """)
+            st.image("assets/WW Letter Sound Eastern Cape (Grade 1).png", width=800)
+        with st.expander("DoE 2022"):
+            st.write("""
+                - More than 55% of Nguni and Sesotho-Setswana language learner samples assessed pre-pandemic cannot read a single word correctly from a grade-level text by the end of Grade 1.
+                - In Nguni languages, only at the 75th percentile is a minimum Grade 3 luency benchmark of 35 wcpm being reached in Grade 3 (or start of Grade 4) learner samples, with median fluency at 20–33 wcpm and 11–47% meeting the benchmark.
+                - It is very sobering that, of the Grade  6 samples, 35–46% do not meet Grade 3 fluency benchmarks and 7–27% fail to meet Grade 2 luency benchmarks.
+                - Among Nguni language samples, about 7–32% of learners assessed at the end of Grade  1 or the start of Grade  2 were meeting the benchmark of 40 lscpm.
+                - By the end of grade 3, most learners (53% to 76%, depending on the sample) have reached the lower threshold (20 cwpm) and approximately a quarter have reached the benchmark (35 cwpm).
+                - At the start of Grade 1, 51% and 42% of the Eastern Cape and North West learner samples respectively have no alphabetic knowledge, despite most of these learners having attended Grade
+                - Across the two samples, 16% and 32% sound fewer than 26 letters per minute by the end of Grade  2.
+                - However, at the beginning of Grade  1, half of learners in an Eastern Cape sample (49%) and two-thirds of learners in a Mpumalanga sample (68%) were unable to provide the initial sound of any of three simple words read aloud by the assessor in a Nguni language (kodwa, misa, and vuka in the Eastern Cape; busa, gogo, and wena in Mpumalanga). Only 23% and 7% of learners in the Eastern Cape and Mpumalanga samples respectively were able to correctly identify the initial sound of all three words.
+                """)
+
+        with st.expander("Masinyusane (2023 EGRA)"):
+            st.write("""
+                - Midway through Grade 1, EC children knew 12.7 letters and averaged 23.7 letters per minute in isiXhosa (sample size 1100).
+                - Midway through Grade 1, 22% of EC children had met the benchmark of 40 letter sounds per minute in Grade 1 (sample size 1100).
+                - Midway through Grade %, EC children know 3.4 letters and averaged 5.1 letters per minute (sample size 775).
+                """)
+        with st.expander("Masinyusane (2024 EGRA)"):
+            st.write("""
+                - EC Grade 1 children knew 7.2 letters and scored a 13.6 on their letter EGRA to begin the year (sample size 795).
+                - EC Grade R children know 0.7 letters and scored 0.9 on their letter EGRA to begin the year (sample size 1101).
+                - Midway through Grade 1, EC children (not on our programme) knew 5.5 letters and averaged 17.7 letters per minute in isiXhosa (sample size 588).
+                - Midway through Grade 1, 14% of EC children (not on our programme) had met the benchmark of 40 letter sounds per minute in Grade 1 (sample size 588).
+                - Midway through Grade R, EC children (not on our programme) know 2.7 letters and averaged 5.2 letters per minute (2023 Masi EGRA; sample size 440).
+
+                """)
+    st.markdown("---")
+
+    # FURTHER STATS
+    with st.container():
         st.header('FURTHER ANALYSIS')
-
-        with st.expander('Children Over 40 EGRA by School'):
-            filtered_df = midline[midline['EGRA Midline'] >= 40]
-
-            # Group by 'School' and count the number of children per school
-            result_df = filtered_df.groupby('School').size().sort_values(ascending=False).reset_index(name='Count')
-
-            # Display the resulting DataFrame
-            st.dataframe(result_df)
-
-        with st.expander('Groups Over 40 EGRA by School'):
-            grouped_means = midline.groupby(['School', 'EA Name', 'Group'])['EGRA Midline'].mean().reset_index()
-
-            # Filter for groups where the mean 'EGRA Midline' is >= 40
-            filtered_groups = grouped_means[grouped_means['EGRA Midline'] >= 40]
-
-            # Now, count how many groups per school meet the criteria
-            result_df = filtered_groups.groupby('School').size().sort_values(ascending=False).reset_index(name='Count')
-
-            # Display the resulting DataFrame
-            st.dataframe(result_df)
 
         with st.expander('Validity of Results'):
             st.success('The following analysis demonstrates a strong correlation between the improvements in Letters Known and the Letters EGRA assessments, reinforcing the validity of our Zazi iZandi results. The two metrcis were captured via different assessment methodologies, making the high correlation even more impressive. The two metrics have a Spearman CoEfficient of 0.933.')
@@ -659,6 +707,26 @@ def display_2024():
 
             df = pd.DataFrame(data)
             st.dataframe(df)
+        with st.expander('Children Over 40 EGRA by School'):
+            filtered_df = midline[midline['EGRA Midline'] >= 40]
+
+            # Group by 'School' and count the number of children per school
+            result_df = filtered_df.groupby('School').size().sort_values(ascending=False).reset_index(name='Count')
+
+            # Display the resulting DataFrame
+            st.dataframe(result_df)
+
+        with st.expander('Groups Over 40 EGRA by School'):
+            grouped_means = midline.groupby(['School', 'EA Name', 'Group'])['EGRA Midline'].mean().reset_index()
+
+            # Filter for groups where the mean 'EGRA Midline' is >= 40
+            filtered_groups = grouped_means[grouped_means['EGRA Midline'] >= 40]
+
+            # Now, count how many groups per school meet the criteria
+            result_df = filtered_groups.groupby('School').size().sort_values(ascending=False).reset_index(name='Count')
+
+            # Display the resulting DataFrame
+            st.dataframe(result_df)
 
         st.markdown("---")
         st.title("ZZ 2.0 Quick Analysis")
