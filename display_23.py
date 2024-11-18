@@ -3,7 +3,6 @@ import plotly.express as px
 import matplotlib.pyplot as plt
 import seaborn as sns
 import statsmodels.api as sm
-from zz_data_processing import process_zz_data, grade1_df, gradeR_df
 from zz_data_process_23 import process_zz_data_23
 from data_loader import load_zazi_izandi_2023
 import os
@@ -122,20 +121,28 @@ def display_2023():
     #Masi Egra Full Baseline	Masi Egra Full Midline	Masi Egra Full Endline
     with st.container():
         st.subheader("Percentage of Grade 1's On Grade Level")
-        st.success("The number of Grade 1 children 'On Grade Level' for letter knowledge increased from 22% to 74%.")
+        st.success("The number of Grade 1 children 'On Grade Level' for letter knowledge increased from 22% to 74% on the 2-minute EGRA.")
+        egra_time = st.selectbox("Choose EGRA Time Limit", ['2-min', '1-min'])
+
+        if egra_time == '2-min':
+            baseline_metric = 'Masi Egra Full Baseline'
+            endline_metric = 'Masi Egra Full Endline'
+        else:
+            baseline_metric = 'Masi Egra Full Baseline'
+            endline_metric = 'Masi Egra 1-min Endline'
 
         grade1 = endline[endline['Grade'] == 'Grade 1']
         # Calculate percentages for baseline
-        baseline_40_or_more = (grade1['Masi Egra Full Baseline'] >= 40).sum()
-        baseline_less_than_40 = (grade1['Masi Egra Full Baseline'] < 40).sum()
+        baseline_40_or_more = (grade1[baseline_metric] >= 40).sum()
+        baseline_less_than_40 = (grade1[baseline_metric] < 40).sum()
         total_baseline = baseline_40_or_more + baseline_less_than_40
 
         baseline_40_or_more_percent = (baseline_40_or_more / total_baseline).round(3) * 100
         baseline_less_than_40_percent = (baseline_less_than_40 / total_baseline).round(3) * 100
 
         # Calculate percentages for midline
-        midline_40_or_more = (grade1['Masi Egra Full Endline'] >= 40).sum()
-        midline_less_than_40 = (grade1['Masi Egra Full Endline'] < 40).sum()
+        midline_40_or_more = (grade1[endline_metric] >= 40).sum()
+        midline_less_than_40 = (grade1[endline_metric] < 40).sum()
         total_midline = midline_40_or_more + midline_less_than_40
 
         midline_40_or_more_percent = (midline_40_or_more / total_midline).round(3) * 100

@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import statsmodels.api as sm
 
-def process_zz_data(baseline, midline, sessions):
+def process_zz_data_midline(baseline, midline, sessions):
 
     # Rename a couple columns
     baseline.rename(columns={'Baseline\nAssessment Score': 'EGRA Baseline'}, inplace=True)
@@ -69,7 +69,7 @@ def process_zz_data(baseline, midline, sessions):
     midline.loc[mask_egra, 'Egra Improvement Agg'] = midline.loc[mask_egra, 'EGRA Midline'] - midline.loc[
         mask_egra, 'EGRA Baseline']
 
-    # Calculate 'Egra Improvement' as a percentage. Not I'm setting initial zeroes to 1 to avoid dividing by zero, even though this makes the results a bit worse.
+    # Calculate 'Egra Improvement' as a percentage. Note I'm setting initial zeroes to 1 to avoid dividing by zero, even though this makes the results a bit worse.
     midline['Adjusted EGRA Baseline'] = midline['EGRA Baseline'].replace(0, 1)
     midline.loc[mask_egra, 'Egra Improvement Pct'] = ((midline.loc[mask_egra, 'EGRA Midline'] - midline.loc[
         mask_egra, 'Adjusted EGRA Baseline']) / midline.loc[mask_egra, 'Adjusted EGRA Baseline']) * 100
@@ -79,6 +79,44 @@ def process_zz_data(baseline, midline, sessions):
     midline['Midline Letters Known'] = midline['Letters Known']
 
     return midline, baseline
+
+def process_zz_data_endline(endline):
+    # Rename a couple columns
+
+    endline.rename(columns={'Endline Assessment Score': 'EGRA Endline'}, inplace=True)
+    endline.rename(columns={'Midline Assessment Score': 'EGRA Midline'}, inplace=True)
+    endline.rename(columns={'Midline Assessment Score - Sept': 'EGRA Midline Sept'}, inplace=True)
+    endline.rename(columns={'Baseline Assessment Score': 'EGRA Baseline'}, inplace=True)
+
+    columns_to_convert = ['EGRA Baseline', 'EGRA Midline', 'EGRA Midline Sept', 'EGRA Endline']
+
+    for col in columns_to_convert:
+        endline[col] = pd.to_numeric(endline[col], errors='coerce')
+
+    # Create letter columns
+
+    letter_cols = ['a', 'e', 'i', 'o', 'u', 'b', 'l', 'm', 'k', 'p', 's', 'h', 'z', 'n', 'd', 'y', 'f', 'w', 'v', 'x',
+                   'g', 't', 'q', 'r', 'c', 'j']
+
+    # Calculate Columns for Letters Learned
+    mask = endline['Captured'] == True
+    endline.loc[mask, 'Letters Known'] = endline.loc[mask, letter_cols].notna().sum(axis=1)
+
+    # Calculate 'Egra Improvement Agg'
+
+    endline_mask_egra = endline['EGRA Endline'].notna()
+    endline.loc[endline_mask_egra, 'Egra Improvement Agg'] = endline.loc[endline_mask_egra, 'EGRA Endline'] - endline.loc[
+        endline_mask_egra, 'EGRA Baseline']
+
+    endline['Adjusted EGRA Baseline'] = endline['EGRA Baseline'].replace(0, 1)
+    endline.loc[endline_mask_egra, 'Egra Improvement Pct'] = ((endline.loc[endline_mask_egra, 'EGRA Midline'] - endline.loc[
+        endline_mask_egra, 'Adjusted EGRA Baseline']) / endline.loc[endline_mask_egra, 'Adjusted EGRA Baseline']) * 100
+
+    endline['Grade'] = endline['Grade'].astype(str).str.strip()
+
+    endline['Midline Letters Known'] = endline['Letters Known']
+
+    return endline
 
 def grade1_df(df):
     grade1 = df[df['Grade'] == 'Grade 1']

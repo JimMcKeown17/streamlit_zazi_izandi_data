@@ -1,6 +1,7 @@
 import streamlit as st
 from display_24 import display_2024
 from display_23 import display_2023
+from display_home import display_home
 
 st.set_page_config(layout="wide", page_title="ZZ Data Portal")
 
@@ -12,7 +13,6 @@ credentials = {
 
 # Function to handle login
 def login():
-    st.sidebar.markdown("---")
     st.sidebar.header("Login")
     username = st.sidebar.text_input("Username", key="username")
     password = st.sidebar.text_input("Password", type="password", key="password")
@@ -27,11 +27,13 @@ def login():
             st.session_state.user = None
     st.sidebar.text("Log in for more detailed views.")
 
-option = st.sidebar.selectbox('Select a Year:', ('2024', '2023'))
-if option == "2024":
-    display_2024()
-elif option == "2023":
-    display_2023()
+# option = st.sidebar.selectbox('Select a Year:', ('2024', '2023'))
+# if option == "2024":
+#     display_2024()
+# elif option == "2023":
+#     display_2023()
+
+display_home()
 
 # Show login section below the navigation
 login()
@@ -42,8 +44,8 @@ if 'user' in st.session_state:
         del st.session_state.user
         st.experimental_rerun()
 else:
-    st.warning("Please log in to access internal content.")
+    st.warning("Please use sidebar for detailed analyses. Data is anonymized to protect schools & children. You may log in to access all data and de-anonymize names.")
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("[Return to Zazi iZandi Home Page](http://zazi-izandi.co.za)")
+st.sidebar.markdown("[Visit Zazi iZandi Website](http://zazi-izandi.co.za)")
 
