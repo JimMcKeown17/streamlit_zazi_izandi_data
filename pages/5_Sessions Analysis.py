@@ -5,13 +5,15 @@ from data_loader import load_zazi_izandi_2024
 import os
 import streamlit as st
 
+st.set_page_config(layout="wide", page_title="ZZ Data Portal")
+
 
 st.header("Sessions Analysis")
 
 # Some quick data cleaning/organizing
 
-df = pd.read_excel("data/Zazi iZandi Session Tracker 20092024.xlsx", sheet_name="Sesssions")
-months = ['Feb', 'Mar', 'Apr', 'May', 'Jul', 'Aug', 'Sep']
+df = pd.read_excel("data/Zazi iZandi Session Tracker 18102024.xlsx", sheet_name="Sessions")
+months = ['Feb', 'Mar', 'Apr', 'May', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov']
 
 # Prepare the list of 'Total Sessions' and 'Sessions per Day' columns
 total_sessions_cols = [f'{month}: Total Sessions' for month in months]
@@ -47,7 +49,7 @@ merged_df = pd.merge(
 )
 
 # Set the categorical data type for 'Month' with the correct order
-month_categories = ['Feb', 'Mar', 'Apr', 'May', 'Jul', 'Aug', 'Sep']
+month_categories = ['Feb', 'Mar', 'Apr', 'May', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov']
 merged_df['Month'] = pd.Categorical(
     merged_df['Month'],
     categories=month_categories,
@@ -58,7 +60,7 @@ merged_df['Month'] = pd.Categorical(
 with st.container():
     st.subheader("Session Metrics per Month")
     # Metric selection
-    metric = st.selectbox('Select Metric', ['Total Sessions', 'Sessions per Day'])
+    metric = st.selectbox('Select Metric', ['Sessions per Day', 'Total Sessions'])
 
     # Use the entire merged_df without filtering
     plot_df = merged_df.copy()
@@ -88,7 +90,7 @@ with st.container():
     # Streamlit app
     st.subheader('Average Sessions per Day per School')
 
-    months = ['Feb', 'Mar', 'Apr', 'May', 'Jul', 'Aug', 'Sep']
+    months = ['Feb', 'Mar', 'Apr', 'May', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov']
     month_options = ['All Months'] + months
 
     # Month selection
@@ -126,7 +128,7 @@ with st.container():
         # Streamlit app
         st.subheader('Average Sessions per Day per School')
 
-        months = ['Feb', 'Mar', 'Apr', 'May', 'Jul', 'Aug', 'Sep']
+        months = ['Feb', 'Mar', 'Apr', 'May', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov']
         month_options = ['All Months'] + months
 
         # Month selection

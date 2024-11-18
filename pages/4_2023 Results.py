@@ -8,10 +8,11 @@ from data_loader import load_zazi_izandi_2023
 import os
 import streamlit as st
 
+st.set_page_config(layout="wide", page_title="ZZ Data Portal")
+
 
 # Import dataframes
 endline_df, sessions_df = load_zazi_izandi_2023()
-
 endline = process_zz_data_23(endline_df, sessions_df)
 
 

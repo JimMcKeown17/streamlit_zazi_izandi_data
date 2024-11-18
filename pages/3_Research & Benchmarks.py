@@ -7,6 +7,9 @@ from zz_data_processing import process_zz_data_midline, process_zz_data_endline,
 from data_loader import load_zazi_izandi_2024
 import os
 
+st.set_page_config(layout="wide", page_title="ZZ Data Portal")
+
+
 baseline_df, midline_df, sessions_df, baseline2_df, endline_df, endline2_df = load_zazi_izandi_2024()
 base_dir = os.path.dirname(os.path.abspath(__file__))
 
