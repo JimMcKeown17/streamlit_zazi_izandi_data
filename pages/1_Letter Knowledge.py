@@ -141,7 +141,7 @@ with tab1:
     with st.container():
         st.subheader("Percentage of Grade 1's On Grade Level")
         st.success(
-            "The number of Grade 1 children 'On Grade Level' for letter knowledge more than quadrupled, increasing from 13% to 53%. And we are only halfway through the year!")
+            "The number of Grade 1 children 'On Grade Level' for letter knowledge more than quadrupled, increasing from 13% to 53%!")
 
         # Calculate percentages for baseline
         baseline_40_or_more = (grade1['EGRA Baseline'] >= 40).sum()
