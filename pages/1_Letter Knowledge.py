@@ -562,153 +562,153 @@ with tab1:
             st.dataframe(group_egra_improvement)
     st.divider()
 
-    st.subheader("Further Analysis")
-    with st.expander("2.0 Learner Endline Results"):
-
-        st.subheader('Letter EGRA Improvement for 2.0 Learners')
-        # Filter for Grade 1 and 2.0 Check
-        filtered_df_2_0 = endline[(endline['Grade'] == 'Grade 1') & (endline['2.0 Check'] == "Yes")]
-
-        # Calculate mean results for the four assessments
-        egra_summary_2_0 = filtered_df_2_0.agg({
-            'EGRA Baseline': 'mean',
-            'EGRA Midline': 'mean',
-            'EGRA Endline': 'mean',
-            'EGRA Midline Sept': 'mean'
-        }).round(1).reset_index(name='Score')
-
-        # Rename columns for easier plotting
-        egra_summary_2_0.rename(columns={'index': 'Measurement'}, inplace=True)
-
-        # Ensure the measurements are ordered as Baseline, Midline, September, Endline
-        measurement_order = ['EGRA Baseline', 'EGRA Midline', 'EGRA Midline Sept', 'EGRA Endline']
-        egra_summary_2_0['Measurement'] = pd.Categorical(egra_summary_2_0['Measurement'], categories=measurement_order, ordered=True)
-
-        # Sort by EGRA Endline score
-        egra_summary_2_0 = egra_summary_2_0.sort_values(by='Score', ascending=True)
-
-        # Create the Plotly bar graph with grouped bars and custom colors
-        egra_fig_2_0 = px.bar(
-            egra_summary_2_0,
-            x='Measurement',
-            y='Score',
-            color='Measurement',
-            barmode='group',
-            labels={'Score': 'Average Score'},
-            title='EGRA Results for 2.0 Children',
-            color_discrete_map=color_discrete_map
-        )
-
-        # Update bar width to make bars wider
-        egra_fig_2_0.update_traces(width=0.5)
-
-        st.plotly_chart(egra_fig_2_0, use_container_width=True)
-
-    with st.expander("1.0 Only Learner Endline Results"):
-
-        st.subheader("Letter EGRA Improvement for 1.0 Learners That Didn't Move on to 2.0")
-        # Filter for Grade 1 and 2.0 Check
-        filtered_df_2_0 = endline[(endline['Grade'] == 'Grade 1') & (endline['2.0 Check'] != "Yes")]
-
-        # Calculate mean results for the four assessments
-        egra_summary_2_0 = filtered_df_2_0.agg({
-            'EGRA Baseline': 'mean',
-            'EGRA Midline': 'mean',
-            'EGRA Endline': 'mean',
-            'EGRA Midline Sept': 'mean'
-        }).round(1).reset_index(name='Score')
-
-        # Rename columns for easier plotting
-        egra_summary_2_0.rename(columns={'index': 'Measurement'}, inplace=True)
-
-        # Define the desired order of measurements
-        measurement_order = ['EGRA Baseline', 'EGRA Midline', 'EGRA Midline Sept', 'EGRA Endline']
-
-        # Set 'Measurement' as a categorical type with the specified order
-        egra_summary_2_0['Measurement'] = pd.Categorical(
-            egra_summary_2_0['Measurement'],
-            categories=measurement_order,
-            ordered=True
-        )
-
-
-        # Create the Plotly bar graph with grouped bars and custom colors
-        egra_fig_2_0 = px.bar(
-            egra_summary_2_0,
-            x='Measurement',
-            y='Score',
-            color='Measurement',
-            barmode='group',
-            labels={'Score': 'Average Score'},
-            title='EGRA Results for 2.0 Children',
-            color_discrete_map=color_discrete_map
-        )
-
-        # Update bar width to make bars wider
-        egra_fig_2_0.update_traces(width=0.5)
-
-        # Update layout to ensure the x-axis respects the categorical order
-        egra_fig_2_0.update_layout(
-            xaxis={'categoryorder': 'array', 'categoryarray': measurement_order}
-        )
-
-        st.plotly_chart(egra_fig_2_0, use_container_width=True)
-    with st.expander("EGRA Improvement by EA Name: Midline to Endline"):
-
-        st.subheader("Improvement in EGRA Scores from Midline to Endline by EA Name")
-
-        # 1. Group the data by 'EA Name' and calculate mean scores
-        improvement_df = endline.groupby('EA Name').agg({
-            'EGRA Midline': 'mean',
-            'EGRA Endline': 'mean'
-        }).reset_index()
-
-        # 2. Calculate the improvement
-        improvement_df['Improvement'] = improvement_df['EGRA Endline'] - improvement_df['EGRA Midline']
-
-        # 3. Round the improvement for better readability
-        improvement_df['Improvement'] = improvement_df['Improvement'].round(2)
-
-        # 4. Sort the DataFrame in ascending order of improvement
-        improvement_df = improvement_df.sort_values(by='Improvement', ascending=True)
-
-        # 5. Create the Plotly bar chart
-        improvement_fig = px.bar(
-            improvement_df,
-            x='EA Name',
-            y='Improvement',
-            color='Improvement',
-            color_continuous_scale='Blues',
-            labels={'Improvement': 'EGRA Improvement (Endline - Midline)', 'EA Name': 'EA Name'},
-            title='EGRA Score Improvement by EA Name',
-            text='Improvement'  # Display the improvement value on each bar
-        )
-
-        # 6. Customize the layout for better readability
-        improvement_fig.update_layout(
-            xaxis_title='EA Name',
-            yaxis_title='Improvement in EGRA Score',
-            xaxis_tickangle=-45,  # Rotate x-axis labels if they are long
-            coloraxis_colorbar=dict(
-                title="Improvement",
-                ticksuffix=" pts"
-            ),
-            uniformtext_minsize=8,
-            uniformtext_mode='hide'
-        )
-
-        # 7. Adjust the text on bars for better visibility
-        improvement_fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
-
-        # 8. Update layout to ensure the bars are ordered as per the DataFrame
-        improvement_fig.update_layout(
-            xaxis={'categoryorder': 'array', 'categoryarray': improvement_df['EA Name']}
-        )
-
-        # 9. Display the Plotly chart in Streamlit
-        st.plotly_chart(improvement_fig, use_container_width=True)
-
-        # Optional: Display the processed data
-        st.write(improvement_df)
+    # st.subheader("Further Analysis")
+    # with st.expander("2.0 Learner Endline Results"):
+    #
+    #     st.subheader('Letter EGRA Improvement for 2.0 Learners')
+    #     # Filter for Grade 1 and 2.0 Check
+    #     filtered_df_2_0 = endline[(endline['Grade'] == 'Grade 1') & (endline['2.0 Check'] == "Yes")]
+    #
+    #     # Calculate mean results for the four assessments
+    #     egra_summary_2_0 = filtered_df_2_0.agg({
+    #         'EGRA Baseline': 'mean',
+    #         'EGRA Midline': 'mean',
+    #         'EGRA Endline': 'mean',
+    #         'EGRA Midline Sept': 'mean'
+    #     }).round(1).reset_index(name='Score')
+    #
+    #     # Rename columns for easier plotting
+    #     egra_summary_2_0.rename(columns={'index': 'Measurement'}, inplace=True)
+    #
+    #     # Ensure the measurements are ordered as Baseline, Midline, September, Endline
+    #     measurement_order = ['EGRA Baseline', 'EGRA Midline', 'EGRA Midline Sept', 'EGRA Endline']
+    #     egra_summary_2_0['Measurement'] = pd.Categorical(egra_summary_2_0['Measurement'], categories=measurement_order, ordered=True)
+    #
+    #     # Sort by EGRA Endline score
+    #     egra_summary_2_0 = egra_summary_2_0.sort_values(by='Score', ascending=True)
+    #
+    #     # Create the Plotly bar graph with grouped bars and custom colors
+    #     egra_fig_2_0 = px.bar(
+    #         egra_summary_2_0,
+    #         x='Measurement',
+    #         y='Score',
+    #         color='Measurement',
+    #         barmode='group',
+    #         labels={'Score': 'Average Score'},
+    #         title='EGRA Results for 2.0 Children',
+    #         color_discrete_map=color_discrete_map
+    #     )
+    #
+    #     # Update bar width to make bars wider
+    #     egra_fig_2_0.update_traces(width=0.5)
+    #
+    #     st.plotly_chart(egra_fig_2_0, use_container_width=True)
+    #
+    # with st.expander("1.0 Only Learner Endline Results"):
+    #
+    #     st.subheader("Letter EGRA Improvement for 1.0 Learners That Didn't Move on to 2.0")
+    #     # Filter for Grade 1 and 2.0 Check
+    #     filtered_df_2_0 = endline[(endline['Grade'] == 'Grade 1') & (endline['2.0 Check'] != "Yes")]
+    #
+    #     # Calculate mean results for the four assessments
+    #     egra_summary_2_0 = filtered_df_2_0.agg({
+    #         'EGRA Baseline': 'mean',
+    #         'EGRA Midline': 'mean',
+    #         'EGRA Endline': 'mean',
+    #         'EGRA Midline Sept': 'mean'
+    #     }).round(1).reset_index(name='Score')
+    #
+    #     # Rename columns for easier plotting
+    #     egra_summary_2_0.rename(columns={'index': 'Measurement'}, inplace=True)
+    #
+    #     # Define the desired order of measurements
+    #     measurement_order = ['EGRA Baseline', 'EGRA Midline', 'EGRA Midline Sept', 'EGRA Endline']
+    #
+    #     # Set 'Measurement' as a categorical type with the specified order
+    #     egra_summary_2_0['Measurement'] = pd.Categorical(
+    #         egra_summary_2_0['Measurement'],
+    #         categories=measurement_order,
+    #         ordered=True
+    #     )
+    #
+    #
+    #     # Create the Plotly bar graph with grouped bars and custom colors
+    #     egra_fig_2_0 = px.bar(
+    #         egra_summary_2_0,
+    #         x='Measurement',
+    #         y='Score',
+    #         color='Measurement',
+    #         barmode='group',
+    #         labels={'Score': 'Average Score'},
+    #         title='EGRA Results for 2.0 Children',
+    #         color_discrete_map=color_discrete_map
+    #     )
+    #
+    #     # Update bar width to make bars wider
+    #     egra_fig_2_0.update_traces(width=0.5)
+    #
+    #     # Update layout to ensure the x-axis respects the categorical order
+    #     egra_fig_2_0.update_layout(
+    #         xaxis={'categoryorder': 'array', 'categoryarray': measurement_order}
+    #     )
+    #
+    #     st.plotly_chart(egra_fig_2_0, use_container_width=True)
+    # with st.expander("EGRA Improvement by EA Name: Midline to Endline"):
+    #
+    #     st.subheader("Improvement in EGRA Scores from Midline to Endline by EA Name")
+    #
+    #     # 1. Group the data by 'EA Name' and calculate mean scores
+    #     improvement_df = endline.groupby('EA Name').agg({
+    #         'EGRA Midline': 'mean',
+    #         'EGRA Endline': 'mean'
+    #     }).reset_index()
+    #
+    #     # 2. Calculate the improvement
+    #     improvement_df['Improvement'] = improvement_df['EGRA Endline'] - improvement_df['EGRA Midline']
+    #
+    #     # 3. Round the improvement for better readability
+    #     improvement_df['Improvement'] = improvement_df['Improvement'].round(2)
+    #
+    #     # 4. Sort the DataFrame in ascending order of improvement
+    #     improvement_df = improvement_df.sort_values(by='Improvement', ascending=True)
+    #
+    #     # 5. Create the Plotly bar chart
+    #     improvement_fig = px.bar(
+    #         improvement_df,
+    #         x='EA Name',
+    #         y='Improvement',
+    #         color='Improvement',
+    #         color_continuous_scale='Blues',
+    #         labels={'Improvement': 'EGRA Improvement (Endline - Midline)', 'EA Name': 'EA Name'},
+    #         title='EGRA Score Improvement by EA Name',
+    #         text='Improvement'  # Display the improvement value on each bar
+    #     )
+    #
+    #     # 6. Customize the layout for better readability
+    #     improvement_fig.update_layout(
+    #         xaxis_title='EA Name',
+    #         yaxis_title='Improvement in EGRA Score',
+    #         xaxis_tickangle=-45,  # Rotate x-axis labels if they are long
+    #         coloraxis_colorbar=dict(
+    #             title="Improvement",
+    #             ticksuffix=" pts"
+    #         ),
+    #         uniformtext_minsize=8,
+    #         uniformtext_mode='hide'
+    #     )
+    #
+    #     # 7. Adjust the text on bars for better visibility
+    #     improvement_fig.update_traces(texttemplate='%{text:.2f}', textposition='outside')
+    #
+    #     # 8. Update layout to ensure the bars are ordered as per the DataFrame
+    #     improvement_fig.update_layout(
+    #         xaxis={'categoryorder': 'array', 'categoryarray': improvement_df['EA Name']}
+    #     )
+    #
+    #     # 9. Display the Plotly chart in Streamlit
+    #     st.plotly_chart(improvement_fig, use_container_width=True)
+    #
+    #     # Optional: Display the processed data
+    #     st.write(improvement_df)
 with tab2:
     st.write("Midline results coming soon...")
