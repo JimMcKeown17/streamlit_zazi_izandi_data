@@ -47,7 +47,7 @@ with tab1:
 
     with st.container():
         st.subheader(f'Letter EGRA Improvement')
-        st.success("On average, our Grade R's scored 67% higher than Grade 1 learners not on the programme. They are more than a full year ahead of a typical South African learner. Meanwhile, our Grade 1's improved the letter EGRA scores by 170%.")
+        st.success("On average, our Grade R's perform similar to a Grade 1 learner not on the programme. They are more than a full year ahead of a typical South African learner. Meanwhile, our Grade 1's improved the letter EGRA scores by 179%.")
         assessment_choice = st.selectbox("Choose an Assessment Period:", ['Endline', 'Midline', 'September'])
         if assessment_choice == "Endline":
             assessment = "Endline"
