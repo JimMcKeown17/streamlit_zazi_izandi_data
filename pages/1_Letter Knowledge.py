@@ -349,6 +349,36 @@ with tab1:
     st.markdown('---')
 
     with st.container():
+        st.subheader("Percentage of Grade 1's Above Grade Level by School")
+    # Calculate the percentage of students 'Above Grade Level' for midline for each school
+        school_data = grade1.groupby('School').apply(lambda x: pd.Series({
+            'Endline Above Grade Level (%)': (x['EGRA Endline'] >= 40).sum() / len(x) * 100
+        })).reset_index()
+
+        # Sort by 'Midline Above Grade Level (%)'
+        school_data_sorted = school_data.sort_values(by='Endline Above Grade Level (%)', ascending=False)
+
+        # Create the Plotly bar graph
+        school_fig = px.bar(
+            school_data_sorted,
+            x='School',
+            y='Endline Above Grade Level (%)',
+            color='School',
+            labels={'School': 'School', 'Endline Above Grade Level (%)': 'Percentage (%)'},
+            title='Percentage of Grade 1 Students Above Grade Level by School'
+        )
+
+        # Add horizontal line at y=27 with label 'South Africa Average'
+        school_fig.add_hline(y=27, line_dash='dash', line_color='red', annotation_text='South Africa Average',
+                                  annotation_position='top left')
+
+
+        st.plotly_chart(school_fig, use_container_width=True)
+
+        with st.expander('Click to view data:'):
+            st.dataframe(school_data_sorted)
+
+    with st.container():
         st.subheader("Percentage of Grade 1's On Grade Level by School")
         st.success(
             "The number of Grade 1 children 'On Grade Level' for letter knowledge more than tripled, increasing from 13% to 45%. And we are only halfway through the year!")
@@ -379,7 +409,7 @@ with tab1:
             'Above Grade Level': [baseline_40_or_more_percent, endline_40_or_more_percent]
         }
 
-        df = pd.DataFrame(data, index=['Baseline', 'Midline'])
+        df = pd.DataFrame(data, index=['Baseline', 'Endline'])
 
         # Melt the DataFrame for Plotly
         df_melted = df.reset_index().melt(id_vars='index', value_vars=['Below Grade Level', 'Above Grade Level'],
@@ -403,32 +433,6 @@ with tab1:
             st.dataframe(df)
 
     st.markdown("---")
-
-    # Calculate the percentage of students 'Above Grade Level' for midline for each school
-    school_data = grade1.groupby('School').apply(lambda x: pd.Series({
-        'Endline Above Grade Level (%)': (x['EGRA Endline'] >= 40).sum() / len(x) * 100
-    })).reset_index()
-
-    # Sort by 'Midline Above Grade Level (%)'
-    school_data_sorted = school_data.sort_values(by='Endline Above Grade Level (%)', ascending=False)
-
-    # Create the Plotly bar graph
-    school_fig = px.bar(
-        school_data_sorted,
-        x='School',
-        y='Endline Above Grade Level (%)',
-        color='School',
-        labels={'School': 'School', 'Endline Above Grade Level (%)': 'Percentage (%)'},
-        title='Percentage of Grade 1 Students Above Grade Level by School'
-    )
-
-    with st.container():
-        st.subheader("Percentage of Grade 1's Above Grade Level by School")
-        st.plotly_chart(school_fig, use_container_width=True)
-
-        with st.expander('Click to view data:'):
-            st.dataframe(school_data_sorted)
-
     # TEACHER ASSISTANTS
 
     st.markdown('---')

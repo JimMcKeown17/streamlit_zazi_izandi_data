@@ -2,6 +2,20 @@ import pandas as pd
 import os
 import streamlit as st
 
+
+def load_zazi_izandi_new_schools_2024():
+    if 'user' in st.session_state and st.session_state.user:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        endline_path = os.path.join(base_dir, "data/New ZZ 1.0 Schools Endline Assessment 2024.xlsx")
+        sheet_name_endline = "Data"
+        endline_df = pd.read_excel(endline_path, sheet_name=sheet_name_endline)
+        return endline_df
+    else:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        endline_path = os.path.join(base_dir, "data/New ZZ 1.0 Schools Endline Assessment 2024 - Anonymized.xlsx")
+        sheet_name_endline = "Data"
+        endline_df = pd.read_excel(endline_path, sheet_name=sheet_name_endline)
+        return endline_df
 def load_zazi_izandi_2024():
     if 'user' in st.session_state and st.session_state.user:
         base_dir = os.path.dirname(os.path.abspath(__file__))

@@ -21,7 +21,7 @@ def login():
         if username in credentials and credentials[username] == password:
             st.sidebar.success("Logged in as {}".format(username))
             st.session_state.user = username
-            st.experimental_rerun()  # Rerun to update the sidebar with internal pages
+            st.rerun()  # Rerun to update the sidebar with internal pages
         else:
             st.sidebar.error("Incorrect username or password")
             st.session_state.user = None

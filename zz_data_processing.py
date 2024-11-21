@@ -109,7 +109,7 @@ def process_zz_data_endline(endline):
         endline_mask_egra, 'EGRA Baseline']
 
     endline['Adjusted EGRA Baseline'] = endline['EGRA Baseline'].replace(0, 1)
-    endline.loc[endline_mask_egra, 'Egra Improvement Pct'] = ((endline.loc[endline_mask_egra, 'EGRA Midline'] - endline.loc[
+    endline.loc[endline_mask_egra, 'Egra Improvement Pct'] = ((endline.loc[endline_mask_egra, 'EGRA Endline'] - endline.loc[
         endline_mask_egra, 'Adjusted EGRA Baseline']) / endline.loc[endline_mask_egra, 'Adjusted EGRA Baseline']) * 100
 
     endline['Grade'] = endline['Grade'].astype(str).str.strip()
@@ -118,6 +118,41 @@ def process_zz_data_endline(endline):
 
     return endline
 
+def process_zz_data_endline_new_schools(endline):
+    # Rename a couple columns
+
+    endline.rename(columns={'Endline Assessment Score': 'EGRA Endline'}, inplace=True)
+    endline.rename(columns={'Baseline Assessment Score': 'EGRA Baseline'}, inplace=True)
+
+    columns_to_convert = ['EGRA Baseline', 'EGRA Endline']
+
+    for col in columns_to_convert:
+        endline[col] = pd.to_numeric(endline[col], errors='coerce')
+
+    # Create letter columns
+
+    letter_cols = ['a', 'e', 'i', 'o', 'u', 'b', 'l', 'm', 'k', 'p', 's', 'h', 'z', 'n', 'd', 'y', 'f', 'w', 'v', 'x',
+                   'g', 't', 'q', 'r', 'c', 'j']
+
+    # Calculate Columns for Letters Learned
+    mask = endline['Captured'] == True
+    endline.loc[mask, 'Letters Known'] = endline.loc[mask, letter_cols].notna().sum(axis=1)
+
+    # Calculate 'Egra Improvement Agg'
+
+    endline_mask_egra = endline['EGRA Endline'].notna()
+    endline.loc[endline_mask_egra, 'Egra Improvement Agg'] = endline.loc[endline_mask_egra, 'EGRA Endline'] - endline.loc[
+        endline_mask_egra, 'EGRA Baseline']
+
+    endline['Adjusted EGRA Baseline'] = endline['EGRA Baseline'].replace(0, 1)
+    endline.loc[endline_mask_egra, 'Egra Improvement Pct'] = ((endline.loc[endline_mask_egra, 'EGRA Endline'] - endline.loc[
+        endline_mask_egra, 'Adjusted EGRA Baseline']) / endline.loc[endline_mask_egra, 'Adjusted EGRA Baseline']) * 100
+
+    endline['Grade'] = endline['Grade'].astype(str).str.strip()
+
+    endline['Endline Letters Known'] = endline['Letters Known']
+
+    return endline
 def grade1_df(df):
     grade1 = df[df['Grade'] == 'Grade 1']
     return grade1
