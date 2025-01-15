@@ -43,7 +43,7 @@ def display_2024():
         with c2:
             st.metric('Children on\n Programme:', '3490')
         with c3:
-            st.metric('Schools on\n Programme:', '16')
+            st.metric('Schools on\n Programme:', '18')
         st.markdown('---')
         st.header('HIGHLIGHTS')
 

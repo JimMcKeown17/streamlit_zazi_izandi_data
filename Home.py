@@ -27,12 +27,6 @@ def login():
             st.session_state.user = None
     st.sidebar.text("Log in for more detailed views.")
 
-# option = st.sidebar.selectbox('Select a Year:', ('2024', '2023'))
-# if option == "2024":
-#     display_2024()
-# elif option == "2023":
-#     display_2023()
-
 display_home()
 
 # Show login section below the navigation
