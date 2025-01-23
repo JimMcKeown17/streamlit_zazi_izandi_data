@@ -1,45 +1,30 @@
 import streamlit as st
-from display_24 import display_2024
-from display_23 import display_2023
 from display_home import display_home
 
+# Ensure wide layout
 st.set_page_config(layout="wide", page_title="ZZ Data Portal")
 
+# Initialize session state for the user
+if 'user' not in st.session_state:
+    st.session_state.user = None
 
-# Define your usernames and passwords
-credentials = {
-    'zazi': 'izandi'
-}
+# Sidebar Login
+st.sidebar.header("Login")
+username = st.sidebar.text_input("Username", key="username")
+password = st.sidebar.text_input("Password", type="password", key="password")
 
-# Function to handle login
-def login():
-    st.sidebar.header("Login")
-    username = st.sidebar.text_input("Username", key="username")
-    password = st.sidebar.text_input("Password", type="password", key="password")
+# Login handling
+if st.sidebar.button("Login"):
+    if username == "zazi" and password == "izandi":
+        st.session_state.user = username
+        st.sidebar.success(f"Logged in as {username}")
+    else:
+        st.sidebar.error("Incorrect username or password")
 
-    if st.sidebar.button("Login"):
-        if username in credentials and credentials[username] == password:
-            st.sidebar.success("Logged in as {}".format(username))
-            st.session_state.user = username
-            st.rerun()  # Rerun to update the sidebar with internal pages
-        else:
-            st.sidebar.error("Incorrect username or password")
-            st.session_state.user = None
-    st.sidebar.text("Log in for more detailed views.")
+# Logout handling
+if st.sidebar.button("Logout"):
+    st.session_state.user = None
+    st.experimental_rerun()
 
+# Display the home page
 display_home()
-
-# Show login section below the navigation
-login()
-
-# Logout button
-if 'user' in st.session_state:
-    if st.sidebar.button("Logout"):
-        del st.session_state.user
-        st.experimental_rerun()
-else:
-    st.warning("Please use sidebar for detailed analyses. Data is anonymized to protect schools & children. You may log in to access all data and de-anonymize names.")
-
-st.sidebar.markdown("---")
-st.sidebar.markdown("[Visit Zazi iZandi Website](http://zazi-izandi.co.za)")
-
