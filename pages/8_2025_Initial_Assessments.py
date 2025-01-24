@@ -5,7 +5,7 @@ import plotly.express as px
 # Streamlit page header
 st.set_page_config(page_title="TA Assessments", layout="wide")
 st.title("2025 Initial Assessments")
-st.info("Utilizing SurveyCTO's EGRA Plugin")
+st.info("Utilizing SurveyCTO's EGRA Plugin. As of Jan 25, 2025, we have 41 TAs starting with assessments. The next 40 will begin once their TLT contracts are signed.")
 
 # Read and process data
 children_df = pd.read_csv("data/EGRA form-assessment_repeat (1).csv", parse_dates=['date'])
@@ -49,12 +49,12 @@ with col2:
     # Number of TAs that assessed > 20 kids
     ta_counts = df['name_ta_rep'].value_counts()
     ta_more_than_20 = ta_counts[ta_counts > 20]
-    st.metric("TAs That Assessed More Than 20 Children", len(ta_more_than_20))
+    st.metric("TAs That Assessed More Than 20 Children", f'{len(ta_more_than_20)}/41')
 
 with col3:
     # Number of TAs that submitted anything
     ta_counts = df['name_ta_rep'].value_counts()
-    st.metric("TAs That Submitted Results (1 or more children)", len(ta_counts))
+    st.metric("TAs That Submitted Results (1 or more children)", f'{len(ta_counts)}/41')
 
 # Assessments Per TA
 with st.container():
