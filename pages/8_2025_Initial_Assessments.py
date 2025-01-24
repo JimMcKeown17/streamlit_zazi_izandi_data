@@ -11,10 +11,14 @@ st.info("Utilizing SurveyCTO's EGRA Plugin")
 children_df = pd.read_csv("data/EGRA form-assessment_repeat (1).csv", parse_dates=['date'])
 ta_df = pd.read_csv("data/EGRA form.csv")
 
-# Define dictionaries (letters_dict, nonwords_dict, words_dict remain the same)
-letters_dict = {
-    # ... (keep existing dictionary)
-}
+def clean_school_name(name):
+    # Remove common suffixes
+    suffixes = [" Primary School", " Primary", " P.S.", " PS"]
+    for suffix in suffixes:
+        if name.endswith(suffix):
+            name = name.replace(suffix, "")
+    # Remove extra spaces and standardize
+    return name.strip()
 
 # Filter by cutoff date
 cutoff_date = pd.Timestamp('2025-01-22')
@@ -32,7 +36,8 @@ df['school_rep'] = df['school_rep'].str.strip().str.title()
 df['school_rep'] = df['school_rep'].str.replace(r'[^\x00-\x7F]+', '', regex=True)
 
 df = df[df['school_rep'] != 'Masinyusane']
-
+df['school_rep_orig'] = df['school_rep']
+df['school_rep'] = df['school_rep'].apply(clean_school_name)
 # START OF PAGE
 
 col1, col2, col3 = st.columns(3)
