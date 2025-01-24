@@ -1,10 +1,11 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 
 # Streamlit page header
 st.set_page_config(page_title="TA Assessments", layout="wide")
 st.title("2025 Initial Assessments")
-st.subheader("Utilizing SurveyCTO's EGRA Plugin")
+st.info("Utilizing SurveyCTO's EGRA Plugin")
 
 # Read and process data
 children_df = pd.read_csv("data/EGRA form-assessment_repeat (1).csv", parse_dates=['date'])
@@ -30,54 +31,175 @@ df['name_ta_rep'] = df['name_ta_rep'].str.replace(r'\s+', ' ', regex=True).str.s
 df['school_rep'] = df['school_rep'].str.strip().str.title()
 df['school_rep'] = df['school_rep'].str.replace(r'[^\x00-\x7F]+', '', regex=True)
 
+df = df[df['school_rep'] != 'Masinyusane']
+
+# START OF PAGE
+
+col1, col2, col3 = st.columns(3)
+
+with col1:# Total Assessed
+    st.metric("Total Number of Children Assessed", len(df))
+
+with col2:
+    # Number of TAs that assessed > 20 kids
+    ta_counts = df['name_ta_rep'].value_counts()
+    ta_more_than_20 = ta_counts[ta_counts > 20]
+    st.metric("TAs That Assessed More Than 20 Children", len(ta_more_than_20))
+
+with col3:
+    # Number of TAs that submitted anything
+    ta_counts = df['name_ta_rep'].value_counts()
+    st.metric("TAs That Submitted Results (1 or more children)", len(ta_counts))
+
+# Assessments Per TA
+with st.container():
+    ta_counts = df['name_ta_rep'].value_counts().reset_index()
+    ta_counts.columns = ['name_ta_rep', 'count']
+
+    fig = px.bar(
+        ta_counts,
+        x='name_ta_rep',
+        y='count',
+        title='Counts of TAs',
+        labels={'name_ta_rep': 'TA Name', 'count': 'Number of Kids Assessed'},
+        color='count',
+        text='count'
+    )
+
+    fig.update_layout(
+        xaxis_title="TA Name",
+        yaxis_title="Number of Kids Assessed",
+        showlegend=False
+    )
+
+
+    st.plotly_chart(fig, use_container_width=True)
+
 # TA Assessments Summary
-st.header("TA Assessments Summary")
-ta_assessments = df.groupby(['school_rep', 'name_ta_rep', 'grade_label'])['name_first_learner'].count().reset_index()
-ta_assessments.columns = ['School', 'TA', 'Grade', 'Count']
-st.dataframe(ta_assessments, use_container_width=True)
+with st.container():
+    st.header("Assessments Completed Per School & TA")
+    ta_assessments = df.groupby(['school_rep', 'name_ta_rep', 'grade_label'])['name_first_learner'].count().reset_index()
+    ta_assessments.columns = ['School', 'TA', 'Grade', 'Count']
+    st.dataframe(ta_assessments, use_container_width=True)
 
 # Grade Summary
-st.header("Grade Summary")
-grade_summary = df.groupby(['grade_label']).agg(
-    Number_Assessed=('name_first_learner', 'count'),
-    Average_Letters_Correct=('letters_correct_a1', 'mean'),
-    Letter_Score=('letters_score_a1', 'mean'),
-    Count_Above_40=('letters_correct_a1', lambda x: (x >= 40).sum())
-).reset_index()
-grade_summary['Average_Letters_Correct'] = grade_summary['Average_Letters_Correct'].round(1)
-grade_summary['Letter_Score'] = grade_summary['Letter_Score'].round(1)
-st.dataframe(grade_summary, use_container_width=True)
+with st.container():
+    st.header("Grade Summary")
+    grade_summary = df.groupby(['grade_label']).agg(
+        Number_Assessed=('name_first_learner', 'count'),
+        Average_Letters_Correct=('letters_correct_a1', 'mean'),
+        Letter_Score=('letters_score_a1', 'mean'),
+        Count_Above_40=('letters_correct_a1', lambda x: (x >= 40).sum())
+    ).reset_index()
+    grade_summary['Average_Letters_Correct'] = grade_summary['Average_Letters_Correct'].round(1)
+    grade_summary['Letter_Score'] = grade_summary['Letter_Score'].round(1)
+    st.dataframe(grade_summary, use_container_width=True)
 
 # School Summary
-st.header("School Summary")
-school_summary = df.groupby(['school_rep', 'grade_label']).agg(
-    Number_Assessed=('name_first_learner', 'count'),
-    Average_Letters_Correct=('letters_correct_a1', 'mean'),
-    Letter_Score=('letters_score_a1', 'mean'),
-    Count_Above_40=('letters_correct_a1', lambda x: (x >= 40).sum())
-).reset_index()
-school_summary['Average_Letters_Correct'] = school_summary['Average_Letters_Correct'].round(1)
-school_summary['Letter_Score'] = school_summary['Letter_Score'].round(1)
-school_summary = school_summary.sort_values(by='Average_Letters_Correct', ascending=False)
-st.dataframe(school_summary, use_container_width=True)
+with st.container():
+    st.header("School Summary")
+    school_summary = df.groupby(['school_rep', 'grade_label']).agg(
+        Number_Assessed=('name_first_learner', 'count'),
+        Average_Letters_Correct=('letters_correct_a1', 'mean'),
+        Letter_Score=('letters_score_a1', 'mean'),
+        Count_Above_40=('letters_correct_a1', lambda x: (x >= 40).sum())
+    ).reset_index()
+    school_summary['Average_Letters_Correct'] = school_summary['Average_Letters_Correct'].round(1)
+    school_summary['Letter_Score'] = school_summary['Letter_Score'].round(1)
+    school_summary = school_summary.sort_values(by='Average_Letters_Correct', ascending=False)
+
+    fig = px.bar(
+        school_summary,
+        x="school_rep",
+        y="Average_Letters_Correct",
+        color="grade_label",
+        barmode="group",
+        title="Average Letters Correct by School and Grade",
+        labels={"school_rep": "School", "Average_Letters_Correct": "Average Letters Correct"},
+        color_discrete_sequence=px.colors.qualitative.Set2  # Optional: Use a qualitative color scheme
+    )
+
+    fig.update_layout(
+        xaxis_title="School",
+        yaxis_title="Average Letters Correct",
+        legend_title="Grade",
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.dataframe(school_summary, use_container_width=True)
 
 # Grade 1 Non-Words Summary
-st.header("Grade 1 Non-Words Summary")
-g1 = df[df['grade_label'] == 'Grade 1']
-school_non_words_summary = g1.groupby(['school_rep', 'class']).agg(
-    Number_Assessed=('name_first_learner', 'count'),
-    Average_NonWords_Correct=('nonwords_correct_a1', 'mean')
-).reset_index()
-school_non_words_summary['Average_NonWords_Correct'] = school_non_words_summary['Average_NonWords_Correct'].round(1)
-school_non_words_summary = school_non_words_summary.sort_values(by='Average_NonWords_Correct', ascending=False)
-st.dataframe(school_non_words_summary, use_container_width=True)
+with st.container():
+    st.header("Grade 1 Non-Words Summary")
+    g1 = df[df['grade_label'] == 'Grade 1']
+    school_non_words_summary = g1.groupby(['school_rep', 'class']).agg(
+        Number_Assessed=('name_first_learner', 'count'),
+        Average_NonWords_Correct=('nonwords_correct_a1', 'mean')
+    ).reset_index()
+    school_non_words_summary['Average_NonWords_Correct'] = school_non_words_summary['Average_NonWords_Correct'].round(1)
+    school_non_words_summary = school_non_words_summary.sort_values(by='Average_NonWords_Correct', ascending=False)
+
+    fig = px.bar(
+        school_non_words_summary,
+        x="school_rep",
+        y="Average_NonWords_Correct",
+        color="class",
+        barmode="group",
+        title="Average Non-Words Correct by School and Class",
+        labels={
+            "school_rep": "School",
+            "Average_NonWords_Correct": "Average Non-Words Correct",
+            "class": "Class"
+        },
+        color_discrete_sequence=px.colors.qualitative.Set2  # Optional: Use a qualitative color scheme
+    )
+
+    # Customize chart layout
+    fig.update_layout(
+        xaxis_title="School",
+        yaxis_title="Average Non-Words Correct",
+        legend_title="Class",
+    )
+
+    # Display the chart in Streamlit
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.dataframe(school_non_words_summary, use_container_width=True)
 
 # Grade 1 Words Summary
-st.header("Grade 1 Words Summary")
-school_words_summary = g1.groupby(['school_rep', 'class']).agg(
-    Number_Assessed=('name_first_learner', 'count'),
-    Average_Words_Correct=('words_correct_a1', 'mean')
-).reset_index()
-school_words_summary['Average_Words_Correct'] = school_words_summary['Average_Words_Correct'].round(1)
-school_words_summary = school_words_summary.sort_values(by='Average_Words_Correct', ascending=False)
-st.dataframe(school_words_summary, use_container_width=True)
+with st.container():
+    st.header("Grade 1 Words Summary")
+    school_words_summary = g1.groupby(['school_rep', 'class']).agg(
+        Number_Assessed=('name_first_learner', 'count'),
+        Average_Words_Correct=('words_correct_a1', 'mean')
+    ).reset_index()
+    school_words_summary['Average_Words_Correct'] = school_words_summary['Average_Words_Correct'].round(1)
+    school_words_summary = school_words_summary.sort_values(by='Average_Words_Correct', ascending=False)
+
+    fig = px.bar(
+        school_words_summary,
+        x="school_rep",  # Schools on the x-axis
+        y="Average_Words_Correct",  # Values for the y-axis
+        color="class",  # Differentiate bars by class
+        barmode="group",  # Grouped bars for classes
+        title="Average Words Correct by School and Class",
+        labels={
+            "school_rep": "School",
+            "Average_Words_Correct": "Average Words Correct",
+            "class": "Class"
+        },
+        color_discrete_sequence=px.colors.qualitative.Set2  # Optional: Use a qualitative color scheme
+    )
+
+    # Customize chart layout
+    fig.update_layout(
+        xaxis_title="School",
+        yaxis_title="Average Words Correct",
+        legend_title="Class",
+    )
+
+    # Display the chart in Streamlit
+    st.plotly_chart(fig, use_container_width=True)
+
+    st.dataframe(school_words_summary, use_container_width=True)
