@@ -48,7 +48,7 @@ with col1:# Total Assessed
 with col2:
     # Number of TAs that assessed > 20 kids
     ta_counts = df['name_ta_rep'].value_counts()
-    ta_more_than_20 = ta_counts[ta_counts > 20]
+    ta_more_than_20 = ta_counts[ta_counts >= 20]
     st.metric("TAs That Assessed More Than 20 Children", f'{len(ta_more_than_20)}/41')
 
 with col3:
