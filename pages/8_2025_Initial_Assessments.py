@@ -4,6 +4,7 @@ import plotly.express as px
 from process_survey_cto_updated import process_egra_data
 from create_letter_tracker import create_letter_tracker
 import os
+from datetime import datetime as dt
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -15,8 +16,8 @@ st.info("Utilizing SurveyCTO's EGRA Plugin. As of Jan 25, 2025, we have 41 TAs s
 # Read and process data
 try:
     df = process_egra_data(
-        children_file=os.path.join(ROOT_DIR, "data/EGRA form-assessment_repeat - Jan 29.csv"),
-        ta_file=os.path.join(ROOT_DIR, "data/EGRA form - Jan 29.csv")
+        children_file=os.path.join(ROOT_DIR, "data/EGRA form-assessment_repeat - Jan 30.csv"),
+        ta_file=os.path.join(ROOT_DIR, "data/EGRA form - Jan 30.csv")
     )
 
     # START OF PAGE
@@ -318,25 +319,41 @@ try:
 
     st.divider()
     with st.container():
-        st.subheader("Generate Letter Tracker")
-        if st.button("Generate Letter Tracker CSV"):
-            try:
-                # Generate the letter tracker DataFrame
-                letter_tracker_df = create_letter_tracker(df, export_csv=False)  # Don't save to file directly
+        st.subheader("Data Export Tools")
 
-                # Convert DataFrame to CSV
-                csv = letter_tracker_df.to_csv(index=False)
+        col1, col2 = st.columns(2)
 
-                # Create download button
-                st.download_button(
-                    label="Download Letter Tracker CSV",
-                    data=csv,
-                    file_name="Letter_Tracker.csv",
-                    mime="text/csv",
-                )
-                st.success("Letter Tracker generated successfully!")
-            except Exception as e:
-                st.error(f"Error generating Letter Tracker: {str(e)}")
+        with col1:
+            if st.button("Generate Letter Tracker"):
+                try:
+                    letter_tracker_df = create_letter_tracker(df, export_csv=False)
+                    csv = letter_tracker_df.to_csv(index=False)
+                    st.download_button(
+                        label="Download Letter Tracker",
+                        data=csv,
+                        file_name="Letter_Tracker.csv",
+                        mime="text/csv",
+                    )
+                    st.success("Letter Tracker generated successfully!")
+                except Exception as e:
+                    st.error(f"Error generating Letter Tracker: {str(e)}")
+
+        with col2:
+            if st.button("Generate Full Dataset"):
+                try:
+                    # Get current date for filename
+                    date = dt.today().strftime('%Y-%m-%d')
+                    # Convert full DataFrame to CSV
+                    csv = df.to_csv(index=False)
+                    st.download_button(
+                        label="Download Full Dataset",
+                        data=csv,
+                        file_name=f"merged_data_{date}.csv",
+                        mime="text/csv",
+                    )
+                    st.success("Full dataset ready for download!")
+                except Exception as e:
+                    st.error(f"Error generating full dataset: {str(e)}")
 
 except Exception as e:
     st.error(f"Error processing data: {str(e)}")
