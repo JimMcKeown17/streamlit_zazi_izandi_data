@@ -11,14 +11,21 @@ def create_styled_html(df):
             width: 100%;
             margin: 20px 0;
             font-family: Arial, sans-serif;
+            font-size: 8px;
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 4px;
             text-align: left;
         }
         th {
             background-color: #f2f2f2;
+        }
+        thead {
+            display: table-header-group; /* This ensures header repeats */
+        }
+        tfoot {
+            display: table-footer-group; /* If you have a table footer */
         }
         .highlight {
             background-color: #FFEB3B;  /* Yellow background */
@@ -32,8 +39,10 @@ def create_styled_html(df):
     """
 
     # List of letter columns
-    letter_cols = ['a', 'e', 'i', 'o', 'u', 'b', 'l', 'm', 'k', 'p', 's', 'h',
-                   'z', 'n', 'd', 'y', 'f', 'w', 'v', 'x', 'g', 't', 'q', 'r', 'c']
+    letter_cols = [
+        'a', 'e', 'i', 'o', 'u', 'b', 'l', 'm', 'k', 'p', 's', 'h',
+        'z', 'n', 'd', 'y', 'f', 'w', 'v', 'x', 'g', 't', 'q', 'r', 'c', 'j'
+    ]
 
     # Function to style cells based on value
     def style_cell(val, col):
@@ -44,30 +53,33 @@ def create_styled_html(df):
                 return 'blank'
         return ''
 
-    # Create HTML for each row
-    rows_html = []
-    # Add header row
-    header = '<tr>' + ''.join(f'<th>{col}</th>' for col in df.columns) + '</tr>'
-    rows_html.append(header)
+    # Build the THEAD (header row)
+    header_html = "<thead><tr>"
+    for col in df.columns:
+        header_html += f"<th>{col}</th>"
+    header_html += "</tr></thead>"
 
-    # Add data rows
+    # Build the TBODY (data rows)
+    data_rows_html = []
     for _, row in df.iterrows():
         cells = []
         for col in df.columns:
             value = row[col]
             style_class = style_cell(value, col)
-            # For letter columns, replace 1 with X and 0 with blank
+            # For letter columns, replace 1 with 'X' and 0 with blank
             if col in letter_cols:
                 display_value = 'X' if value == 1 else ''
             else:
                 display_value = value
             cells.append(f'<td class="{style_class}">{display_value}</td>')
-        rows_html.append('<tr>' + ''.join(cells) + '</tr>')
+        data_rows_html.append('<tr>' + ''.join(cells) + '</tr>')
 
-    # Combine all parts
-    table_html = f'<table>{"".join(rows_html)}</table>'
+    tbody_html = f"<tbody>{''.join(data_rows_html)}</tbody>"
+
+    # Combine to form the full table
+    table_html = f"<table>{header_html}{tbody_html}</table>"
+
     return styles + table_html
-
 
 def main():
     # Read the CSV data

@@ -3,13 +3,8 @@ import pandas as pd
 import plotly.express as px
 from process_survey_cto_updated import process_egra_data
 from create_letter_tracker import create_letter_tracker
-from letter_tracker_htmls import main as create_html_reports
 import os
 from datetime import datetime as dt
-import pdfkit
-import tempfile
-import shutil
-import zipfile
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -323,77 +318,13 @@ try:
         st.dataframe(school_words_summary, use_container_width=True)
 
     st.divider()
-
-
-    def generate_letter_tracker_pdfs(df):
-        """Generate letter tracker PDFs through the full pipeline"""
-        # Create temporary directory for processing
-        temp_dir = tempfile.mkdtemp()
-        try:
-            # Set up directories
-            os.makedirs(os.path.join(temp_dir, 'html_reports'), exist_ok=True)
-            os.makedirs(os.path.join(temp_dir, 'pdf_trackers'), exist_ok=True)
-
-            # Step 1: Create letter tracker
-            with st.spinner('Creating letter tracker...'):
-                letter_tracker_path = os.path.join(temp_dir, 'Letter Tracker.csv')
-                letter_tracker_df = create_letter_tracker(df, export_csv=True, output_path=letter_tracker_path)
-
-            # Step 2: Generate HTML reports
-            with st.spinner('Generating HTML reports...'):
-                original_dir = os.getcwd()
-                os.chdir(temp_dir)
-                create_html_reports()
-                os.chdir(original_dir)
-
-            # Step 3: Convert to PDFs
-            with st.spinner('Converting to PDFs...'):
-                options = {
-                    'orientation': 'Landscape',
-                    'page-size': 'A4',
-                    'margin-top': '0.25in',
-                    'margin-bottom': '0.25in',
-                    'margin-left': '0.25in',
-                    'margin-right': '0.25in',
-                }
-
-                html_dir = os.path.join(temp_dir, 'html_reports')
-                pdf_dir = os.path.join(temp_dir, 'pdf_trackers')
-
-                for filename in os.listdir(html_dir):
-                    if filename.lower().endswith(".html"):
-                        input_path = os.path.join(html_dir, filename)
-                        output_path = os.path.join(
-                            pdf_dir,
-                            os.path.splitext(filename)[0] + ".pdf"
-                        )
-                        pdfkit.from_file(input_path, output_path, options=options)
-
-            # Create zip file of PDFs
-            zip_path = os.path.join(temp_dir, 'letter_trackers.zip')
-            with zipfile.ZipFile(zip_path, 'w') as zipf:
-                for root, dirs, files in os.walk(pdf_dir):
-                    for file in files:
-                        file_path = os.path.join(root, file)
-                        arcname = os.path.relpath(file_path, pdf_dir)
-                        zipf.write(file_path, arcname)
-
-            # Read zip file
-            with open(zip_path, 'rb') as f:
-                return f.read()
-
-        finally:
-            # Clean up temporary directory
-            shutil.rmtree(temp_dir)
-
-
     with st.container():
         st.subheader("Data Export Tools")
 
-        col1, col2, col3 = st.columns(3)
+        col1, col2 = st.columns(2)
 
         with col1:
-            if st.button("Generate Letter Tracker CSV (w Groups)"):
+            if st.button("Generate Letter Tracker"):
                 try:
                     letter_tracker_df = create_letter_tracker(df, export_csv=False)
                     csv = letter_tracker_df.to_csv(index=False)
@@ -423,20 +354,6 @@ try:
                     st.success("Full dataset ready for download!")
                 except Exception as e:
                     st.error(f"Error generating full dataset: {str(e)}")
-
-        with col3:
-            if st.button("Generate PDF Letter Trackers"):
-                try:
-                    zip_data = generate_letter_tracker_pdfs(df)
-                    st.download_button(
-                        label="Download PDF Letter Trackers",
-                        data=zip_data,
-                        file_name="letter_trackers.zip",
-                        mime="application/zip"
-                    )
-                    st.success("PDF Letter Trackers generated successfully!")
-                except Exception as e:
-                    st.error(f"Error generating PDFs: {str(e)}")
 
 except Exception as e:
     st.error(f"Error processing data: {str(e)}")
