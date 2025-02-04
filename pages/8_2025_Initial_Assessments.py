@@ -21,8 +21,8 @@ st.info("Utilizing SurveyCTO's EGRA Plugin. As of Jan 25, 2025, we have 41 TAs s
 # Read and process data
 try:
     df = process_egra_data(
-        children_file=os.path.join(ROOT_DIR, "data/EGRA form-assessment_repeat - Feb 3.csv"),
-        ta_file=os.path.join(ROOT_DIR, "data/EGRA form - Feb 3.csv")
+        children_file=os.path.join(ROOT_DIR, "data/EGRA form-assessment_repeat - Feb 4.csv"),
+        ta_file=os.path.join(ROOT_DIR, "data/EGRA form - Feb 4.csv")
     )
 
     # START OF PAGE
