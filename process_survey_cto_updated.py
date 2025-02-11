@@ -252,6 +252,13 @@ class EGRADataProcessor:
                         df.at[idx, new_col] = pd.NA
         return df
 
+    def process_usernames(self, df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+        # Filter separately for each username
+        df_primary = df[df['username'] == 'zz_collect']
+        df_ecd = df[df['username'] == 'ecd_assessments']
+
+        return df_primary, df_ecd
+
 def process_egra_data(
         children_file: str,
         ta_file: str,
@@ -268,10 +275,11 @@ def process_egra_data(
     df, _ = processor.remove_duplicates(df)
     df = processor.clean_class_labels(df)
     df = processor.process_assessment_data(df)
+    df, df_ecd = processor.process_usernames(df)
 
     df = assign_groups_by_cohort(df, group_size=7)
 
-    return df
+    return df, df_ecd
 
 
 if __name__ == "__main__":

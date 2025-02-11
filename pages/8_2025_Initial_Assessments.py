@@ -16,13 +16,13 @@ ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 # Streamlit page header
 st.set_page_config(page_title="TA Assessments", layout="wide")
 st.title("2025 Initial Assessments")
-st.info("Utilizing SurveyCTO's EGRA Plugin. As of Jan 25, 2025, we have 41 TAs starting with assessments. The next 40 will begin once their TLT contracts are signed.")
+# st.info("Utilizing SurveyCTO's EGRA Plugin. As of Jan 25, 2025, we have 41 TAs starting with assessments. The next 40 will begin once their TLT contracts are signed.")
 
 # Read and process data
 try:
-    df = process_egra_data(
-        children_file=os.path.join(ROOT_DIR, "data/EGRA form-assessment_repeat - Feb 4.csv"),
-        ta_file=os.path.join(ROOT_DIR, "data/EGRA form - Feb 4.csv")
+    df, df_ecd = process_egra_data(
+        children_file=os.path.join(ROOT_DIR, "data/EGRA form-assessment_repeat - Feb 11.csv"),
+        ta_file=os.path.join(ROOT_DIR, "data/EGRA form - Feb 11.csv")
     )
 
     # START OF PAGE
@@ -390,7 +390,7 @@ try:
     with st.container():
         st.subheader("Data Export Tools")
 
-        col1, col2, col3 = st.columns(3)
+        col1, col2, col3, col4 = st.columns(4)
 
         with col1:
             if st.button("Generate Letter Tracker CSV (w Groups)"):
@@ -437,6 +437,23 @@ try:
                     st.success("PDF Letter Trackers generated successfully!")
                 except Exception as e:
                     st.error(f"Error generating PDFs: {str(e)}")
+
+        with col4:
+            if st.button("ECD Dataset"):
+                try:
+                    # Get current date for filename
+                    date = dt.today().strftime('%Y-%m-%d')
+                    # Convert full DataFrame to CSV
+                    csv = df_ecd.to_csv(index=False)
+                    st.download_button(
+                        label="Download Full Dataset",
+                        data=csv,
+                        file_name=f"ecd_data_{date}.csv",
+                        mime="text/csv",
+                    )
+                    st.success("Full dataset ready for download!")
+                except Exception as e:
+                    st.error(f"Error generating full dataset: {str(e)}")
 
 except Exception as e:
     st.error(f"Error processing data: {str(e)}")
