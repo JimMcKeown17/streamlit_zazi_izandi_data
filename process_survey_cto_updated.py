@@ -77,9 +77,17 @@ class EGRADataProcessor:
         )
 
         # Filter out specific schools
-        excluded_schools = ['Masinyusane', 'Masi', 'Atest', 'Sume Center', 'Rc',
-                            'Tckvp', 'Ilitha Lethu Day Care', "Isaac Booi", "Ee"]
+        excluded_schools = ['Masinyusane', 'Masi', 'Atest', 'Rc',
+                            'Tckvp', "Isaac Booi", "Ee"]
         df = df[~df['school_rep'].isin(excluded_schools)]
+
+        mask = df['school_rep'].isin([
+            'Sume Center',
+            'Ilitha Lethu Day Care',
+            'Njongozabantu Day Care',
+            'Greenapple'
+        ])
+        df.loc[mask, 'username'] = 'ecd_assessments'
 
         return df
 
@@ -87,9 +95,10 @@ class EGRADataProcessor:
         """Clean school names by removing common suffixes."""
         df = df.copy()
         df['school_rep_orig'] = df['school_rep']
+        df['school_rep'] = df['school_rep'].str.lower().str.title()
 
         def clean_name(name: str) -> str:
-            suffixes = [" Primary School", " Primary", " P.S.", " PS", "Public School"]
+            suffixes = [" Primary School","primary school","Primary school", " Primary", " P.S.", "Public", " PS", "Public School", "pre school", "preschool", "pre-school", "Day care", "Daycare"]
             for suffix in suffixes:
                 if name.endswith(suffix):
                     name = name.replace(suffix, "")
@@ -97,6 +106,12 @@ class EGRADataProcessor:
 
         df['school_rep'] = df['school_rep'].apply(clean_name)
         df.loc[df['school_rep'] == 'K. K Ncwana', 'school_rep'] = 'Kk Ncwana'
+        df.loc[df['school_rep'] == 'K.K Ncwana', 'school_rep'] = 'Kk Ncwana'
+        df.loc[df['school_rep'] == 'Green-Apple', 'school_rep'] = 'Green Apple'
+        df.loc[df['school_rep'] == 'GreenApple', 'school_rep'] = 'Green Apple'
+        df.loc[df['school_rep'] == 'Kwa-Noxolo', 'school_rep'] = 'KwaNoxolo'
+        df.loc[df['school_rep'] == 'St Mary magaldene edu day care', 'school_rep'] = 'St Mary magaldene day care'
+
         return df
 
     def remove_duplicates(self, df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
