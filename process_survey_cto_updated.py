@@ -44,6 +44,13 @@ class EGRADataProcessor:
         # Merge dataframes
         return children_df.merge(ta_df, left_on='PARENT_KEY', right_on='KEY', how='left')
 
+    def clean_special_cases(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Fix special cases."""
+        df = df.copy()
+        df.loc[df['username'] == 'Aphelele Nkomo', 'class'] = '1A'
+
+        return df
+
     def clean_names(self, df: pd.DataFrame) -> pd.DataFrame:
         """Clean TA and school names."""
         df = df.copy()
@@ -279,12 +286,13 @@ def process_egra_data(
         ta_file: str,
         output_dir: str = '.',
         cutoff_date: str = '2025-01-22'
-) -> pd.DataFrame:
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Main function to process EGRA data."""
     processor = EGRADataProcessor()
 
     # Load and process data
     df = processor.load_data(children_file, ta_file, cutoff_date)
+    df = processor.clean_special_cases(df)
     df = processor.clean_names(df)
     df = processor.clean_school_names(df)
     df, _ = processor.remove_duplicates(df)
