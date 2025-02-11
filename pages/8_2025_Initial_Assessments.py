@@ -36,12 +36,12 @@ try:
         # Number of TAs that assessed >= 20 kids
         ta_counts = df['name_ta_rep'].value_counts()
         ta_more_than_20 = ta_counts[ta_counts >= 20]
-        st.metric("TAs That Assessed > 20 Children", f'{len(ta_more_than_20)}/41')
+        st.metric("TAs That Assessed > 20 Children", f'{len(ta_more_than_20)}')
 
     with col3:
         # Number of TAs that submitted anything
         ta_counts = df['name_ta_rep'].value_counts()
-        st.metric("TAs That Submitted Results (1+ Children)", f'{len(ta_counts)}/41')
+        st.metric("TAs That Submitted Results (1+ Children)", f'{len(ta_counts)}')
 
 
     st.divider()
