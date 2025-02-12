@@ -47,6 +47,8 @@ class EGRADataProcessor:
     def clean_special_cases(self, df: pd.DataFrame) -> pd.DataFrame:
         """Fix special cases."""
         df = df.copy()
+
+        # Fix class for 'Aphelele Nkomo'
         df.loc[df['username'] == 'Aphelele Nkomo', 'class'] = '1A'
 
         return df
@@ -280,6 +282,17 @@ class EGRADataProcessor:
         df_ecd = df[df['username'] == 'ecd_assessments']
 
         return df_primary, df_ecd
+    def exclude(self, df: pd.DataFrame) -> pd.DataFrame:
+        # Filter separately for each username
+        # df = df[df['name_ta_rep'] != 'Sivenathi Ntshontsho']
+        df = df[df['name_ta_rep'] != 'Bongiwe Mbusi']
+
+        df.loc[
+            (df['name_ta_rep'] == 'Sivenathi Ntshontsho'),
+            ['words_correct_a1', 'nonwords_correct_a1']
+        ] = 0
+
+        return df
 
 def process_egra_data(
         children_file: str,
@@ -298,6 +311,7 @@ def process_egra_data(
     df, _ = processor.remove_duplicates(df)
     df = processor.clean_class_labels(df)
     df = processor.process_assessment_data(df)
+    df = processor.exclude(df)
     df, df_ecd = processor.process_usernames(df)
 
     df = assign_groups_by_cohort(df, group_size=7)
