@@ -34,7 +34,10 @@ class EGRADataProcessor:
 
     def load_data(self, children_file: str, ta_file: str, cutoff_date: str = '2025-01-22') -> pd.DataFrame:
         """Load and merge EGRA data from children and TA files."""
-        children_df = pd.read_csv(children_file, parse_dates=['date'])
+        children_df = pd.read_csv(children_file, parse_dates=['date'], dtype={
+        "column_name_337": str,
+        "column_name_392": int,
+    }, low_memory=False)
         ta_df = pd.read_csv(ta_file)
 
         # Filter by date

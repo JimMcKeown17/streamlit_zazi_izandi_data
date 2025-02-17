@@ -13,6 +13,21 @@ import zipfile
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
+@st.cache_data
+def load_egra_data(children_filename: str, ta_filename: str):
+    """
+    Caches the DataFrame loading and processing so it doesn't
+    re-run on every Streamlit re-execution or widget change.
+    """
+    children_path = os.path.join(ROOT_DIR, "data", children_filename)
+    ta_path       = os.path.join(ROOT_DIR, "data", ta_filename)
+
+    df, df_ecd = process_egra_data(
+        children_file=children_path,
+        ta_file=ta_path
+    )
+    return df, df_ecd
+
 # Streamlit page header
 st.set_page_config(page_title="TA Assessments", layout="wide")
 st.title("2025 Initial Assessments")
@@ -20,9 +35,9 @@ st.title("2025 Initial Assessments")
 
 # Read and process data
 try:
-    df, df_ecd = process_egra_data(
-        children_file=os.path.join(ROOT_DIR, "data/EGRA form-assessment_repeat - Feb 14.csv"),
-        ta_file=os.path.join(ROOT_DIR, "data/EGRA form - Feb 14.csv")
+    df, df_ecd = load_egra_data(
+        children_filename="EGRA form-assessment_repeat - Feb 14.csv",
+        ta_filename="EGRA form - Feb 14.csv"
     )
 
     # START OF PAGE
