@@ -13,6 +13,10 @@ import zipfile
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
+if 'user' not in st.session_state or st.session_state.user is None:
+    st.error("Please log in to access this page")
+    st.stop()
+
 @st.cache_data
 def load_egra_data(children_filename: str, ta_filename: str):
     """
