@@ -21,7 +21,7 @@ def display_home():
     st.image(logo_path, width=250)
 
     # Summary Stats
-    st.header('SUMMARY STATS')
+    st.header('2024 SUMMARY STATS')
     c1, c2, c3 = st.columns(3)
     with c1:
         st.metric('Community\n Youth Jobs:', '82')

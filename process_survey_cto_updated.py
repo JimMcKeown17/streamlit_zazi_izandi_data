@@ -122,6 +122,7 @@ class EGRADataProcessor:
         df.loc[df['school_rep'] == 'Green-Apple', 'school_rep'] = 'Green Apple'
         df.loc[df['school_rep'] == 'GreenApple', 'school_rep'] = 'Green Apple'
         df.loc[df['school_rep'] == 'Kwa-Noxolo', 'school_rep'] = 'KwaNoxolo'
+        df.loc[df['school_rep'] == 'Keyser Ngxwana', 'school_rep'] = 'Kayser Ngxwana'
         df.loc[df['school_rep'] == 'St Mary magaldene edu day care', 'school_rep'] = 'St Mary magaldene day care'
 
         return df
@@ -280,11 +281,14 @@ class EGRADataProcessor:
         return df
 
     def process_usernames(self, df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-        # Filter separately for each username
-        df_primary = df[df['username'] == 'zz_collect']
+        # Filter 'df_primary' for all usernames containing 'zz'
+        df_primary = df[df['username'].str.contains('zz', na=False)]
+
+        # Filter 'df_ecd' for the exact match 'ecd_assessments'
         df_ecd = df[df['username'] == 'ecd_assessments']
 
         return df_primary, df_ecd
+
     def exclude(self, df: pd.DataFrame) -> pd.DataFrame:
         # Filter separately for each username
         # df = df[df['name_ta_rep'] != 'Sivenathi Ntshontsho']
@@ -315,6 +319,7 @@ def process_egra_data(
     df = processor.clean_class_labels(df)
     df = processor.process_assessment_data(df)
     df = processor.exclude(df)
+    # df_ecd = pd.DataFrame()
     df, df_ecd = processor.process_usernames(df)
 
     df = assign_groups_by_cohort(df, group_size=7)
