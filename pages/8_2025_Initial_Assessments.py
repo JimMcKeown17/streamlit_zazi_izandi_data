@@ -40,8 +40,8 @@ st.title("2025 Initial Assessments")
 # Read and process data
 try:
     df, df_ecd = load_egra_data(
-        children_filename="EGRA form [Eastern Cape]-assessment_repeat - Mar 26.csv",
-        ta_filename="EGRA form [Eastern Cape] - Mar 26.csv"
+        children_filename="EGRA form [Eastern Cape]-assessment_repeat - Mar 27.csv",
+        ta_filename="EGRA form [Eastern Cape] - Mar 27.csv"
     )
 
     # START OF PAGE
