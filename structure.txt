@@ -1,0 +1,109 @@
+.
+├── 10_Test_Page.py
+├── 8_2025_Initial_Assessments_orig.py
+├── 9_2025_Process_Assessments.py
+├── Home.py
+├── Main.py
+├── Older Scripts
+│   ├── data_processing_orig.py
+│   ├── display_24_test.py
+│   ├── main-orig.py
+│   └── main-orig2.py
+├── assets
+│   ├── 2024_Letter_Improvement.png
+│   ├── Data site banner.jpg
+│   ├── Data site banner.png
+│   ├── EC isiXhosa Against Benchmarks.png
+│   ├── Masinyusne Logo Colour.png
+│   ├── WW Letter Sound Eastern Cape (Grade 1).png
+│   └── Zazi iZandi logo.png
+├── create_letter_tracker.py
+├── data
+│   ├── 20241112 - New ZZ Schools Endline Assessment 2024.xlsx
+│   ├── 20241112 - Zazi iZandi 2.0 Endline Assessment - Anonymized.xlsx
+│   ├── 20241112 - Zazi iZandi 2.0 Endline Assessment.xlsx
+│   ├── 20241112 - Zazi iZandi 2024 Endline Assessment  - 1.0.xlsx
+│   ├── 20241115 - Zazi iZandi 2024 Endline Assessment  - 1.0 - anonymized.xlsx
+│   ├── 20241115 - Zazi iZandi 2024 Endline Assessment  - 1.0.xlsx
+│   ├── EGRA form - Feb 11.csv
+│   ├── EGRA form - Feb 12.csv
+│   ├── EGRA form - Feb 14.csv
+│   ├── EGRA form - Feb 19.csv
+│   ├── EGRA form - Feb 3.csv
+│   ├── EGRA form - Feb 4.csv
+│   ├── EGRA form - Feb 6.csv
+│   ├── EGRA form - Jan 28.csv
+│   ├── EGRA form - Jan 29.csv
+│   ├── EGRA form - Jan 30.csv
+│   ├── EGRA form [Eastern Cape] - Apr 7.csv
+│   ├── EGRA form [Eastern Cape] - Mar 11.csv
+│   ├── EGRA form [Eastern Cape] - Mar 18.csv
+│   ├── EGRA form [Eastern Cape] - Mar 19.csv
+│   ├── EGRA form [Eastern Cape] - Mar 20.csv
+│   ├── EGRA form [Eastern Cape] - Mar 24.csv
+│   ├── EGRA form [Eastern Cape] - Mar 26.csv
+│   ├── EGRA form [Eastern Cape] - Mar 27.csv
+│   ├── EGRA form [Eastern Cape]-assessment_repeat - Apr 7.csv
+│   ├── EGRA form [Eastern Cape]-assessment_repeat - Mar 11.csv
+│   ├── EGRA form [Eastern Cape]-assessment_repeat - Mar 18.csv
+│   ├── EGRA form [Eastern Cape]-assessment_repeat - Mar 19.csv
+│   ├── EGRA form [Eastern Cape]-assessment_repeat - Mar 20.csv
+│   ├── EGRA form [Eastern Cape]-assessment_repeat - Mar 24.csv
+│   ├── EGRA form [Eastern Cape]-assessment_repeat - Mar 26.csv
+│   ├── EGRA form [Eastern Cape]-assessment_repeat - Mar 27.csv
+│   ├── EGRA form-assessment_repeat (1).csv
+│   ├── EGRA form-assessment_repeat - Feb 11.csv
+│   ├── EGRA form-assessment_repeat - Feb 12.csv
+│   ├── EGRA form-assessment_repeat - Feb 14.csv
+│   ├── EGRA form-assessment_repeat - Feb 19.csv
+│   ├── EGRA form-assessment_repeat - Feb 3.csv
+│   ├── EGRA form-assessment_repeat - Feb 4.csv
+│   ├── EGRA form-assessment_repeat - Feb 6.csv
+│   ├── EGRA form-assessment_repeat - Jan 28.csv
+│   ├── EGRA form-assessment_repeat - Jan 29.csv
+│   ├── EGRA form-assessment_repeat - Jan 30.csv
+│   ├── EGRA form.csv
+│   ├── Letter Tracker.csv
+│   ├── New ZZ 1.0 Schools Baseline Assessement 2024.xlsx
+│   ├── New ZZ 1.0 Schools Endline Assessment 2024 - Anonymized.xlsx
+│   ├── New ZZ 1.0 Schools Endline Assessment 2024.xlsx
+│   ├── ZZ 2.0 Baseline Assessment.xlsx
+│   ├── ZZ Children's Database 2023 (Endline) 20231130 - anonymized.xlsx
+│   ├── ZZ Children's Database 2023 (Endline) 20231130.xlsx
+│   ├── Zazi iZandi Children's Session Tracker-08062024 - anonymized.xlsx
+│   ├── Zazi iZandi Children's Session Tracker-08062024.xlsx
+│   ├── Zazi iZandi Children's database (Baseline)7052024 - anonymized.xlsx
+│   ├── Zazi iZandi Children's database (Baseline)7052024.xlsx
+│   ├── Zazi iZandi Midline Assessments database (1) - anonymized.xlsx
+│   ├── Zazi iZandi Midline Assessments database (1).xlsx
+│   ├── Zazi iZandi Midline Assessments database (2).xlsx
+│   ├── Zazi iZandi Midline Assessments database-16082024.xlsx
+│   ├── Zazi iZandi Session Tracker 18102024.xlsx
+│   ├── Zazi iZandi Session Tracker 20092024.xlsx
+│   ├── Zazi iZandi Session Tracker 20231124.xlsx
+│   └── merged_data.csv
+├── data_loader.py
+├── display_23.py
+├── display_24.py
+├── display_home.py
+├── grouping_logic.py
+├── letter_tracker_htmls.py
+├── merged_data_2025-01-29.csv
+├── pages
+│   ├── 1_Letter Knowledge.py
+│   ├── 2_Word Reading.py
+│   ├── 4_New_Schools_1.0.py
+│   ├── 5_Sessions Analysis.py
+│   ├── 6_2023 Results.py
+│   ├── 7_Research & Benchmarks.py
+│   └── 8_2025_Initial_Assessments.py
+├── print_tree.py
+├── process_survey_cto_updated.py
+├── process_surveycto.py
+├── requirements.txt
+├── structure.txt
+├── test_to_pdf.py
+├── zz_data_process_23.py
+└── zz_data_processing.py
+
+5 directories, 102 files
