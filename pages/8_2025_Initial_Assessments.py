@@ -40,9 +40,11 @@ st.title("2025 Initial Assessments")
 # Read and process data
 try:
     df, df_ecd = load_egra_data(
-        children_filename="EGRA form [Eastern Cape]-assessment_repeat - Apr 10.csv",
-        ta_filename="EGRA form [Eastern Cape] - Apr 10.csv"
+        children_filename="EGRA form [Eastern Cape]-assessment_repeat - May 4.csv",
+        ta_filename="EGRA form [Eastern Cape] - May 4.csv"
     )
+    df['submission_date'] = pd.to_datetime(df['date'])
+    df = df[df['submission_date'] < pd.Timestamp('2025-04-15')]
 
     # START OF PAGE
 
@@ -404,7 +406,101 @@ try:
         finally:
             # Clean up temporary directory
             shutil.rmtree(temp_dir)
+    st.divider()
+    # Add this section after your existing Grade 1 analyses
+    with st.container():
+        st.header("Grade 1 Overall Letter Score Performance")
 
+        # Filter for Grade 1 only
+        g1_letter_scores = df[df['grade_label'] == 'Grade 1']
+
+        # Calculate overall statistics
+        total_g1_students = len(g1_letter_scores)
+        students_above_40 = len(g1_letter_scores[g1_letter_scores['letters_score_a1'] >= 40])
+        percentage_above_40 = (students_above_40 / total_g1_students * 100) if total_g1_students > 0 else 0
+
+        # Create a simple bar chart showing percentage
+        fig = px.bar(
+            x=['Grade 1'],
+            y=[percentage_above_40],
+            title='Percentage of Grade 1 Learners with Letter Score >= 40',
+            labels={'x': 'Grade', 'y': 'Percentage (%)'},
+            text=[f'{percentage_above_40:.1f}%'],
+            color=[percentage_above_40],
+            color_continuous_scale='RdYlGn'
+        )
+
+        # Customize layout
+        fig.update_layout(
+            xaxis_title="",
+            yaxis_title="Percentage (%)",
+            showlegend=False,
+            yaxis_range=[0, 100],  # Set y-axis from 0 to 100%
+            height=400
+        )
+
+        # Display chart
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Show summary stats
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Total Grade 1 Students", total_g1_students)
+        with col2:
+            st.metric("Students with Score >= 40", students_above_40)
+        with col3:
+            st.metric("Percentage Above 40", f"{percentage_above_40:.1f}%")
+
+    st.divider()
+    # Add this section after your existing Grade 1 analyses (around line 285-300)
+    with st.container():
+        st.header("Grade 1 Learners with Letter Score >= 40")
+
+        # Filter for Grade 1 only
+        g1_letter_scores = df[df['grade_label'] == 'Grade 1']
+
+        # Calculate percentage by school
+        school_letter_score_summary = g1_letter_scores.groupby('school_rep').agg(
+            Total_Assessed=('name_first_learner', 'count'),
+            Above_40_Count=('letters_score_a1', lambda x: (x >= 40).sum())
+        ).reset_index()
+
+        # Calculate percentage
+        school_letter_score_summary['Percentage_Above_40'] = (
+                school_letter_score_summary['Above_40_Count'] /
+                school_letter_score_summary['Total_Assessed'] * 100
+        ).round(1)
+
+        # Sort by percentage descending
+        school_letter_score_summary = school_letter_score_summary.sort_values(
+            by='Percentage_Above_40', ascending=False
+        )
+
+        # Create bar chart
+        fig = px.bar(
+            school_letter_score_summary,
+            x='school_rep',
+            y='Percentage_Above_40',
+            title='Percentage of Grade 1 Learners with Letter Score >= 40 by School',
+            labels={'school_rep': 'School', 'Percentage_Above_40': 'Percentage (%)'},
+            color='Percentage_Above_40',
+            text='Percentage_Above_40',
+            color_continuous_scale='RdYlGn'
+        )
+
+        # Customize layout
+        fig.update_layout(
+            xaxis_title="School",
+            yaxis_title="Percentage (%)",
+            showlegend=False,
+            yaxis_range=[0, 100]  # Set y-axis from 0 to 100%
+        )
+
+        # Display chart
+        st.plotly_chart(fig, use_container_width=True)
+
+        # Show detailed table
+        st.dataframe(school_letter_score_summary, use_container_width=True)
 
     with st.container():
         st.subheader("Data Export Tools")
