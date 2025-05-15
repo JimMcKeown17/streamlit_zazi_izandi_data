@@ -40,11 +40,11 @@ st.title("2025 Initial Assessments")
 # Read and process data
 try:
     df, df_ecd = load_egra_data(
-        children_filename="EGRA form [Eastern Cape]-assessment_repeat - May 4.csv",
-        ta_filename="EGRA form [Eastern Cape] - May 4.csv"
+        children_filename="EGRA form [Eastern Cape]-assessment_repeat - May 15.csv",
+        ta_filename="EGRA form [Eastern Cape] - May 15.csv"
     )
     df['submission_date'] = pd.to_datetime(df['date'])
-    df = df[df['submission_date'] < pd.Timestamp('2025-04-15')]
+    df = df[df['submission_date'] < pd.Timestamp('2025-05-12')]
 
     # START OF PAGE
 
