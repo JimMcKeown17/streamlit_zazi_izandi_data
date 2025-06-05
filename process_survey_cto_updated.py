@@ -89,8 +89,8 @@ class EGRADataProcessor:
         )
 
         # Filter out specific schools
-        excluded_schools = ['Masinyusane', 'Masi', 'Atest', 'Rc',
-                            'Tckvp', "Isaac Booi", "Ee"]
+        excluded_schools = ['Masinyusane', 'Masi', 'Atest', 'Rc', 'RC'
+                            'Tckvp', "Isaac Booi", "Ee", "Ppp", "Agap", "Ghnn"]
         df = df[~df['school_rep'].isin(excluded_schools)]
 
         mask = df['school_rep'].isin([
@@ -119,10 +119,26 @@ class EGRADataProcessor:
         df['school_rep'] = df['school_rep'].apply(clean_name)
         df.loc[df['school_rep'] == 'K. K Ncwana', 'school_rep'] = 'Kk Ncwana'
         df.loc[df['school_rep'] == 'K.K Ncwana', 'school_rep'] = 'Kk Ncwana'
+        df.loc[df['school_rep'] == 'K.K. Ncwana', 'school_rep'] = 'Kk Ncwana'
+        df.loc[df['school_rep'] == 'Kk Ncwane', 'school_rep'] = 'Kk Ncwana'
         df.loc[df['school_rep'] == 'Green-Apple', 'school_rep'] = 'Green Apple'
         df.loc[df['school_rep'] == 'GreenApple', 'school_rep'] = 'Green Apple'
         df.loc[df['school_rep'] == 'Kwa-Noxolo', 'school_rep'] = 'KwaNoxolo'
         df.loc[df['school_rep'] == 'Keyser Ngxwana', 'school_rep'] = 'Kayser Ngxwana'
+        df.loc[df['school_rep'] == 'Keyser Ngxwane', 'school_rep'] = 'Kayser Ngxwana'
+        df.loc[df['school_rep'] == 'Bj Mnyanda Ps', 'school_rep'] = 'Bj Mnyanda'
+        df.loc[df['school_rep'] == 'Bj Mnyandaw', 'school_rep'] = 'Bj Mnyanda'
+        df.loc[df['school_rep'] == 'Bj Mnyandq', 'school_rep'] = 'Bj Mnyanda'
+        df.loc[df['school_rep'] == 'Emfundweni Primary School.', 'school_rep'] = 'Emfundweni'
+        df.loc[df['school_rep'] == 'Emzoncane', 'school_rep'] = 'Emzomncane'
+        df.loc[df['school_rep'] == 'Gertrude', 'school_rep'] = 'Gertrude Shope'
+        df.loc[df['school_rep'] == 'Melisizwe P School', 'school_rep'] = 'Melisizwe'
+        df.loc[df['school_rep'] == 'Ben Nyati', 'school_rep'] = 'Ben Nyathi'
+        df.loc[df['school_rep'] == 'Enkwekwezini', 'school_rep'] = 'Enkwenkwezini'
+        df.loc[df['school_rep'] == 'Siyaphambhili', 'school_rep'] = 'Siyaphambili'
+        df.loc[df['school_rep'] == 'Spencer', 'school_rep'] = 'Spencer Mabija'
+        df.loc[df['school_rep'] == 'Steven Mazungula', 'school_rep'] = 'Stephen Mazungula'
+
         df.loc[df['school_rep'] == 'St Mary magaldene edu day care', 'school_rep'] = 'St Mary magaldene day care'
 
         return df
@@ -330,6 +346,6 @@ def process_egra_data(
 if __name__ == "__main__":
     # Example usage
     df = process_egra_data(
-        children_file="data/EGRA form-assessment_repeat - Jan 29.csv",
-        ta_file="data/EGRA form - Jan 29.csv"
+        children_file="data/EGRA form-assessment_repeat - June 4.csv",
+        ta_file="data/EGRA form - June 4.csv"
     )

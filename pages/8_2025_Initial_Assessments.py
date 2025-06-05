@@ -39,29 +39,31 @@ st.title("2025 Initial Assessments")
 
 # Read and process data
 try:
-    df, df_ecd = load_egra_data(
-        children_filename="EGRA form [Eastern Cape]-assessment_repeat - May 15.csv",
-        ta_filename="EGRA form [Eastern Cape] - May 15.csv"
+    df_full, df_ecd = load_egra_data(
+        children_filename="EGRA form [Eastern Cape]-assessment_repeat - June 4.csv",
+        ta_filename="EGRA form [Eastern Cape] - June 4.csv"
     )
-    df['submission_date'] = pd.to_datetime(df['date'])
-    df = df[df['submission_date'] < pd.Timestamp('2025-05-12')]
+    df_full['submission_date'] = pd.to_datetime(df_full['date'])
+    
+    # Create initial dataset for initial assessments (before midline cutoff)
+    initial_df = df_full[df_full['submission_date'] < pd.Timestamp('2025-04-15')]
 
     # START OF PAGE
 
     col1, col2, col3 = st.columns(3)
 
     with col1:# Total Assessed
-        st.metric("Total Number of Children Assessed", len(df))
+        st.metric("Total Number of Children Assessed", len(initial_df))
 
     with col2:
         # Number of TAs that assessed >= 20 kids
-        ta_counts = df['name_ta_rep'].value_counts()
+        ta_counts = initial_df['name_ta_rep'].value_counts()
         ta_more_than_20 = ta_counts[ta_counts >= 20]
         st.metric("TAs That Assessed > 20 Children", f'{len(ta_more_than_20)}')
 
     with col3:
         # Number of TAs that submitted anything
-        ta_counts = df['name_ta_rep'].value_counts()
+        ta_counts = initial_df['name_ta_rep'].value_counts()
         st.metric("TAs That Submitted Results (1+ Children)", f'{len(ta_counts)}')
 
 
@@ -70,7 +72,7 @@ try:
     # Grade Summary
     with st.container():
         st.subheader("EGRA Letters per Grade")
-        grade_summary = df.groupby(['grade_label']).agg(
+        grade_summary = initial_df.groupby(['grade_label']).agg(
             Number_Assessed=('name_first_learner', 'count'),
             Average_Letters_Correct=('letters_correct_a1', 'mean'),
             Letter_Score=('letters_score_a1', 'mean'),
@@ -111,7 +113,7 @@ try:
     # School Summary
     with st.container():
         st.header("School Summary")
-        school_summary = df.groupby(['school_rep', 'grade_label']).agg(
+        school_summary = initial_df.groupby(['school_rep', 'grade_label']).agg(
             Number_Assessed=('name_first_learner', 'count'),
             Average_Letters_Correct=('letters_correct_a1', 'mean'),
             Letter_Score=('letters_score_a1', 'mean'),
@@ -154,7 +156,7 @@ try:
         st.info("This is a measure of how many Grade 1 learners are hitting the benchmark of 40 letters correct.")
 
         # Filter for Grade 1 only
-        g1_letter_scores = df[df['grade_label'] == 'Grade 1']
+        g1_letter_scores = initial_df[initial_df['grade_label'] == 'Grade 1']
 
         # Calculate overall statistics
         total_g1_students = len(g1_letter_scores)
@@ -199,7 +201,7 @@ try:
         st.header("Grade 1 Benchmark by School")
 
         # Filter for Grade 1 only
-        g1_letter_scores = df[df['grade_label'] == 'Grade 1']
+        g1_letter_scores = initial_df[initial_df['grade_label'] == 'Grade 1']
 
         # Calculate percentage by school
         school_letter_score_summary = g1_letter_scores.groupby('school_rep').agg(
@@ -247,7 +249,7 @@ try:
     with st.container():
         st.subheader("Data Export Tools")
         
-        def generate_letter_tracker_pdfs(df):
+        def generate_letter_tracker_pdfs(initial_df):
             """Generate letter tracker PDFs through the full pipeline"""
             # Create temporary directory for processing
             temp_dir = tempfile.mkdtemp()
@@ -259,7 +261,7 @@ try:
                 # Step 1: Create letter tracker
                 with st.spinner('Creating letter tracker...'):
                     letter_tracker_path = os.path.join(temp_dir, 'Letter Tracker.csv')
-                    letter_tracker_df = create_letter_tracker(df, export_csv=True, output_path=letter_tracker_path)
+                    letter_tracker_df = create_letter_tracker(initial_df, export_csv=True, output_path=letter_tracker_path)
 
                 # Step 2: Generate HTML reports
                 with st.spinner('Generating HTML reports...'):
@@ -313,7 +315,7 @@ try:
         with col1:
             if st.button("Generate Letter Tracker CSV (w Groups)"):
                 try:
-                    letter_tracker_df = create_letter_tracker(df, export_csv=False)
+                    letter_tracker_df = create_letter_tracker(initial_df, export_csv=False)
                     csv = letter_tracker_df.to_csv(index=False)
                     st.download_button(
                         label="Download Letter Tracker",
@@ -331,7 +333,7 @@ try:
                     # Get current date for filename
                     date = dt.today().strftime('%Y-%m-%d')
                     # Convert full DataFrame to CSV
-                    csv = df.to_csv(index=False)
+                    csv = initial_df.to_csv(index=False)
                     st.download_button(
                         label="Download Full Dataset",
                         data=csv,
@@ -345,7 +347,7 @@ try:
         with col3:
             if st.button("Generate PDF Letter Trackers"):
                 try:
-                    zip_data = generate_letter_tracker_pdfs(df)
+                    zip_data = generate_letter_tracker_pdfs(initial_df)
                     st.download_button(
                         label="Download PDF Letter Trackers",
                         data=zip_data,
@@ -380,7 +382,7 @@ try:
         with st.container():
             st.subheader("Assessments Per TA")
 
-            ta_counts = df['name_ta_rep'].value_counts().reset_index()
+            ta_counts = initial_df['name_ta_rep'].value_counts().reset_index()
             ta_counts.columns = ['name_ta_rep', 'count']
 
             fig = px.bar(
@@ -407,7 +409,7 @@ try:
 
             # Group by school and grade, counting the number of assessments
             school_grade_counts = (
-                df.groupby(['school_rep', 'grade'])
+                initial_df.groupby(['school_rep', 'grade'])
                 .size()
                 .reset_index(name='count')
             )
@@ -449,7 +451,7 @@ try:
 
             # Group by school and grade, counting the number of assessments
             school_class_counts = (
-                df.groupby(['school_rep','class'])
+                initial_df.groupby(['school_rep','class'])
                 .size()
                 .reset_index(name='count')
             )
@@ -489,7 +491,7 @@ try:
         # TA Assessments Summary
         with st.container():
             st.header("Assessments Completed Per School & TA")
-            ta_assessments = df.groupby(['school_rep', 'name_ta_rep', 'grade_label'])['name_first_learner'].count().reset_index()
+            ta_assessments = initial_df.groupby(['school_rep', 'name_ta_rep', 'grade_label'])['name_first_learner'].count().reset_index()
             ta_assessments.columns = ['School', 'TA', 'Grade', 'Count']
             st.dataframe(ta_assessments, use_container_width=True)
 

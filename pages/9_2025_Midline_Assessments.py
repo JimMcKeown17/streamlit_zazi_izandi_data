@@ -40,8 +40,8 @@ st.title("2025 Midline Assessments")
 # Read and process data
 try:
     df_full, df_ecd = load_egra_data(
-        children_filename="EGRA form [Eastern Cape]-assessment_repeat - May 15.csv",
-        ta_filename="EGRA form [Eastern Cape] - May 15.csv"
+        children_filename="EGRA form [Eastern Cape]-assessment_repeat - June 4.csv",
+        ta_filename="EGRA form [Eastern Cape] - June 4.csv"
     )
     df_full['submission_date'] = pd.to_datetime(df_full['date'])
     
@@ -228,7 +228,7 @@ try:
         # Calculate percentage by school
         school_letter_score_summary = g1_letter_scores.groupby('school_rep').agg(
             Total_Assessed=('name_first_learner', 'count'),
-            Above_40_Count=('letters_score_a1', lambda x: (x >= 40).sum())
+            Above_40_Count=('letters_score', lambda x: (x >= 40).sum())
         ).reset_index()
 
         # Calculate percentage
@@ -518,6 +518,50 @@ try:
             ta_assessments.columns = ['School', 'TA', 'Grade', 'Count']
             st.dataframe(ta_assessments, use_container_width=True)
 
+    st.divider()
+    
+    # Missing Midline Assessments
+    with st.expander("Schools & Grades Missing Midline Assessments"):
+        st.subheader("Schools and Grades with Initial Results but No Midline Results")
+        
+        # Get unique combinations of school and grade from initial assessments
+        initial_combinations = initial_df[['school_rep', 'grade_label']].drop_duplicates()
+        initial_combinations['has_initial'] = True
+        
+        # Get unique combinations of school and grade from midline assessments  
+        midline_combinations = midline_df[['school_rep', 'grade_label']].drop_duplicates()
+        midline_combinations['has_midline'] = True
+        
+        # Merge to find combinations that exist in initial but not in midline
+        comparison_df = pd.merge(
+            initial_combinations, 
+            midline_combinations, 
+            on=['school_rep', 'grade_label'], 
+            how='left'
+        )
+        
+        # Filter for combinations that have initial but no midline
+        missing_midline = comparison_df[comparison_df['has_midline'].isna()].copy()
+        missing_midline = missing_midline[['school_rep', 'grade_label']]
+        missing_midline.columns = ['School', 'Grade']
+        
+        # Add count of initial assessments for context
+        initial_counts = initial_df.groupby(['school_rep', 'grade_label']).size().reset_index(name='Initial_Count')
+        missing_midline = pd.merge(
+            missing_midline,
+            initial_counts,
+            left_on=['School', 'Grade'],
+            right_on=['school_rep', 'grade_label'],
+            how='left'
+        )[['School', 'Grade', 'Initial_Count']]
+        
+        missing_midline = missing_midline.sort_values(['School', 'Grade'])
+        
+        if len(missing_midline) > 0:
+            st.warning(f"Found {len(missing_midline)} school-grade combinations with initial results but no midline results:")
+            st.dataframe(missing_midline, use_container_width=True)
+        else:
+            st.success("All schools and grades with initial assessments also have midline assessments!")
 
 except Exception as e:
     st.error(f"Error processing data: {str(e)}")
