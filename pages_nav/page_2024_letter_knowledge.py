@@ -1,0 +1,45 @@
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+import sys
+import os
+
+def show():
+    # Check authentication - but use the same logic as the original pages
+    if 'user' not in st.session_state:
+        st.session_state.user = None
+    
+    # Add the root directory to path for imports
+    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    if root_dir not in sys.path:
+        sys.path.insert(0, root_dir)
+    
+    # Import necessary modules that the original page needs
+    from zz_data_processing import process_zz_data_midline, process_zz_data_endline, grade1_df, gradeR_df
+    from data_loader import load_zazi_izandi_2024
+    
+    # Execute the original page file content
+    page_path = os.path.join(root_dir, "pages", "2_2024_Letter Knowledge.py")
+    with open(page_path, 'r') as f:
+        content = f.read()
+    
+    # Remove the page config line to avoid conflicts
+    content = content.replace('st.set_page_config(layout="wide", page_title="ZZ Data Portal")', '')
+    
+    # Create execution context with all necessary variables
+    exec_globals = {
+        'st': st,
+        'pd': pd,
+        'px': px,
+        'process_zz_data_midline': process_zz_data_midline,
+        'process_zz_data_endline': process_zz_data_endline,
+        'grade1_df': grade1_df,
+        'gradeR_df': gradeR_df,
+        'load_zazi_izandi_2024': load_zazi_izandi_2024,
+        'os': os,
+        '__name__': '__main__',
+        '__file__': page_path
+    }
+    
+    # Execute the content with proper context
+    exec(content, exec_globals) 
