@@ -58,6 +58,12 @@ def load_all_data():
 
 data_2023, baseline_2024, midline_2024, endline_2024, new_schools_df, data_2025 = load_all_data()
 
+# Standardize all grade names upfront to avoid issues
+baseline_2024['Grade'] = baseline_2024['Grade'].replace({'1': 'Grade 1', 'R': 'Grade R'})
+midline_2024['Grade'] = midline_2024['Grade'].replace({'1': 'Grade 1', 'R': 'Grade R'})
+endline_2024['Grade'] = endline_2024['Grade'].replace({'1': 'Grade 1', 'R': 'Grade R'})
+new_schools_df['Grade'] = new_schools_df['Grade'].replace({'1': 'Grade 1', 'R': 'Grade R'})
+
 def get_egra_scores_by_period(assessment_period):
     """Get EGRA scores for all years based on assessment period"""
     

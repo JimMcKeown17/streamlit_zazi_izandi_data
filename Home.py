@@ -59,7 +59,7 @@ if st.session_state.user:
         ],
         "Research & Benchmarks": [
             st.Page(research_show, title="Research & Benchmarks", icon="🔬", url_path="research"),
-            st.Page(egra_comparisons_show, title="EGRA Comparisons", icon="📊", url_path="egra_comparisons"),
+            st.Page(egra_comparisons_show, title="Year Comparisons", icon="📊", url_path="egra_comparisons"),
         ]
     }
 else:
