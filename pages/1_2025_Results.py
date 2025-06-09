@@ -36,7 +36,7 @@ def load_egra_data(children_filename: str, ta_filename: str):
 st.set_page_config(page_title="TA Assessments", layout="wide")
 
 # Create tabs
-midline_tab, baseline_tab = st.tabs(["2025 Midline", "2024 Baseline"])
+midline_tab, baseline_tab = st.tabs(["2025 Midline", "2025 Baseline"])
 
 with midline_tab:
     st.title("2025 Midline Assessments")
