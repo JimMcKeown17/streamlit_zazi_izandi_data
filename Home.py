@@ -35,6 +35,7 @@ from pages_nav.page_2024_new_schools import show as new_schools_show
 from pages_nav.page_2024_sessions import show as sessions_show
 from pages_nav.page_2023_results import show as results_2023_show
 from pages_nav.page_research import show as research_show
+from pages_nav.page_egra_comparisons import show as egra_comparisons_show
 
 # Define page structure
 if st.session_state.user:
@@ -58,6 +59,7 @@ if st.session_state.user:
         ],
         "Research & Benchmarks": [
             st.Page(research_show, title="Research & Benchmarks", icon="🔬", url_path="research"),
+            st.Page(egra_comparisons_show, title="EGRA Comparisons", icon="📊", url_path="egra_comparisons"),
         ]
     }
 else:
