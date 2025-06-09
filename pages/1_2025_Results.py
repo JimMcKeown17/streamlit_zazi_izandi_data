@@ -10,6 +10,10 @@ import pdfkit
 import tempfile
 import shutil
 import zipfile
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 
@@ -334,6 +338,93 @@ with midline_tab:
                     shutil.rmtree(temp_dir)
 
 
+            # OpenAI Analysis Section
+            st.divider()
+            with st.container():
+                st.header("🤖 AI Data Analysis")
+                st.write("Get insights from OpenAI's ChatGPT about your assessment data. You can ask about overall performance, underperforming schools, and more.")
+                
+                # Analysis type selection
+                analysis_col1, analysis_col2 = st.columns(2)
+                
+                with analysis_col1:
+                    analysis_type = st.selectbox(
+                        "Select Analysis Type:",
+                        ["general", "school_comparison", "grade_improvement"],
+                        format_func=lambda x: {
+                            "general": "📊 General Overview", 
+                            "school_comparison": "🏫 School Performance",
+                            "grade_improvement": "📈 Grade Analysis"
+                        }[x]
+                    )
+                
+                with analysis_col2:
+                    model_choice = st.selectbox(
+                        "Select AI Model:",
+                        ["gpt-4o-mini", "gpt-4o", "gpt-3.5-turbo"],
+                        help="gpt-4o-mini is faster and cheaper, gpt-4o is more capable"
+                    )
+                
+                # Custom questions input
+                custom_questions_input = st.text_area(
+                    "Additional Questions (optional):",
+                    placeholder="Enter specific questions you'd like the AI to address, one per line",
+                    help="Ask specific questions about the data, e.g., 'What factors might explain school performance differences?'"
+                )
+                
+                # Parse custom questions
+                custom_questions = None
+                if custom_questions_input.strip():
+                    custom_questions = [q.strip() for q in custom_questions_input.split('\n') if q.strip()]
+                
+                # Analysis button
+                if st.button("🚀 Generate AI Analysis", type="primary"):
+                    if not os.getenv('OPENAI_API_KEY'):
+                        st.error("⚠️ OPENAI_API_KEY not found in environment variables. Please add it to your .env file.")
+                    else:
+                        with st.spinner("🤔 AI is analyzing your data..."):
+                            try:
+                                # Import the analysis function
+                                from openai_analysis import analyze_data_with_openai
+                                
+                                analysis = analyze_data_with_openai(
+                                    midline_df, 
+                                    analysis_type=analysis_type, 
+                                    custom_questions=custom_questions,
+                                    model=model_choice
+                                )
+                                
+                                if analysis:
+                                    st.success("✅ Analysis Complete!")
+                                    
+                                    # Display the analysis in an expandable section
+                                    with st.expander("📋 AI Analysis Results", expanded=True):
+                                        st.markdown(analysis)
+                                    
+                                    # Option to download the analysis
+                                    st.download_button(
+                                        label="📥 Download Analysis",
+                                        data=analysis,
+                                        file_name=f"ai_analysis_{analysis_type}_{dt.today().strftime('%Y-%m-%d')}.txt",
+                                        mime="text/plain"
+                                    )
+                                else:
+                                    st.error("❌ Failed to generate analysis. Please check your API key and try again.")
+                                    
+                            except ImportError:
+                                st.error("❌ OpenAI analysis module not found. Please ensure openai_analysis.py is in your project directory.")
+                            except Exception as e:
+                                st.error(f"❌ Error during analysis: {str(e)}")
+                
+                # Quick data preview for context
+                with st.expander("📊 Data Preview", expanded=False):
+                    st.write(f"**Total Students:** {len(midline_df)}")
+                    st.write(f"**Schools:** {midline_df['school_rep'].nunique()}")
+                    st.write(f"**Teaching Assistants:** {midline_df['name_ta_rep'].nunique()}")
+                    st.write("**Sample Data:**")
+                    st.dataframe(midline_df[['school_rep', 'grade_label', 'letters_correct', 'name_ta_rep']].head(), use_container_width=True)
+            
+            st.divider()
             with st.container():
                 st.subheader("Data Export Tools")
 
