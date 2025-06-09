@@ -170,5 +170,286 @@ def show():
                 with st.expander('Click to view data:'):
                     st.dataframe(df_grade_level)
 
+            st.divider()
+
+            # School Summary
+            with st.container():
+                st.header("School Summary")
+                school_summary = midline_df.groupby(['school_rep', 'grade_label']).agg(
+                    Number_Assessed=('name_first_learner', 'count'),
+                    Average_Letters_Correct=('letters_correct_a1', 'mean'),
+                    Letter_Score=('letters_score_a1', 'mean'),
+                    Count_Above_40=('letters_correct_a1', lambda x: (x >= 40).sum())
+                ).reset_index()
+                school_summary['Average_Letters_Correct'] = school_summary['Average_Letters_Correct'].round(1)
+                school_summary['Letter_Score'] = school_summary['Letter_Score'].round(1)
+                school_summary = school_summary.sort_values(by='Average_Letters_Correct', ascending=False)
+
+                # Setting a filter for which results end up displayed on the chart.
+                school_summary = school_summary[school_summary['Number_Assessed'] > 10]
+
+                fig = px.bar(
+                    school_summary,
+                    x="school_rep",
+                    y="Average_Letters_Correct",
+                    color="grade_label",
+                    barmode="group",
+                    title="Average Letters Correct by School and Grade",
+                    labels={"school_rep": "School", "Average_Letters_Correct": "Average Letters Correct"},
+                    color_discrete_sequence=px.colors.qualitative.Set2  # Optional: Use a qualitative color scheme
+                )
+
+                fig.update_layout(
+                    xaxis_title="School",
+                    yaxis_title="Average Letters Correct",
+                    legend_title="Grade",
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
+
+                st.dataframe(school_summary, use_container_width=True)
+
+            st.divider()
+            
+            # Add this section after your existing Grade 1 analyses
+            with st.container():
+                st.header("Grade 1 Learners Hitting Benchmark")
+                st.info("This is a measure of how many Grade 1 learners are hitting the benchmark of 40 letters correct.")
+
+                # Filter for Grade 1 only
+                g1_letter_scores = midline_df[midline_df['grade_label'] == 'Grade 1']
+
+                # Calculate overall statistics
+                total_g1_students = len(g1_letter_scores)
+                students_above_40 = len(g1_letter_scores[g1_letter_scores['letters_score_a1'] >= 40])
+                percentage_above_40 = (students_above_40 / total_g1_students * 100) if total_g1_students > 0 else 0
+
+                # Create a simple bar chart showing percentage
+                fig = px.bar(
+                    x=['Grade 1'],
+                    y=[percentage_above_40],
+                    title='Percentage of Grade 1 Learners with Letter Score >= 40',
+                    labels={'x': 'Grade', 'y': 'Percentage (%)'},
+                    text=[f'{percentage_above_40:.1f}%'],
+                    color=[percentage_above_40],
+                    color_continuous_scale='RdYlGn'
+                )
+
+                # Customize layout
+                fig.update_layout(
+                    xaxis_title="",
+                    yaxis_title="Percentage (%)",
+                    showlegend=False,
+                    yaxis_range=[0, 100],  # Set y-axis from 0 to 100%
+                    height=400
+                )
+
+                # Display chart
+                st.plotly_chart(fig, use_container_width=True)
+
+                # Show summary stats
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Total Grade 1 Students", total_g1_students)
+                with col2:
+                    st.metric("Students with Score >= 40", students_above_40)
+                with col3:
+                    st.metric("Percentage Above 40", f"{percentage_above_40:.1f}%")
+
+            st.divider()
+            
+            # Grade 1 Benchmark by School
+            with st.container():
+                st.header("Grade 1 Benchmark by School")
+
+                # Filter for Grade 1 only
+                g1_letter_scores = midline_df[midline_df['grade_label'] == 'Grade 1']
+
+                # Calculate percentage by school
+                school_letter_score_summary = g1_letter_scores.groupby('school_rep').agg(
+                    Total_Assessed=('name_first_learner', 'count'),
+                    Above_40_Count=('letters_score_a1', lambda x: (x >= 40).sum())
+                ).reset_index()
+
+                # Calculate percentage
+                school_letter_score_summary['Percentage_Above_40'] = (
+                        school_letter_score_summary['Above_40_Count'] /
+                        school_letter_score_summary['Total_Assessed'] * 100
+                ).round(1)
+
+                # Sort by percentage descending
+                school_letter_score_summary = school_letter_score_summary.sort_values(
+                    by='Percentage_Above_40', ascending=False
+                )
+
+                # Create bar chart
+                fig = px.bar(
+                    school_letter_score_summary,
+                    x='school_rep',
+                    y='Percentage_Above_40',
+                    title='Percentage of Grade 1 Learners with Letter Score >= 40 by School',
+                    labels={'school_rep': 'School', 'Percentage_Above_40': 'Percentage (%)'},
+                    color='Percentage_Above_40',
+                    text='Percentage_Above_40',
+                    color_continuous_scale='RdYlGn'
+                )
+
+                # Customize layout
+                fig.update_layout(
+                    xaxis_title="School",
+                    yaxis_title="Percentage (%)",
+                    showlegend=False,
+                    yaxis_range=[0, 100]  # Set y-axis from 0 to 100%
+                )
+
+                # Display chart
+                st.plotly_chart(fig, use_container_width=True)
+
+                # Show detailed table
+                st.dataframe(school_letter_score_summary, use_container_width=True)
+
+            st.divider()
+
+            # Baseline vs Midline Comparison by School
+            with st.container():
+                st.header("Baseline vs Midline Comparison by School")
+                
+                # Grade selection dropdown for both charts
+                grade_selection = st.selectbox(
+                    "Select Grade for Comparison Charts:",
+                    ["Grade R", "Grade 1"],
+                    key="grade_comparison_selector"
+                )
+
+                st.subheader(f"1. Average Letters Correct - {grade_selection}")
+                
+                # Filter data for selected grade
+                baseline_grade_data = initial_df[initial_df['grade_label'] == grade_selection]
+                midline_grade_data = midline_df[midline_df['grade_label'] == grade_selection]
+                
+                # Calculate baseline averages by school
+                baseline_school_avg = baseline_grade_data.groupby('school_rep')['letters_correct_a1'].mean().reset_index()
+                baseline_school_avg.columns = ['School', 'Baseline Avg']
+                baseline_school_avg['Baseline Avg'] = baseline_school_avg['Baseline Avg'].round(1)
+                
+                # Calculate midline averages by school
+                midline_school_avg = midline_grade_data.groupby('school_rep')['letters_correct_a1'].mean().reset_index()
+                midline_school_avg.columns = ['School', 'Midline Avg']
+                midline_school_avg['Midline Avg'] = midline_school_avg['Midline Avg'].round(1)
+                
+                # Merge baseline and midline data
+                school_comparison = pd.merge(baseline_school_avg, midline_school_avg, on='School', how='outer')
+                school_comparison = school_comparison.fillna(0)  # Fill NaN with 0 for schools not in both datasets
+                
+                # Calculate improvement and sort by it
+                school_comparison['Improvement'] = school_comparison['Midline Avg'] - school_comparison['Baseline Avg']
+                school_comparison = school_comparison.sort_values(by='Improvement', ascending=False)
+                
+                # Melt the DataFrame for Plotly grouped bar chart
+                school_comparison_melted = school_comparison.melt(
+                    id_vars=['School', 'Improvement'],
+                    value_vars=['Baseline Avg', 'Midline Avg'],
+                    var_name='Assessment Period',
+                    value_name='Average Letters Correct'
+                )
+                
+                # Create grouped bar chart with custom order
+                fig = px.bar(
+                    school_comparison_melted,
+                    x='School',
+                    y='Average Letters Correct',
+                    color='Assessment Period',
+                    barmode='group',
+                    title=f'Baseline vs Midline Average Letters Correct by School - {grade_selection}',
+                    labels={'School': 'School', 'Average Letters Correct': 'Average Letters Correct'},
+                    color_discrete_map={'Baseline Avg': '#b3b3b3', 'Midline Avg': '#ffd641'},
+                    category_orders={'School': school_comparison['School'].tolist()}  # Custom order by improvement
+                )
+                
+                fig.update_layout(
+                    xaxis_title="School",
+                    yaxis_title="Average Letters Correct",
+                    legend_title="Assessment Period"
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+                
+                with st.expander(f'View {grade_selection} Average Data'):
+                    st.dataframe(school_comparison, use_container_width=True)
+
+                st.subheader(f"2. Percentage at Benchmark (≥40) - {grade_selection}")
+                
+                # Calculate baseline benchmark percentages by school
+                baseline_benchmark = baseline_grade_data.groupby('school_rep').agg(
+                    Total_Assessed=('name_first_learner', 'count'),
+                    Above_40_Count=('letters_correct_a1', lambda x: (x >= 40).sum())
+                ).reset_index()
+                baseline_benchmark['Baseline %'] = (
+                    baseline_benchmark['Above_40_Count'] / baseline_benchmark['Total_Assessed'] * 100
+                ).round(1)
+                baseline_benchmark = baseline_benchmark[['school_rep', 'Baseline %']]
+                baseline_benchmark.columns = ['School', 'Baseline %']
+                
+                # Calculate midline benchmark percentages by school
+                midline_benchmark = midline_grade_data.groupby('school_rep').agg(
+                    Total_Assessed=('name_first_learner', 'count'),
+                    Above_40_Count=('letters_correct_a1', lambda x: (x >= 40).sum())
+                ).reset_index()
+                midline_benchmark['Midline %'] = (
+                    midline_benchmark['Above_40_Count'] / midline_benchmark['Total_Assessed'] * 100
+                ).round(1)
+                midline_benchmark = midline_benchmark[['school_rep', 'Midline %']]
+                midline_benchmark.columns = ['School', 'Midline %']
+                
+                # Merge baseline and midline benchmark data
+                benchmark_comparison = pd.merge(baseline_benchmark, midline_benchmark, on='School', how='outer')
+                benchmark_comparison = benchmark_comparison.fillna(0)  # Fill NaN with 0 for schools not in both datasets
+                
+                # Calculate improvement and sort by it
+                benchmark_comparison['Improvement'] = benchmark_comparison['Midline %'] - benchmark_comparison['Baseline %']
+                benchmark_comparison = benchmark_comparison.sort_values(by='Improvement', ascending=False)
+                
+                # Melt the DataFrame for Plotly grouped bar chart
+                benchmark_comparison_melted = benchmark_comparison.melt(
+                    id_vars=['School', 'Improvement'],
+                    value_vars=['Baseline %', 'Midline %'],
+                    var_name='Assessment Period',
+                    value_name='Percentage at Benchmark'
+                )
+                
+                # Create grouped bar chart with custom order
+                fig = px.bar(
+                    benchmark_comparison_melted,
+                    x='School',
+                    y='Percentage at Benchmark',
+                    color='Assessment Period',
+                    barmode='group',
+                    title=f'Baseline vs Midline Percentage at Benchmark by School - {grade_selection}',
+                    labels={'School': 'School', 'Percentage at Benchmark': 'Percentage at Benchmark (%)'},
+                    color_discrete_map={'Baseline %': '#b3b3b3', 'Midline %': '#32c93c'},
+                    category_orders={'School': benchmark_comparison['School'].tolist()}  # Custom order by improvement
+                )
+                
+                fig.update_layout(
+                    xaxis_title="School",
+                    yaxis_title="Percentage at Benchmark (%)",
+                    legend_title="Assessment Period",
+                    yaxis_range=[0, 100]  # Set y-axis from 0 to 100%
+                )
+                
+                # Add horizontal line at national average
+                fig.add_hline(
+                    y=27,
+                    line_dash='dash',
+                    line_color='red',
+                    annotation_text='South Africa Average (27%)',
+                    annotation_position='top left'
+                )
+                
+                st.plotly_chart(fig, use_container_width=True)
+                
+                with st.expander(f'View {grade_selection} Benchmark Data'):
+                    st.dataframe(benchmark_comparison, use_container_width=True)
+
     except Exception as e:
         st.error(f"Error loading data: {e}") 
