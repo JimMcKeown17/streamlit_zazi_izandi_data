@@ -36,6 +36,7 @@ from pages_nav.page_2024_sessions import show as sessions_show
 from pages_nav.page_2023_results import show as results_2023_show
 from pages_nav.page_research import show as research_show
 from pages_nav.page_egra_comparisons import show as egra_comparisons_show
+from pages_nav.page_2025_sessions import show as sessions_2025_show
 
 # Define page structure
 if st.session_state.user:
@@ -47,6 +48,7 @@ if st.session_state.user:
         "2025 Results": [
             st.Page(midline_2025_show, title="Midline", icon="📊", url_path="2025_midline"),
             st.Page(baseline_2025_show, title="Baseline", icon="📋", url_path="2025_baseline"),
+            st.Page(sessions_2025_show, title="Session Analysis", icon="📈", url_path="2025_sessions"),
         ],
         "2024 Results": [
             st.Page(letter_knowledge_show, title="Letter Knowledge", icon="📝", url_path="2024_letter_knowledge"),

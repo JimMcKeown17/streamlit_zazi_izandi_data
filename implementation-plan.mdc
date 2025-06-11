@@ -1,0 +1,10 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Implementation Plan for 2025 Session Analysis Page
+
+1. Add new page handler file `pages_nav/page_2025_sessions.py` that renders Session Analysis using existing `db_api_get_sessions` module. Done - New file created with `show()` implementing UI and data logic.
+
+2. Update `Home.py` navigation to include the new Session Analysis page under "2025 Results" section. Done - Added import and st.Page entry.

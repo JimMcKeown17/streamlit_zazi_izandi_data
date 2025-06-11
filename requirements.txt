@@ -11,3 +11,5 @@ wkhtmltopdf
 streamlit-authenticator
 openai
 python-dotenv
+psycopg2-binary
+sqlalchemy

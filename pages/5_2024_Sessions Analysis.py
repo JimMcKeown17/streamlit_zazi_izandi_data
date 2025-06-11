@@ -10,6 +10,15 @@ st.set_page_config(layout="wide", page_title="ZZ Data Portal")
 
 st.header("Sessions Analysis")
 
+# Load sessions data and compute average sessions per child
+_, _, sessions_df, _, _, _ = load_zazi_izandi_2024()
+avg_sessions_per_child = sessions_df['Total Sessions'].mean().round(1)
+
+# Display summary metric at the top
+st.header('SUMMARY STATS')
+st.metric('Average Sessions per\n Child:', f'{avg_sessions_per_child:.1f}')
+st.markdown('---')
+
 # Some quick data cleaning/organizing
 
 df = pd.read_excel("data/Zazi iZandi Session Tracker 18102024.xlsx", sheet_name="Sessions")
