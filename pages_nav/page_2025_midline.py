@@ -462,43 +462,6 @@ def show():
                 st.header("🤖 ZazAI Data Analysis")
                 st.write("Get insights from our super AI analyst, ZazAI.")
                 
-                # Debug Section
-                st.markdown("### 🔍 Debug & Diagnostics")
-                st.write("If the AI analysis isn't working, run diagnostics to identify the issue:")
-                
-                debug_col1, debug_col2 = st.columns([1, 3])
-                with debug_col1:
-                    if st.button("🔧 Run System Diagnostics", type="secondary", key="debug_btn"):
-                        st.session_state.run_diagnostics = True
-                
-                if st.session_state.get('run_diagnostics', False):
-                    with debug_col2:
-                        try:
-                            import sys
-                            sys.path.append('..')
-                            from AI_Tools import debug_ai_analysis
-                            import json
-                            debug_results = debug_ai_analysis.run_comprehensive_diagnostics(midline_df)
-                            
-                            # Download diagnostics report
-                            if debug_results:
-                                report_json = json.dumps(debug_results, indent=2)
-                                st.download_button(
-                                    label="📥 Download Diagnostics Report",
-                                    data=report_json,
-                                    file_name=f"ai_analysis_diagnostics_{dt.now().strftime('%Y%m%d_%H%M%S')}.json",
-                                    mime="application/json",
-                                    key="download_debug"
-                                )
-                        except Exception as e:
-                            st.error(f"❌ Debug system failed: {str(e)}")
-                            st.code(f"Error details: {str(e)}")
-                    
-                    # Reset the diagnostics flag
-                    st.session_state.run_diagnostics = False
-                
-                st.divider()
-                
                 # Analysis type selection
                 analysis_col1, analysis_col2 = st.columns(2)
                 
@@ -683,12 +646,43 @@ def show():
                                 st.error(f"❌ Error during analysis: {str(e)}")
                 
                 # Quick data preview for context
-                with st.expander("📊 Data Preview", expanded=False):
-                    st.write(f"**Total Students:** {len(midline_df)}")
-                    st.write(f"**Schools:** {midline_df['school_rep'].nunique()}")
-                    st.write(f"**Teaching Assistants:** {midline_df['name_ta_rep'].nunique()}")
-                    st.write("**Sample Data:**")
-                    st.dataframe(midline_df[['school_rep', 'grade_label', 'letters_correct', 'name_ta_rep']].head(), use_container_width=True)
+                with st.expander("🔍 Debug & Diagnostics", expanded=False):
+                    # Debug Section
+                    st.markdown("### 🔍 Debug & Diagnostics")
+                    st.write("If the AI analysis isn't working, run diagnostics to identify the issue:")
+                    
+                    debug_col1, debug_col2 = st.columns([1, 3])
+                    with debug_col1:
+                        if st.button("🔧 Run System Diagnostics", type="secondary", key="debug_btn"):
+                            st.session_state.run_diagnostics = True
+                    
+                    if st.session_state.get('run_diagnostics', False):
+                        with debug_col2:
+                            try:
+                                import sys
+                                sys.path.append('..')
+                                from AI_Tools import debug_ai_analysis
+                                import json
+                                debug_results = debug_ai_analysis.run_comprehensive_diagnostics(midline_df)
+                                
+                                # Download diagnostics report
+                                if debug_results:
+                                    report_json = json.dumps(debug_results, indent=2)
+                                    st.download_button(
+                                        label="📥 Download Diagnostics Report",
+                                        data=report_json,
+                                        file_name=f"ai_analysis_diagnostics_{dt.now().strftime('%Y%m%d_%H%M%S')}.json",
+                                        mime="application/json",
+                                        key="download_debug"
+                                    )
+                            except Exception as e:
+                                st.error(f"❌ Debug system failed: {str(e)}")
+                                st.code(f"Error details: {str(e)}")
+                        
+                        # Reset the diagnostics flag
+                        st.session_state.run_diagnostics = False
+                    
+                    st.divider()
 
     except Exception as e:
         st.error(f"Error loading data: {e}") 
