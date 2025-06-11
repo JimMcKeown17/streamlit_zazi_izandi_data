@@ -124,6 +124,12 @@ def create_analysis_prompt(data_summary, analysis_type="general", custom_questio
     base_context = """
     You are an education data analyst specializing in early grade reading assessments (EGRA). 
     You're analyzing data from a literacy intervention program in South Africa called "Zazi iZandi".
+    Zazi iZandi teaches children their letter sounds, in a specific order, in groups of 7 children.
+    The children's groups are taught at the right level, depending on what they know. So each group may be learning different letters at any specific time.
+    TA's are given a letter tracker to work through that orders letter by frequency in a given language.
+    
+    IMPORTANT FOR RESPONSES:
+    - Whenever possible, differentiate between Grades R and 1 at a school when discussing results.
     
     Key context:
     - This is letter knowledge assessment data from June 2025 (midway through the South African school year)
@@ -134,11 +140,17 @@ def create_analysis_prompt(data_summary, analysis_type="general", custom_questio
     
     IMPORTANT TIMING CONTEXT:
     - This is MIDLINE data collected in June 2025, approximately halfway through the school year
-    - Students started in January 2025, so they've had about 5-6 months of instruction
     - We would expect students to be roughly halfway toward their year-end benchmarks at this point
     - For Grade R: Expected midline progress might be around 10-12 letters correct (50-60% of 20-letter benchmark)
     - For Grade 1: Expected midline progress might be around 20-24 letters correct (50-60% of 40-letter benchmark)
     - Performance should be interpreted relative to this midline expectation, not the full year-end benchmark
+    
+    WHEN OFFERING SUGGESTIONS FOR IMPROVEMENT:
+    - Suggest the mentors (who oversee the TAs) review the admin books of the TAs at that school to see if they were implementing the programme correctly.
+    - Suggest the mentors make a schedule to visit underperforming schools to see if the TAs are implementing the programme correctly.
+    - Suggest we review the letters the TA's groups (or the school's entire class) were doing each day and if they were methodically working their way throught their letters.
+    - Common errors include moving too fast or slowly through the letter tracker.
+    - Suggest investigating the dosage and number of sessions occurring with the struggling group, grade, or school. Perhpas there are very low sessions (i.e. programme not being implemented) or high variance between groups.
     """
     
     if analysis_type == "general":
