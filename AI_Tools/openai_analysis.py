@@ -12,7 +12,6 @@ def setup_openai_client():
     """Initialize OpenAI client with API key from environment variables."""
     api_key = os.getenv('OPENAI_API_KEY')
     if not api_key:
-        st.error("OPENAI_API_KEY not found in environment variables. Please add it to your .env file.")
         return None
     
     client = openai.OpenAI(api_key=api_key)
@@ -236,7 +235,6 @@ def get_openai_analysis(prompt, model="gpt-4o-mini", max_tokens=1500):
         return response.choices[0].message.content
         
     except Exception as e:
-        st.error(f"Error calling OpenAI API: {str(e)}")
         return None
 
 def analyze_data_with_openai(df, analysis_type="general", custom_questions=None, model="gpt-4o-mini"):

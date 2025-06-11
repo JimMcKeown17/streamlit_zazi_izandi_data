@@ -19,7 +19,6 @@ def setup_openai_client():
     """Initialize OpenAI client with API key from environment variables."""
     api_key = os.getenv('OPENAI_API_KEY')
     if not api_key:
-        st.error("OPENAI_API_KEY not found in environment variables. Please add it to your .env file.")
         return None
     
     client = openai.OpenAI(api_key=api_key)
@@ -34,18 +33,6 @@ def log_trace(event_type: str, data: Dict, iteration: int = None):
         "data": data
     }
     TRACE_LOG.append(trace_entry)
-    
-    # Also show in Streamlit for real-time monitoring
-    if event_type == "iteration_start":
-        st.write(f"🔄 **Iteration {iteration}**: Starting...")
-    elif event_type == "tool_calls":
-        st.write(f"🔧 **Iteration {iteration}**: Using {len(data['tool_calls'])} tool(s): {', '.join([tc['name'] for tc in data['tool_calls']])}")
-    elif event_type == "tool_result":
-        st.write(f"📊 **Tool Result**: {data['function_name']} completed")
-    elif event_type == "iteration_complete":
-        st.write(f"✅ **Iteration {iteration}**: Complete")
-    elif event_type == "final_response":
-        st.write(f"🎯 **Analysis Complete**: Generated {len(data['content'])} characters of response")
 
 def get_tool_definitions():
     """Define the available tools for the AI to use."""
@@ -348,21 +335,12 @@ def generate_initial_analysis(df: pd.DataFrame, model: str = "gpt-4o-mini") -> s
 def answer_question(df: pd.DataFrame, question: str, model: str = "gpt-4o-mini") -> str:
     """Answer a specific question about the data using tools."""
     
-    # Add detailed debugging
-    st.write("🔧 **Debug Info:**")
-    st.write(f"- Question: {question}")
-    st.write(f"- Model: {model}")
-    st.write(f"- DataFrame shape: {df.shape}")
-    
     client = setup_openai_client()
     if not client:
         return "Failed to setup OpenAI client"
     
-    st.write("✅ OpenAI client setup successful")
-    
     try:
         toolkit = DataAnalysisToolkit(df)
-        st.write("✅ DataAnalysisToolkit initialized")
     except Exception as e:
         return f"Error initializing toolkit: {str(e)}"
     
@@ -385,15 +363,8 @@ Answer the question directly and concisely based on the tool results."""
         }
     ]
     
-    st.write("✅ Messages prepared")
-    
     try:
-        # Test tool definitions first
         tools = get_tool_definitions()
-        st.write(f"✅ Tool definitions loaded: {len(tools)} tools")
-        
-        # Make the API call with detailed error handling
-        st.write("🚀 Making OpenAI API call...")
         
         response = client.chat.completions.create(
             model=model,
@@ -404,16 +375,12 @@ Answer the question directly and concisely based on the tool results."""
             temperature=0.7
         )
         
-        st.write("✅ OpenAI API call successful")
-        
         # Check response structure
         if not response.choices:
             return "Error: No response choices returned from OpenAI"
         
         if not response.choices[0].message:
             return "Error: No message in response choice"
-            
-        st.write("✅ Response structure valid")
         
         return process_ai_response(client, toolkit, messages, response, model)
         
@@ -422,53 +389,32 @@ Answer the question directly and concisely based on the tool results."""
     except openai.APIError as e:
         return f"OpenAI API error: {str(e)}"
     except Exception as e:
-        st.error(f"Unexpected error type: {type(e).__name__}")
-        st.code(traceback.format_exc())
         return f"Error answering question: {str(e)}"
 
 def process_ai_response(client, toolkit: DataAnalysisToolkit, messages: List[Dict], 
                        response, model: str, max_iterations: int = 4) -> str:
-    """Process AI response and handle tool calls iteratively with comprehensive tracing."""
+    """Process AI response and handle tool calls iteratively."""
     iteration = 0
     
     # Clear previous trace log for new analysis
     global TRACE_LOG
     TRACE_LOG = []
     
-    # Create a real-time trace display container
-    trace_container = st.expander("🔍 Real-Time Iteration Trace", expanded=False)
-    
-    with trace_container:
-        st.write("**Starting AI Analysis with Tool Calling...**")
-        
-        log_trace("analysis_start", {
-            "model": model,
-            "max_iterations": max_iterations,
-            "initial_message_count": len(messages)
-        })
-    
     while iteration < max_iterations:
         iteration += 1
         
-        with trace_container:
-            log_trace("iteration_start", {
-                "message_count": len(messages)
-            }, iteration)
+        log_trace("iteration_start", {
+            "message_count": len(messages)
+        }, iteration)
         
         response_message = response.choices[0].message
         
         # If no tool calls, return the final answer
         if not response_message.tool_calls:
-            with trace_container:
-                log_trace("final_response", {
-                    "content": response_message.content,
-                    "total_iterations": iteration - 1
-                })
-                st.success(f"✅ **Analysis Complete** in {iteration - 1} iterations!")
-            
-            # Add download option for trace log
-            with trace_container:
-                _add_trace_download_option()
+            log_trace("final_response", {
+                "content": response_message.content,
+                "total_iterations": iteration - 1
+            })
             return response_message.content
         
         # Log the tool calls for this iteration with error handling
@@ -483,20 +429,14 @@ def process_ai_response(client, toolkit: DataAnalysisToolkit, messages: List[Dic
                         "arguments": parsed_args
                     })
                 except json.JSONDecodeError as e:
-                    with trace_container:
-                        st.error(f"❌ JSON parsing error for tool {tc.function.name}: {str(e)}")
-                        st.code(f"Raw arguments: {tc.function.arguments}")
                     return f"Error parsing tool arguments: {str(e)}"
         except Exception as e:
-            with trace_container:
-                st.error(f"❌ Error processing tool calls: {str(e)}")
             return f"Error processing tool calls: {str(e)}"
         
-        with trace_container:
-            log_trace("tool_calls", {
-                "tool_calls": tool_call_info,
-                "assistant_content": response_message.content
-            }, iteration)
+        log_trace("tool_calls", {
+            "tool_calls": tool_call_info,
+            "assistant_content": response_message.content
+        }, iteration)
         
         # Add the assistant's response to conversation
         messages.append({
@@ -521,43 +461,19 @@ def process_ai_response(client, toolkit: DataAnalysisToolkit, messages: List[Dic
                 function_name = tool_call.function.name
                 function_args = json.loads(tool_call.function.arguments)
 
-                # Run the entire execution block inside the trace container so all output stays hidden unless expanded
-                with trace_container:
-                    st.write(f"🔧 Executing: {function_name}")
+                # Execute the tool
+                tool_result = execute_tool_call(toolkit, function_name, function_args, iteration)
 
-                    # Execute the tool
-                    tool_result = execute_tool_call(toolkit, function_name, function_args, iteration)
-
-                    # Add tool result to conversation
-                    messages.append({
-                        "role": "tool",
-                        "tool_call_id": tool_call.id,
-                        "content": json.dumps(tool_result, indent=2)
-                    })
-
-                    st.write(f"✅ {function_name} completed")
-
-                    # Show tool result summary for debugging
-                    if isinstance(tool_result, dict):
-                        if "error" in tool_result:
-                            st.error(f"🚨 Tool returned error: {tool_result['error']}")
-                        elif "top_performers" in tool_result:
-                            st.success(f"📊 Found {len(tool_result['top_performers'])} top performers")
-                        elif "underperformers" in tool_result:
-                            st.success(f"📊 Found {len(tool_result['underperformers'])} underperformers") 
-                        else:
-                            st.info(f"📊 Tool result keys: {list(tool_result.keys())}")
-                    else:
-                        st.info(f"📊 Tool result type: {type(tool_result)}")
+                # Add tool result to conversation
+                messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": json.dumps(tool_result, indent=2)
+                })
                     
             except json.JSONDecodeError as e:
-                with trace_container:
-                    st.error(f"❌ JSON error in tool execution: {str(e)}")
                 return f"JSON error executing tool: {str(e)}"
             except Exception as e:
-                with trace_container:
-                    st.error(f"❌ Error executing tool {function_name}: {str(e)}")
-                    st.code(traceback.format_exc())
                 return f"Error executing tool {function_name}: {str(e)}"
         
         # Add synthesis prompt after 2 iterations to encourage stopping
@@ -587,44 +503,25 @@ def process_ai_response(client, toolkit: DataAnalysisToolkit, messages: List[Dic
                     temperature=0.7
                 )
             
-            with trace_container:
-                log_trace("iteration_complete", {
-                    "success": True
-                }, iteration)
+            log_trace("iteration_complete", {
+                "success": True
+            }, iteration)
                 
         except Exception as e:
-            with trace_container:
-                log_trace("api_error", {
-                    "error": str(e),
-                    "iteration": iteration
-                }, iteration)
-                st.error(f"❌ API Error in iteration {iteration}: {str(e)}")
-            
-            with trace_container:
-                _add_trace_download_option()
+            log_trace("api_error", {
+                "error": str(e),
+                "iteration": iteration
+            }, iteration)
             return f"Analysis failed at iteration {iteration} due to API error: {str(e)}"
     
-    # If we hit max iterations, return what we have with detailed trace info
+    # If we hit max iterations, return what we have
     final_message = response.choices[0].message
     partial_response = final_message.content if final_message.content else ""
     
-    with trace_container:
-        log_trace("max_iterations_reached", {
-            "final_content": partial_response,
-            "total_tool_calls": sum(1 for entry in TRACE_LOG if entry["event_type"] == "tool_execution_start")
-        })
-        st.warning(f"⚠️ **Reached iteration limit** ({max_iterations} iterations)")
-        
-        # Show iteration summary
-        st.subheader("📊 Iteration Summary:")
-        for i in range(1, max_iterations + 1):
-            tools_used = [entry["data"]["function_name"] for entry in TRACE_LOG 
-                         if entry["event_type"] == "tool_execution_start" and entry["iteration"] == i]
-            if tools_used:
-                st.write(f"**Iteration {i}**: {', '.join(tools_used)}")
-    
-    with trace_container:
-        _add_trace_download_option()
+    log_trace("max_iterations_reached", {
+        "final_content": partial_response,
+        "total_tool_calls": sum(1 for entry in TRACE_LOG if entry["event_type"] == "tool_execution_start")
+    })
     
     return f"""Analysis reached iteration limit after {max_iterations} tool calls, but here's what I found:
 
@@ -638,21 +535,7 @@ def process_ai_response(client, toolkit: DataAnalysisToolkit, messages: List[Dic
 💡 **Optimization Tips**:
 - Try asking more specific questions like: "Which schools improved the most?"
 - Avoid broad questions that require multiple analysis types
-- Consider using the context-only method for simpler queries
-
-📥 **Download the full trace log above to see detailed iteration flow.**"""
-
-def _add_trace_download_option():
-    """Add download option for the trace log."""
-    if TRACE_LOG:
-        trace_json = json.dumps(TRACE_LOG, indent=2)
-        st.download_button(
-            label="📥 Download Full Trace Log",
-            data=trace_json,
-            file_name=f"openai_trace_log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
-            mime="application/json",
-            key=f"trace_download_{len(TRACE_LOG)}"
-        )
+- Consider using the context-only method for simpler queries"""
 
 def analyze_with_tools(df: pd.DataFrame, analysis_type: str = "initial", 
                       question: str = None, model: str = "gpt-4o-mini") -> str:

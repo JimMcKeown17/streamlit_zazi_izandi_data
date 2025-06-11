@@ -645,6 +645,57 @@ def show():
                             except Exception as e:
                                 st.error(f"❌ Error during analysis: {str(e)}")
                 
+                # Debug section in expander
+                with st.expander("🔧 Debug & Diagnostics", expanded=False):
+                    st.markdown("### 🔍 Debug Information")
+                    st.write("Use this section to troubleshoot AI analysis issues:")
+                    
+                    debug_col1, debug_col2 = st.columns([1, 3])
+                    with debug_col1:
+                        if st.button("🔧 Run System Diagnostics", type="secondary", key="debug_btn"):
+                            st.session_state.run_diagnostics = True
+                    
+                    if st.session_state.get('run_diagnostics', False):
+                        with debug_col2:
+                            try:
+                                import sys
+                                sys.path.append('..')
+                                from AI_Tools import debug_ai_analysis
+                                import json
+                                debug_results = debug_ai_analysis.run_comprehensive_diagnostics(midline_df)
+                                
+                                # Download diagnostics report
+                                if debug_results:
+                                    report_json = json.dumps(debug_results, indent=2)
+                                    st.download_button(
+                                        label="📥 Download Diagnostics Report",
+                                        data=report_json,
+                                        file_name=f"ai_analysis_diagnostics_{dt.now().strftime('%Y%m%d_%H%M%S')}.json",
+                                        mime="application/json",
+                                        key="download_debug"
+                                    )
+                            except Exception as e:
+                                st.error(f"❌ Debug system failed: {str(e)}")
+                                st.code(f"Error details: {str(e)}")
+                        
+                        # Reset the diagnostics flag
+                        st.session_state.run_diagnostics = False
+                    
+                    # Quick data info for troubleshooting
+                    st.divider()
+                    st.markdown("### 📊 Data Quick Info")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("DataFrame Shape", f"{midline_df.shape[0]} rows × {midline_df.shape[1]} cols")
+                    with col2:
+                        st.metric("Available Columns", len(midline_df.columns))
+                    with col3:
+                        api_key_status = "✅ Set" if os.getenv('OPENAI_API_KEY') else "❌ Missing"
+                        st.metric("API Key Status", api_key_status)
+                    
+                    if st.checkbox("Show column names", key="show_cols"):
+                        st.write("**DataFrame Columns:**")
+                        st.write(list(midline_df.columns))
 
 
     except Exception as e:
