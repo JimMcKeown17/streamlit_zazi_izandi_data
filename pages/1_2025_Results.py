@@ -385,7 +385,10 @@ with midline_tab:
                         with st.spinner("🤔 AI is analyzing your data..."):
                             try:
                                 # Import the analysis function
-                                from openai_analysis import analyze_data_with_openai
+                                import sys
+                                import os
+                                sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+                                from AI_Tools.openai_analysis import analyze_data_with_openai
                                 
                                 analysis = analyze_data_with_openai(
                                     midline_df, 

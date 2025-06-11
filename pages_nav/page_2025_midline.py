@@ -459,8 +459,45 @@ def show():
             # OpenAI Analysis Section
             st.divider()
             with st.container():
-                st.header("🤖 AI Data Analysis")
-                st.write("Get insights from OpenAI's ChatGPT about your assessment data")
+                st.header("🤖 ZazAI Data Analysis")
+                st.write("Get insights from our super AI analyst, ZazAI.")
+                
+                # Debug Section
+                st.markdown("### 🔍 Debug & Diagnostics")
+                st.write("If the AI analysis isn't working, run diagnostics to identify the issue:")
+                
+                debug_col1, debug_col2 = st.columns([1, 3])
+                with debug_col1:
+                    if st.button("🔧 Run System Diagnostics", type="secondary", key="debug_btn"):
+                        st.session_state.run_diagnostics = True
+                
+                if st.session_state.get('run_diagnostics', False):
+                    with debug_col2:
+                        try:
+                            import sys
+                            sys.path.append('..')
+                            from AI_Tools import debug_ai_analysis
+                            import json
+                            debug_results = debug_ai_analysis.run_comprehensive_diagnostics(midline_df)
+                            
+                            # Download diagnostics report
+                            if debug_results:
+                                report_json = json.dumps(debug_results, indent=2)
+                                st.download_button(
+                                    label="📥 Download Diagnostics Report",
+                                    data=report_json,
+                                    file_name=f"ai_analysis_diagnostics_{dt.now().strftime('%Y%m%d_%H%M%S')}.json",
+                                    mime="application/json",
+                                    key="download_debug"
+                                )
+                        except Exception as e:
+                            st.error(f"❌ Debug system failed: {str(e)}")
+                            st.code(f"Error details: {str(e)}")
+                    
+                    # Reset the diagnostics flag
+                    st.session_state.run_diagnostics = False
+                
+                st.divider()
                 
                 # Analysis type selection
                 analysis_col1, analysis_col2 = st.columns(2)
@@ -483,12 +520,46 @@ def show():
                         help="gpt-4o-mini is faster and cheaper, gpt-4o is more capable"
                     )
                 
-                # Custom questions input
-                custom_questions_input = st.text_area(
-                    "Additional Questions (optional):",
-                    placeholder="Enter specific questions you'd like the AI to address, one per line",
-                    help="Ask specific questions about the data, e.g., 'What factors might explain school performance differences?'"
+                # Analysis method selection
+                analysis_method = st.radio(
+                    "Analysis Method:",
+                    ["🔧 Tool-Enabled (Recommended)", "📄 Context-Only"],
+                    help="Tool-enabled allows AI to dynamically explore data; Context-only sends summarized data"
                 )
+                
+                # Show capabilities based on analysis method
+                if analysis_method == "🔧 Tool-Enabled (Recommended)":
+                    st.info("""
+                    **Tool-Enabled Analysis Capabilities:**
+                    - 🎯 Dynamic data exploration and drill-downs
+                    - 📊 Benchmark analysis with midline context
+                    - 🔍 Top/underperformer identification
+                    - 📈 Variance analysis across schools/TAs/classes
+                    - 🚨 At-risk student identification
+                    - 🔄 Interactive Q&A with follow-up questions
+                    """)
+                    
+                    # Custom questions for tool-enabled analysis
+                    custom_questions_input = st.text_area(
+                        "Ask Specific Questions (optional):",
+                        placeholder="e.g., 'Which schools need the most support?' or 'How do our top TAs compare?'",
+                        help="The AI can answer specific questions using dynamic data analysis tools"
+                    )
+                else:
+                    st.info("""
+                    **Context-Only Analysis:**
+                    - 📄 Pre-calculated summary statistics
+                    - 🎯 Standard benchmark comparisons  
+                    - 📊 Fixed analysis types (General/School/Grade)
+                    - ⚡ Faster processing
+                    """)
+                    
+                    # Custom questions for context-only analysis  
+                    custom_questions_input = st.text_area(
+                        "Additional Questions (optional):",
+                        placeholder="Enter specific questions you'd like the AI to address, one per line",
+                        help="Ask specific questions about the pre-calculated data summary"
+                    )
                 
                 # Parse custom questions
                 custom_questions = None
@@ -500,37 +571,114 @@ def show():
                     if not os.getenv('OPENAI_API_KEY'):
                         st.error("⚠️ OPENAI_API_KEY not found in environment variables. Please add it to your .env file.")
                     else:
-                        with st.spinner("🤔 AI is analyzing your data..."):
+                        with st.spinner("🤔 ZazAI is analyzing your data..."):
                             try:
-                                # Import the analysis function
-                                from openai_analysis import analyze_data_with_openai
+                                analysis = None
+                                method_used = analysis_method
                                 
-                                analysis = analyze_data_with_openai(
-                                    midline_df, 
-                                    analysis_type=analysis_type, 
-                                    custom_questions=custom_questions,
-                                    model=model_choice
-                                )
+                                if analysis_method == "🔧 Tool-Enabled (Recommended)":
+                                    # Try the tool-enabled analysis first
+                                    try:
+                                        import sys
+                                        sys.path.append('..')
+                                        from AI_Tools.openai_tools_analysis import analyze_with_tools
+                                        
+                                        if custom_questions and custom_questions[0].strip():
+                                            # Answer specific questions
+                                            analysis = analyze_with_tools(
+                                                midline_df,
+                                                analysis_type="question",
+                                                question="\n".join(custom_questions),
+                                                model=model_choice
+                                            )
+                                        else:
+                                            # Generate initial comprehensive analysis
+                                            analysis = analyze_with_tools(
+                                                midline_df,
+                                                analysis_type="initial", 
+                                                model=model_choice
+                                            )
+                                            
+                                    except Exception as tool_error:
+                                        # Tool-enabled analysis failed, fall back to context-only
+                                        st.warning(f"⚠️ Tool-enabled analysis encountered an error. Falling back to context-only method...")
+                                        st.info(f"Error details: {str(tool_error)}")
+                                        
+                                        try:
+                                            import sys
+                                            sys.path.append('..')
+                                            from AI_Tools.openai_analysis import analyze_data_with_openai
+                                            
+                                            analysis = analyze_data_with_openai(
+                                                midline_df, 
+                                                analysis_type=analysis_type, 
+                                                custom_questions=custom_questions,
+                                                model=model_choice
+                                            )
+                                            method_used = "📄 Context-Only (Fallback)"
+                                            
+                                        except Exception as fallback_error:
+                                            st.error(f"❌ Both analysis methods failed. Tool error: {str(tool_error)} | Fallback error: {str(fallback_error)}")
+                                            analysis = None
+                                else:
+                                    # Use the original context-only method directly
+                                    import sys
+                                    sys.path.append('..')
+                                    from AI_Tools.openai_analysis import analyze_data_with_openai
+                                    
+                                    analysis = analyze_data_with_openai(
+                                        midline_df, 
+                                        analysis_type=analysis_type, 
+                                        custom_questions=custom_questions,
+                                        model=model_choice
+                                    )
                                 
                                 if analysis:
-                                    st.success("✅ Analysis Complete!")
+                                    # Show success message with method used
+                                    if method_used == "📄 Context-Only (Fallback)":
+                                        st.success("✅ Analysis Complete! (Used fallback method)")
+                                        st.info("🔄 The tool-enabled analysis had issues, but the context-only method worked successfully.")
+                                        
+                                        # Show helpful tips for next time
+                                        with st.expander("💡 Tips for Tool-Enabled Analysis", expanded=False):
+                                            st.markdown("""
+                                            **Common issues and solutions:**
+                                            - **Complex questions**: Try breaking them into simpler parts
+                                            - **Data format issues**: Check if your data has the expected columns
+                                            - **API limits**: Tool-enabled analysis uses more API calls
+                                            
+                                            **Try these simpler questions next time:**
+                                            - "Which schools perform best?"
+                                            - "Show me Grade 1 benchmark results"
+                                            - "Which TAs need support?"
+                                            """)
+                                    else:
+                                        st.success("✅ Analysis Complete!")
                                     
                                     # Display the analysis in an expandable section
-                                    with st.expander("📋 AI Analysis Results", expanded=True):
+                                    analysis_title = f"📋 AI Analysis Results - {method_used}"
+                                    with st.expander(analysis_title, expanded=True):
                                         st.markdown(analysis)
                                     
                                     # Option to download the analysis
+                                    if "Tool-Enabled" in method_used:
+                                        method_suffix = "tools"
+                                    elif "Fallback" in method_used:
+                                        method_suffix = "context_fallback"
+                                    else:
+                                        method_suffix = "context"
+                                        
                                     st.download_button(
                                         label="📥 Download Analysis",
                                         data=analysis,
-                                        file_name=f"ai_analysis_{analysis_type}_{dt.today().strftime('%Y-%m-%d')}.txt",
+                                        file_name=f"ai_analysis_{method_suffix}_{dt.today().strftime('%Y-%m-%d')}.txt",
                                         mime="text/plain"
                                     )
                                 else:
                                     st.error("❌ Failed to generate analysis. Please check your API key and try again.")
                                     
-                            except ImportError:
-                                st.error("❌ OpenAI analysis module not found. Please ensure openai_analysis.py is in your project directory.")
+                            except ImportError as e:
+                                st.error(f"❌ Analysis module not found: {str(e)}. Please ensure all required files are in your project directory.")
                             except Exception as e:
                                 st.error(f"❌ Error during analysis: {str(e)}")
                 
