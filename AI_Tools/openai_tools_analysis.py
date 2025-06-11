@@ -436,7 +436,7 @@ def process_ai_response(client, toolkit: DataAnalysisToolkit, messages: List[Dic
     TRACE_LOG = []
     
     # Create a real-time trace display container
-    trace_container = st.expander("🔍 Real-Time Iteration Trace", expanded=True)
+    trace_container = st.expander("🔍 Real-Time Iteration Trace", expanded=False)
     
     with trace_container:
         st.write("**Starting AI Analysis with Tool Calling...**")
@@ -467,7 +467,8 @@ def process_ai_response(client, toolkit: DataAnalysisToolkit, messages: List[Dic
                 st.success(f"✅ **Analysis Complete** in {iteration - 1} iterations!")
             
             # Add download option for trace log
-            _add_trace_download_option()
+            with trace_container:
+                _add_trace_download_option()
             return response_message.content
         
         # Log the tool calls for this iteration with error handling
@@ -518,24 +519,24 @@ def process_ai_response(client, toolkit: DataAnalysisToolkit, messages: List[Dic
         for tool_call in response_message.tool_calls:
             try:
                 function_name = tool_call.function.name
+                function_args = json.loads(tool_call.function.arguments)
+
+                # Run the entire execution block inside the trace container so all output stays hidden unless expanded
                 with trace_container:
                     st.write(f"🔧 Executing: {function_name}")
-                
-                function_args = json.loads(tool_call.function.arguments)
-                
-                # Execute the tool
-                tool_result = execute_tool_call(toolkit, function_name, function_args, iteration)
-                
-                # Add tool result to conversation
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": json.dumps(tool_result, indent=2)
-                })
-                
-                with trace_container:
+
+                    # Execute the tool
+                    tool_result = execute_tool_call(toolkit, function_name, function_args, iteration)
+
+                    # Add tool result to conversation
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps(tool_result, indent=2)
+                    })
+
                     st.write(f"✅ {function_name} completed")
-                    
+
                     # Show tool result summary for debugging
                     if isinstance(tool_result, dict):
                         if "error" in tool_result:
@@ -599,7 +600,8 @@ def process_ai_response(client, toolkit: DataAnalysisToolkit, messages: List[Dic
                 }, iteration)
                 st.error(f"❌ API Error in iteration {iteration}: {str(e)}")
             
-            _add_trace_download_option()
+            with trace_container:
+                _add_trace_download_option()
             return f"Analysis failed at iteration {iteration} due to API error: {str(e)}"
     
     # If we hit max iterations, return what we have with detailed trace info
@@ -621,7 +623,8 @@ def process_ai_response(client, toolkit: DataAnalysisToolkit, messages: List[Dic
             if tools_used:
                 st.write(f"**Iteration {i}**: {', '.join(tools_used)}")
     
-    _add_trace_download_option()
+    with trace_container:
+        _add_trace_download_option()
     
     return f"""Analysis reached iteration limit after {max_iterations} tool calls, but here's what I found:
 
