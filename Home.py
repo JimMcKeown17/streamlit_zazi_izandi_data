@@ -29,6 +29,7 @@ if st.sidebar.button("Logout"):
 from pages_nav.home_page import show as home_show
 from pages_nav.page_2025_midline import show as midline_2025_show
 from pages_nav.page_2025_baseline import show as baseline_2025_show
+from pages_nav.page_2025_zazai import show as zazai_show
 from pages_nav.page_2024_letter_knowledge import show as letter_knowledge_show
 from pages_nav.page_2024_word_reading import show as word_reading_show
 from pages_nav.page_2024_new_schools import show as new_schools_show
@@ -49,6 +50,7 @@ if st.session_state.user:
             st.Page(midline_2025_show, title="Midline", icon="📊", url_path="2025_midline"),
             st.Page(baseline_2025_show, title="Baseline", icon="📋", url_path="2025_baseline"),
             st.Page(sessions_2025_show, title="Session Analysis", icon="📈", url_path="2025_sessions"),
+            st.Page(zazai_show, title="ZazAI", icon="🤖", url_path="2025_zazai"),
         ],
         "2024 Results": [
             st.Page(letter_knowledge_show, title="Letter Knowledge", icon="📝", url_path="2024_letter_knowledge"),

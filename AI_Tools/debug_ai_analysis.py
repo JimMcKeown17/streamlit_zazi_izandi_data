@@ -15,7 +15,8 @@ def run_comprehensive_diagnostics(df):
     Tests each component individually to identify issues.
     """
     
-    st.header("🔍 AI Analysis System Diagnostics")
+    st.header("🔧 AI Analysis System Diagnostics")
+    st.write("This diagnostic tool will test all components of the AI analysis system.")
     
     results = {
         "timestamp": datetime.now().isoformat(),
@@ -23,136 +24,131 @@ def run_comprehensive_diagnostics(df):
         "overall_status": "UNKNOWN"
     }
     
-    # Test 1: Environment Setup
-    st.subheader("1. Environment Setup")
-    env_status = test_environment()
-    results["tests"].append({"test": "environment", "status": env_status["status"], "details": env_status})
+    # Test sequence
+    test_functions = [
+        ("environment", test_environment),
+        ("data_structure", lambda: test_data_structure(df)),
+        ("openai_api", test_openai_connection),
+        ("module_imports", test_module_imports),
+        ("tool_system", lambda: test_tool_system(df)),
+        ("simple_openai_call", test_simple_openai_call)
+    ]
     
-    # Test 2: Data Structure
-    st.subheader("2. Data Structure Validation")
-    data_status = test_data_structure(df)
-    results["tests"].append({"test": "data_structure", "status": data_status["status"], "details": data_status})
+    for test_name, test_func in test_functions:
+        st.subheader(f"🧪 Testing: {test_name.replace('_', ' ').title()}")
+        
+        try:
+            test_result = test_func()
+            test_result["test"] = test_name
+            results["tests"].append(test_result)
+            
+        except Exception as e:
+            error_result = {
+                "test": test_name,
+                "status": "FAIL",
+                "issues": [f"Test crashed: {str(e)}"],
+                "details": {"exception": str(e), "traceback": traceback.format_exc()}
+            }
+            results["tests"].append(error_result)
+            st.error(f"❌ Test {test_name} crashed: {str(e)}")
+            st.code(traceback.format_exc())
     
-    # Test 3: OpenAI Connection
-    st.subheader("3. OpenAI API Connection")
-    api_status = test_openai_connection()
-    results["tests"].append({"test": "openai_api", "status": api_status["status"], "details": api_status})
-    
-    # Test 4: Module Imports
-    st.subheader("4. Module Import Tests")
-    import_status = test_module_imports()
-    results["tests"].append({"test": "module_imports", "status": import_status["status"], "details": import_status})
-    
-    # Test 5: Tool System
-    st.subheader("5. Tool System Test")
-    tool_status = test_tool_system(df)
-    results["tests"].append({"test": "tool_system", "status": tool_status["status"], "details": tool_status})
-    
-    # Test 6: Context-Only System
-    st.subheader("6. Context-Only System Test")
-    context_status = test_context_system(df)
-    results["tests"].append({"test": "context_system", "status": context_status["status"], "details": context_status})
-    
-    # Test 7: Simple OpenAI Call
-    st.subheader("7. Simple OpenAI Test")
-    simple_status = test_simple_openai_call()
-    results["tests"].append({"test": "simple_openai", "status": simple_status["status"], "details": simple_status})
-    
-    # Overall Assessment
-    st.subheader("🎯 Overall Assessment")
+    # Overall assessment
+    st.divider()
+    st.header("📋 Overall Assessment")
     overall_assessment(results)
     
     return results
 
 def test_environment():
-    """Test environment variables and basic setup."""
+    """Test environment setup and dependencies."""
     status = {"status": "PASS", "issues": [], "details": {}}
     
-    try:
-        # Check API key
-        api_key = os.getenv('OPENAI_API_KEY')
-        if not api_key:
-            status["status"] = "FAIL"
-            status["issues"].append("OPENAI_API_KEY not found in environment")
-            st.error("❌ OPENAI_API_KEY not found")
-        elif len(api_key) < 20:
-            status["status"] = "WARN"
-            status["issues"].append("API key seems too short")
-            st.warning("⚠️ API key seems unusually short")
-        else:
-            st.success(f"✅ API key found (length: {len(api_key)})")
-            status["details"]["api_key_length"] = len(api_key)
+    # Test API key
+    api_key = os.getenv('OPENAI_API_KEY')
+    if api_key:
+        st.success("✅ OPENAI_API_KEY found in environment")
+        status["details"]["api_key_present"] = True
         
-        # Check .env file existence
-        if os.path.exists('.env'):
-            st.success("✅ .env file exists")
-            status["details"]["env_file_exists"] = True
+        # Basic validation
+        if len(api_key) > 20 and api_key.startswith(('sk-', 'sk-proj-')):
+            st.success("✅ API key format looks valid")
+            status["details"]["api_key_format_valid"] = True
         else:
-            st.warning("⚠️ .env file not found")
-            status["details"]["env_file_exists"] = False
-            
-    except Exception as e:
+            status["status"] = "WARN"
+            status["issues"].append("API key format may be invalid")
+            st.warning("⚠️ API key format may be invalid")
+    else:
         status["status"] = "FAIL"
-        status["issues"].append(f"Environment test error: {str(e)}")
-        st.error(f"❌ Environment test failed: {str(e)}")
+        status["issues"].append("OPENAI_API_KEY not found in environment")
+        st.error("❌ OPENAI_API_KEY not found in environment variables")
+    
+    # Test required packages
+    required_packages = ['openai', 'pandas', 'streamlit']
+    for package in required_packages:
+        try:
+            __import__(package)
+            st.success(f"✅ {package} is available")
+            status["details"][f"{package}_available"] = True
+        except ImportError:
+            status["status"] = "FAIL"
+            status["issues"].append(f"Required package {package} not available")
+            st.error(f"❌ Required package {package} not available")
     
     return status
 
 def test_data_structure(df):
-    """Test DataFrame structure and expected columns."""
+    """Test that the DataFrame has the expected structure."""
     status = {"status": "PASS", "issues": [], "details": {}}
     
-    try:
-        # Basic DataFrame info
-        status["details"]["shape"] = df.shape
-        status["details"]["columns"] = list(df.columns)
-        
-        st.write(f"📊 DataFrame shape: {df.shape}")
-        st.write(f"📋 Columns: {len(df.columns)} total")
-        
-        # Expected columns for analysis
-        expected_columns = {
-            'letters_correct': 'letters_correct',
-            'grade_label': 'grade_label', 
-            'school_rep': 'school_rep',
-            'name_ta_rep': 'name_ta_rep',
-            'name_first_learner': 'name_first_learner'
-        }
-        
-        missing_columns = []
-        found_columns = []
-        
-        for key, col_name in expected_columns.items():
-            if col_name in df.columns:
-                found_columns.append(col_name)
-                st.success(f"✅ {col_name} found")
-            else:
-                missing_columns.append(col_name)
-                st.error(f"❌ {col_name} missing")
-        
-        status["details"]["found_columns"] = found_columns
-        status["details"]["missing_columns"] = missing_columns
-        
-        if missing_columns:
-            status["status"] = "FAIL" if len(missing_columns) > 2 else "WARN"
-            status["issues"].append(f"Missing columns: {missing_columns}")
-        
-        # Data type checks
-        if 'letters_correct' in df.columns:
-            score_info = {
-                "min": float(df['letters_correct'].min()),
-                "max": float(df['letters_correct'].max()),
-                "mean": float(df['letters_correct'].mean()),
-                "null_count": int(df['letters_correct'].isnull().sum())
-            }
-            status["details"]["score_stats"] = score_info
-            st.write(f"📈 Score range: {score_info['min']} - {score_info['max']} (avg: {score_info['mean']:.1f})")
-            
-    except Exception as e:
+    # Basic DataFrame checks
+    if not isinstance(df, pd.DataFrame):
         status["status"] = "FAIL"
-        status["issues"].append(f"Data structure test error: {str(e)}")
-        st.error(f"❌ Data structure test failed: {str(e)}")
-        st.code(traceback.format_exc())
+        status["issues"].append("Input is not a pandas DataFrame")
+        st.error("❌ Input is not a pandas DataFrame")
+        return status
+    
+    if len(df) == 0:
+        status["status"] = "FAIL"
+        status["issues"].append("DataFrame is empty")
+        st.error("❌ DataFrame is empty")
+        return status
+    
+    st.success(f"✅ DataFrame has {len(df)} rows and {len(df.columns)} columns")
+    status["details"]["total_rows"] = len(df)
+    status["details"]["total_columns"] = len(df.columns)
+    
+    # Check for key columns expected by analysis tools
+    expected_columns = ['letters_correct', 'school_rep', 'grade_label', 'name_ta_rep']
+    missing_columns = []
+    
+    for col in expected_columns:
+        if col in df.columns:
+            st.success(f"✅ Key column '{col}' found")
+            status["details"][f"has_{col}"] = True
+        else:
+            missing_columns.append(col)
+            status["details"][f"has_{col}"] = False
+    
+    if missing_columns:
+        status["status"] = "WARN"
+        status["issues"].append(f"Missing expected columns: {missing_columns}")
+        st.warning(f"⚠️ Missing expected columns: {missing_columns}")
+    
+    # Check data types and ranges
+    if 'letters_correct' in df.columns:
+        if pd.api.types.is_numeric_dtype(df['letters_correct']):
+            st.success("✅ 'letters_correct' is numeric")
+            status["details"]["letters_correct_numeric"] = True
+            
+            min_val = df['letters_correct'].min()
+            max_val = df['letters_correct'].max()
+            st.info(f"📊 Letters correct range: {min_val} to {max_val}")
+            status["details"]["letters_correct_range"] = {"min": float(min_val), "max": float(max_val)}
+        else:
+            status["status"] = "WARN"
+            status["issues"].append("'letters_correct' column is not numeric")
+            st.warning("⚠️ 'letters_correct' column is not numeric")
     
     return status
 
@@ -161,32 +157,32 @@ def test_openai_connection():
     status = {"status": "PASS", "issues": [], "details": {}}
     
     try:
-        import openai
-        
         api_key = os.getenv('OPENAI_API_KEY')
         if not api_key:
             status["status"] = "FAIL"
-            status["issues"].append("No API key available")
-            st.error("❌ No API key for OpenAI test")
+            status["issues"].append("No API key available for testing")
+            st.error("❌ No API key available for testing")
             return status
         
+        import openai
         client = openai.OpenAI(api_key=api_key)
         
-        # Test with a simple call
+        # Test with a minimal call
         response = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[{"role": "user", "content": "Say 'test successful'"}],
+            messages=[
+                {"role": "user", "content": "Hello, respond with just 'OK'"}
+            ],
             max_tokens=10
         )
         
         if response.choices[0].message.content:
             st.success("✅ OpenAI API connection successful")
-            status["details"]["response_received"] = True
-            status["details"]["model_used"] = "gpt-4o-mini"
+            status["details"]["api_response"] = response.choices[0].message.content.strip()
         else:
             status["status"] = "WARN"
-            status["issues"].append("API connected but no content received")
-            st.warning("⚠️ API connected but response empty")
+            status["issues"].append("API call succeeded but no content returned")
+            st.warning("⚠️ API call succeeded but no content returned")
             
     except Exception as e:
         status["status"] = "FAIL"
@@ -201,7 +197,6 @@ def test_module_imports():
     status = {"status": "PASS", "issues": [], "details": {"imported_modules": []}}
     
     modules_to_test = [
-        ("openai_analysis", "Context-only analysis module"),
         ("openai_tools_analysis", "Tool-enabled analysis module"),
         ("ai_tools", "Analysis tools module"),
         ("openai", "OpenAI library"),
@@ -211,8 +206,6 @@ def test_module_imports():
         try:
             if module_name == "openai":
                 import openai
-            elif module_name == "openai_analysis":
-                import openai_analysis
             elif module_name == "openai_tools_analysis":
                 import openai_tools_analysis
             elif module_name == "ai_tools":
@@ -263,41 +256,6 @@ def test_tool_system(df):
         status["status"] = "FAIL"
         status["issues"].append(f"Tool system test error: {str(e)}")
         st.error(f"❌ Tool system test failed: {str(e)}")
-        st.code(traceback.format_exc())
-    
-    return status
-
-def test_context_system(df):
-    """Test the context-only analysis system."""
-    status = {"status": "PASS", "issues": [], "details": {}}
-    
-    try:
-        from openai_analysis import prepare_data_summary
-        
-        # Test data summary preparation
-        summary = prepare_data_summary(df, "general")
-        if isinstance(summary, dict):
-            st.success("✅ prepare_data_summary() works")
-            status["details"]["data_summary_works"] = True
-            
-            # Test JSON serialization
-            try:
-                json.dumps(summary)
-                st.success("✅ Context data is JSON serializable")
-                status["details"]["json_serializable"] = True
-            except Exception as json_error:
-                status["status"] = "FAIL"
-                status["issues"].append(f"JSON serialization failed: {str(json_error)}")
-                st.error(f"❌ JSON serialization failed: {str(json_error)}")
-        else:
-            status["status"] = "WARN"
-            status["issues"].append("prepare_data_summary() returned unexpected format")
-            st.warning("⚠️ prepare_data_summary() returned unexpected format")
-            
-    except Exception as e:
-        status["status"] = "FAIL"
-        status["issues"].append(f"Context system test error: {str(e)}")
-        st.error(f"❌ Context system test failed: {str(e)}")
         st.code(traceback.format_exc())
     
     return status

@@ -384,18 +384,25 @@ with midline_tab:
                     else:
                         with st.spinner("🤔 AI is analyzing your data..."):
                             try:
-                                # Import the analysis function
+                                # Import the tools analysis function
                                 import sys
                                 import os
                                 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-                                from AI_Tools.openai_analysis import analyze_data_with_openai
+                                from AI_Tools.openai_tools_analysis import analyze_with_tools
                                 
-                                analysis = analyze_data_with_openai(
-                                    midline_df, 
-                                    analysis_type=analysis_type, 
-                                    custom_questions=custom_questions,
-                                    model=model_choice
-                                )
+                                if custom_questions:
+                                    analysis = analyze_with_tools(
+                                        midline_df,
+                                        analysis_type="question",
+                                        question="\n".join(custom_questions),
+                                        model=model_choice
+                                    )
+                                else:
+                                    analysis = analyze_with_tools(
+                                        midline_df,
+                                        analysis_type="initial",
+                                        model=model_choice
+                                    )
                                 
                                 if analysis:
                                     st.success("✅ Analysis Complete!")
@@ -415,7 +422,7 @@ with midline_tab:
                                     st.error("❌ Failed to generate analysis. Please check your API key and try again.")
                                     
                             except ImportError:
-                                st.error("❌ OpenAI analysis module not found. Please ensure openai_analysis.py is in your project directory.")
+                                st.error("❌ OpenAI tools analysis module not found. Please ensure openai_tools_analysis.py is in your project directory.")
                             except Exception as e:
                                 st.error(f"❌ Error during analysis: {str(e)}")
                 
