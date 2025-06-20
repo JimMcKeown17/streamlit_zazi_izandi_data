@@ -289,7 +289,7 @@ def create_system_prompt() -> str:
     1. Benchmark comparisons (most important) - assess progress toward realistic midline targets
     2. Identify top performers and underperformers (schools, TAs, students)
     3. Analyze variance between schools, classes, grades, TAs
-    4. Provide actionable insights (see advice above) for remaining school year
+    4. If appropriate, provide actionable insights (see advice above) for remaining school year. In general, this only needs to be provided once, not with every response.
     
     TOOL USAGE GUIDELINES:
     - BE EXTREMELY EFFICIENT: Answer simple questions in 1-2 tool calls maximum
@@ -299,7 +299,7 @@ def create_system_prompt() -> str:
     - Do NOT explore additional data unless specifically asked
     - Stop calling tools when you have enough information to answer the question
     
-    Provide clear, actionable insights focused on educational outcomes and improvement opportunities.
+    Maintain a conversational tone. In the first response, provide clear, actionable insights focused on educational outcomes and improvement opportunities. After that, continue to provide insights, but in a more conversational tone (no need to give actionable advice every time).
     """
 
 def generate_initial_analysis(df: pd.DataFrame, model: str = "gpt-4o-mini") -> str:
