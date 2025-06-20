@@ -151,7 +151,7 @@ class DataAnalysisToolkit:
         return self.convert_to_json_serializable(result)
     
     def identify_top_performers(self, group_by: str, metric: str = 'letters_correct', 
-                           top_n: int = 5, min_sample_size: int = 5) -> Dict:
+                           top_n: int = 5, min_sample_size: int = 5, grade: Optional[str] = None) -> Dict:
         """Identify top performing schools, TAs, or classes."""
         if group_by not in self.column_map:
             return {"error": f"Invalid group_by value: {group_by}"}
@@ -159,26 +159,35 @@ class DataAnalysisToolkit:
         group_col = self.column_map[group_by]
         metric_col = self.column_map.get(metric, metric)
         
-        # Check if the column exists in the DataFrame
-        if group_col not in self.df.columns:
-            return {"error": f"Column '{group_col}' not found in data. Available columns: {list(self.df.columns)[:10]}..."}
+        # Filter by grade if specified
+        df = self.df.copy()
+        if grade:
+            if self.column_map['grade'] not in df.columns:
+                return {"error": f"Grade column '{self.column_map['grade']}' not found in data"}
+            df = df[df[self.column_map['grade']] == grade]
+            if len(df) == 0:
+                return {"error": f"No data found for grade: {grade}"}
         
-        if metric_col not in self.df.columns:
+        # Check if the column exists in the DataFrame
+        if group_col not in df.columns:
+            return {"error": f"Column '{group_col}' not found in data. Available columns: {list(df.columns)[:10]}..."}
+        
+        if metric_col not in df.columns:
             # Try alternate column names for letters correct
             alternate_cols = ['letters_correct_a1', 'letters_correct', 'letters_score_a1']
             found_col = None
             for alt_col in alternate_cols:
-                if alt_col in self.df.columns:
+                if alt_col in df.columns:
                     found_col = alt_col
                     break
             
             if found_col:
                 metric_col = found_col
             else:
-                return {"error": f"Score column '{metric_col}' not found. Available columns: {list(self.df.columns)[:10]}..."}
+                return {"error": f"Score column '{metric_col}' not found. Available columns: {list(df.columns)[:10]}..."}
         
         # Calculate performance by group
-        performance = self.df.groupby(group_col).agg({
+        performance = df.groupby(group_col).agg({
             metric_col: ['count', 'mean', 'std'],
             self.column_map['student']: 'count'
         }).round(2)
@@ -194,7 +203,8 @@ class DataAnalysisToolkit:
         
         # Build result without calling convert_to_json_serializable on the entire dict
         result = {
-            "analysis_type": f"Top {top_n} {group_by}s by {metric}",
+            "analysis_type": f"Top {top_n} {group_by}s by {metric}" + (f" - {grade}" if grade else ""),
+            "grade_filter": grade,
             "min_sample_size": min_sample_size,
             "total_groups_analyzed": len(performance),
             "top_performers": []
@@ -214,7 +224,7 @@ class DataAnalysisToolkit:
         return result
 
     def identify_underperformers(self, group_by: str, metric: str = 'letters_correct', 
-                                bottom_n: int = 3, min_sample_size: int = 5) -> Dict:
+                                bottom_n: int = 3, min_sample_size: int = 5, grade: Optional[str] = None) -> Dict:
         """Identify underperforming schools, TAs, or classes."""
         if group_by not in self.column_map:
             return {"error": f"Invalid group_by value: {group_by}"}
@@ -222,26 +232,35 @@ class DataAnalysisToolkit:
         group_col = self.column_map[group_by]
         metric_col = self.column_map.get(metric, metric)
         
-        # Check if the column exists in the DataFrame
-        if group_col not in self.df.columns:
-            return {"error": f"Column '{group_col}' not found in data. Available columns: {list(self.df.columns)[:10]}..."}
+        # Filter by grade if specified
+        df = self.df.copy()
+        if grade:
+            if self.column_map['grade'] not in df.columns:
+                return {"error": f"Grade column '{self.column_map['grade']}' not found in data"}
+            df = df[df[self.column_map['grade']] == grade]
+            if len(df) == 0:
+                return {"error": f"No data found for grade: {grade}"}
         
-        if metric_col not in self.df.columns:
+        # Check if the column exists in the DataFrame
+        if group_col not in df.columns:
+            return {"error": f"Column '{group_col}' not found in data. Available columns: {list(df.columns)[:10]}..."}
+        
+        if metric_col not in df.columns:
             # Try alternate column names for letters correct
             alternate_cols = ['letters_correct_a1', 'letters_correct', 'letters_score_a1']
             found_col = None
             for alt_col in alternate_cols:
-                if alt_col in self.df.columns:
+                if alt_col in df.columns:
                     found_col = alt_col
                     break
             
             if found_col:
                 metric_col = found_col
             else:
-                return {"error": f"Score column '{metric_col}' not found. Available columns: {list(self.df.columns)[:10]}..."}
+                return {"error": f"Score column '{metric_col}' not found. Available columns: {list(df.columns)[:10]}..."}
         
         # Calculate performance by group
-        performance = self.df.groupby(group_col).agg({
+        performance = df.groupby(group_col).agg({
             metric_col: ['count', 'mean', 'std'],
             self.column_map['student']: 'count'
         }).round(2)
@@ -257,7 +276,8 @@ class DataAnalysisToolkit:
         
         # Build result without calling convert_to_json_serializable on the entire dict
         result = {
-            "analysis_type": f"Bottom {bottom_n} {group_by}s by {metric}",
+            "analysis_type": f"Bottom {bottom_n} {group_by}s by {metric}" + (f" - {grade}" if grade else ""),
+            "grade_filter": grade,
             "min_sample_size": min_sample_size,
             "total_groups_analyzed": len(performance),
             "underperformers": []
@@ -330,7 +350,7 @@ class DataAnalysisToolkit:
         }
         return self.convert_to_json_serializable(result)
     
-    def variance_analysis(self, group_by: str, metric: str = 'letters_correct') -> Dict:
+    def variance_analysis(self, group_by: str, metric: str = 'letters_correct', grade: Optional[str] = None) -> Dict:
         """Analyze variance within and between groups."""
         if group_by not in self.column_map:
             return {"error": f"Invalid group_by value: {group_by}"}
@@ -338,8 +358,17 @@ class DataAnalysisToolkit:
         group_col = self.column_map[group_by]
         metric_col = self.column_map.get(metric, metric)
         
+        # Filter by grade if specified
+        df = self.df.copy()
+        if grade:
+            if self.column_map['grade'] not in df.columns:
+                return {"error": f"Grade column '{self.column_map['grade']}' not found in data"}
+            df = df[df[self.column_map['grade']] == grade]
+            if len(df) == 0:
+                return {"error": f"No data found for grade: {grade}"}
+        
         # Calculate statistics by group
-        group_stats = self.df.groupby(group_col)[metric_col].agg([
+        group_stats = df.groupby(group_col)[metric_col].agg([
             'count', 'mean', 'std', 'min', 'max', 
             lambda x: x.quantile(0.25),
             lambda x: x.quantile(0.75)
@@ -348,14 +377,15 @@ class DataAnalysisToolkit:
         group_stats.columns = ['count', 'mean', 'std', 'min', 'max', 'q25', 'q75']
         
         # Overall statistics
-        overall_mean = self.df[metric_col].mean()
-        overall_std = self.df[metric_col].std()
+        overall_mean = df[metric_col].mean()
+        overall_std = df[metric_col].std()
         
         # Calculate coefficient of variation for each group
         group_stats['cv'] = (group_stats['std'] / group_stats['mean'] * 100).round(2)
         
         result = {
-            "analysis_type": f"Variance Analysis: {metric} by {group_by}",
+            "analysis_type": f"Variance Analysis: {metric} by {group_by}" + (f" - {grade}" if grade else ""),
+            "grade_filter": grade,
             "overall_stats": {
                 "mean": float(overall_mean),
                 "std": float(overall_std),

@@ -97,7 +97,13 @@ def show():
 
     # Clean, minimal header
     st.title("🤖 ZazAI – 2025 Midline Data Analyst")
-    st.write("Have a conversation with our AI data analyst about your 2025 midline assessment data.")
+    st.info("""Have a conversation with our AI data analyst about your 2025 midline assessment data. You can ask things such as:
+- What impact is the programme having on the children?
+- What is the percentage of children are hitting the government benchmarks?
+- What are the top 5 schools?
+- Who are the underperforming TAs?
+- What tips would you give to improve the implementation of the programme?
+""")
 
     try:
         # Load and prepare midline dataset

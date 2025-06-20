@@ -72,16 +72,17 @@ def get_tool_definitions():
             "type": "function",
             "function": {
                 "name": "identify_top_performers",
-                "description": "Identify top performing schools, TAs, or classes",
+                "description": "Identify top performing schools, TAs, or classes. IMPORTANT: Grade must be specified for school/TA/class analysis. Always analyze Grade R and Grade 1 separately.",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "group_by": {"type": "string", "enum": ["school", "ta", "class"], "description": "What to group by"},
+                        "grade": {"type": "string", "description": "REQUIRED: Grade filter (Grade R or Grade 1) - must be specified for organizational analysis"},
                         "metric": {"type": "string", "default": "letters_correct", "description": "Metric to analyze"},
                         "top_n": {"type": "integer", "default": 5, "description": "Number of top performers to return"},
                         "min_sample_size": {"type": "integer", "default": 5, "description": "Minimum sample size for inclusion"}
                     },
-                    "required": ["group_by"]
+                    "required": ["group_by", "grade"]
                 }
             }
         },
@@ -89,16 +90,17 @@ def get_tool_definitions():
             "type": "function",
             "function": {
                 "name": "identify_underperformers",
-                "description": "Identify underperforming schools, TAs, or classes",
+                "description": "Identify underperforming schools, TAs, or classes. IMPORTANT: Grade must be specified for school/TA/class analysis. Always analyze Grade R and Grade 1 separately.",
                 "parameters": {
                     "type": "object",
                     "properties": {
                         "group_by": {"type": "string", "enum": ["school", "ta", "class"], "description": "What to group by"},
+                        "grade": {"type": "string", "description": "REQUIRED: Grade filter (Grade R or Grade 1) - must be specified for organizational analysis"},
                         "metric": {"type": "string", "default": "letters_correct", "description": "Metric to analyze"},
                         "bottom_n": {"type": "integer", "default": 3, "description": "Number of underperformers to return"},
                         "min_sample_size": {"type": "integer", "default": 5, "description": "Minimum sample size for inclusion"}
                     },
-                    "required": ["group_by"]
+                    "required": ["group_by", "grade"]
                 }
             }
         },
@@ -121,11 +123,12 @@ def get_tool_definitions():
             "type": "function",
             "function": {
                 "name": "variance_analysis",
-                "description": "Analyze variance within and between groups",
+                "description": "Analyze variance within and between groups. IMPORTANT: When analyzing school, TA, or class variance, grade must be specified to analyze Grade R and Grade 1 separately.",
                 "parameters": {
                     "type": "object", 
                     "properties": {
                         "group_by": {"type": "string", "enum": ["school", "ta", "class", "grade"], "description": "What to group by"},
+                        "grade": {"type": "string", "description": "Grade filter (Grade R or Grade 1) - required when group_by is school, ta, or class"},
                         "metric": {"type": "string", "default": "letters_correct", "description": "Metric to analyze"}
                     },
                     "required": ["group_by"]
@@ -268,8 +271,19 @@ def create_system_prompt() -> str:
     The children's groups are taught at the right level, depending on what they know. So each group may be learning different letters at any specific time.
     TA's are given a letter tracker to work through that orders letter by frequency in a given language.
     
+    CRITICAL GRADE SEPARATION REQUIREMENT:
+    - ALWAYS analyze Grade R and Grade 1 separately for school, TA, or class performance comparisons
+    - When asked about "top schools", "underperforming TAs", or similar organizational analysis, make TWO separate tool calls:
+      1. One with grade="Grade R" filter
+      2. One with grade="Grade 1" filter
+    - Present results clearly separated by grade level with distinct sections for each grade
+    - Example: For "top 5 schools", call identify_top_performers twice - once for Grade R, once for Grade 1
+    - This separation is MANDATORY for all school, TA, and class performance analysis
+    
     IMPORTANT FOR RESPONSES:
-    - Whenever possible, differentiate between Grades R and 1 at a school when discussing results.
+    - If user asks about overall performance, compare Grade 1 and Grade R against their respective benchmarks. The user wants to know the perentage of children overall in Grade R and 1 who are hitting the midilne and endline benchmarks. The user will also be curious to know the average letters correct the grades are getting.
+    - Always differentiate between Grades R and 1 when discussing organizational performance results
+    - Use clear headings like "## Grade R Results" and "## Grade 1 Results"
     
     IMPORTANT CONTEXT:
     - This is MIDLINE data (halfway through school year, ~5-6 months of instruction)
@@ -278,7 +292,7 @@ def create_system_prompt() -> str:
     - South African national average for Grade 1 is 27% above year-end benchmark
     - Focus on identifying performance patterns, variance, and benchmark comparisons
     
-    ACTIONABLE INSIGHTS (COMMON SUGGESTIONS FOR IMPROVEMENT):
+    ACTIONABLE INSIGHTS (COMMON SUGGESTIONS FOR IMPROVEMENT, especially for user questions about TA performance):
     - Suggest the mentors (who oversee the TAs) review the admin books of the TAs at that school to see if they were implementing the programme correctly.
     - Suggest the mentors make a schedule to visit underperforming schools to see if the TAs are implementing the programme correctly.
     - Suggest we review the letters the TA's groups (or the school's entire class) were doing each day and if they were methodically working their way throught their letters.
@@ -287,15 +301,17 @@ def create_system_prompt() -> str:
     
     YOUR ANALYSIS PRIORITIES:
     1. Benchmark comparisons (most important) - assess progress toward realistic midline targets
-    2. Identify top performers and underperformers (schools, TAs, students)
+    2. Identify top performers and underperformers (schools, TAs, students) - ALWAYS BY GRADE
     3. Analyze variance between schools, classes, grades, TAs
     4. If appropriate, provide actionable insights (see advice above) for remaining school year. In general, this only needs to be provided once, not with every response.
+    5. If user asks about TA performance, give actionable insights (see advice above).
     
     TOOL USAGE GUIDELINES:
-    - BE EXTREMELY EFFICIENT: Answer simple questions in 1-2 tool calls maximum
-    - For "top TA" questions: Call identify_top_performers(group_by="ta") ONCE and analyze results
+    - BE EXTREMELY EFFICIENT: Answer simple questions in 1-2 tool calls maximum PER GRADE
+    - For "top TA" questions: Call identify_top_performers(group_by="ta", grade="Grade R") and identify_top_performers(group_by="ta", grade="Grade 1")
+    - For "school performance": Call identify_top_performers(group_by="school", grade="Grade R") and identify_top_performers(group_by="school", grade="Grade 1")
     - NEVER repeat the same tool call with identical parameters
-    - After 2 tool calls, you MUST synthesize and provide your analysis
+    - After 4 tool calls total (2 per grade), you MUST synthesize and provide your analysis
     - Do NOT explore additional data unless specifically asked
     - Stop calling tools when you have enough information to answer the question
     
@@ -366,11 +382,15 @@ def answer_question(df: pd.DataFrame, question: str, model: str = "gpt-4o-mini")
             "role": "user", 
             "content": f"""Please answer this specific question about the assessment data: {question}
 
-IMPORTANT: This is a focused question that should require only 2-3 tool calls. Do NOT explore beyond what's needed to answer this specific question.
+IMPORTANT: This is a focused question that should require only 2-4 tool calls total (2 per grade for organizational analysis). Do NOT explore beyond what's needed to answer this specific question.
 
-For questions about "top TAs": Use identify_top_performers(group_by="ta") and provide your analysis.
-For questions about "school comparison": Use identify_top_performers(group_by="school") and provide your analysis.  
-For questions about "benchmarks": Use benchmark_analysis() and provide your analysis.
+CRITICAL: For questions about schools, TAs, or classes, you MUST analyze Grade R and Grade 1 separately:
+- For "top TAs": Call identify_top_performers(group_by="ta", grade="Grade R") AND identify_top_performers(group_by="ta", grade="Grade 1")
+- For "school comparison": Call identify_top_performers(group_by="school", grade="Grade R") AND identify_top_performers(group_by="school", grade="Grade 1")  
+- For "underperforming schools": Call identify_underperformers(group_by="school", grade="Grade R") AND identify_underperformers(group_by="school", grade="Grade 1")
+- For "benchmarks": Use benchmark_analysis() - grade separation may be handled within the tool
+
+Structure your response with clear sections for Grade R and Grade 1 results when analyzing organizational performance.
 
 Answer the question directly and concisely based on the tool results."""
         }
@@ -405,7 +425,7 @@ Answer the question directly and concisely based on the tool results."""
         return f"Error answering question: {str(e)}"
 
 def process_ai_response(client, toolkit: DataAnalysisToolkit, messages: List[Dict], 
-                       response, model: str, max_iterations: int = 4) -> str:
+                       response, model: str, max_iterations: int = 6) -> str:
     """Process AI response and handle tool calls iteratively."""
     iteration = 0
     
@@ -489,8 +509,8 @@ def process_ai_response(client, toolkit: DataAnalysisToolkit, messages: List[Dic
             except Exception as e:
                 return f"Error executing tool {function_name}: {str(e)}"
         
-        # Add synthesis prompt after 2 iterations to encourage stopping
-        if iteration >= 2:
+        # Add synthesis prompt after 4 iterations to encourage stopping
+        if iteration >= 4:
             messages.append({
                 "role": "user",
                 "content": "You now have sufficient information to answer the question. Please provide your analysis and conclusion without making additional tool calls."
@@ -498,8 +518,8 @@ def process_ai_response(client, toolkit: DataAnalysisToolkit, messages: List[Dic
         
         # Get the next response
         try:
-            # After 2 iterations, disable tools completely
-            if iteration >= 2:
+            # After 4 iterations, disable tools completely
+            if iteration >= 4:
                 response = client.chat.completions.create(
                     model=model,
                     messages=messages,
