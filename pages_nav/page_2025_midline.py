@@ -562,6 +562,85 @@ def show():
                     st.warning(f"No TAs found with sufficient data (5+ matched children between baseline and midline) for {ta_grade_selection}.")
             
             st.divider()
+            
+            # TAs by Midline Performance
+            with st.container():
+                st.header("TAs by Midline Performance (Letters Correct)")
+                st.info("This shows TAs ranked by the average midline scores of their students. You can choose Top or Bottom Performers.")
+                
+                # Filter controls for TA midline performance
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    ta_midline_grade_selection = st.selectbox(
+                        "Select Grade for TA Midline Performance Analysis:",
+                        ["Grade R", "Grade 1"],
+                        key="ta_midline_grade_selector"
+                    )
+                
+                with col2:
+                    midline_performance_type = st.selectbox(
+                        "Show:",
+                        ["Top Performers", "Bottom Performers"],
+                        key="ta_midline_performance_type_selector"
+                    )
+                
+                # Filter midline data by selected grade
+                midline_df_grade_performance = midline_df[midline_df['grade_label'] == ta_midline_grade_selection]
+                
+                # Calculate midline performance by TA
+                ta_midline_performance = midline_df_grade_performance.groupby('name_ta_rep').agg(
+                    Average_Midline_Score=('letters_correct_a1', 'mean'),
+                    Number_of_Children=('name_first_learner', 'count')
+                ).reset_index()
+                
+                # Round averages
+                ta_midline_performance['Average_Midline_Score'] = ta_midline_performance['Average_Midline_Score'].round(1)
+                
+                # Filter for TAs who assessed at least 5 children (to ensure meaningful data)
+                ta_midline_filtered = ta_midline_performance[ta_midline_performance['Number_of_Children'] >= 5]
+                
+                # Sort by average midline score (ascending for bottom performers, descending for top)
+                midline_ascending_order = midline_performance_type == "Bottom Performers"
+                ta_midline_filtered = ta_midline_filtered.sort_values(by='Average_Midline_Score', ascending=midline_ascending_order)
+                
+                # Take top/bottom 25 TAs to keep chart readable
+                selected_midline_tas = ta_midline_filtered.head(25)
+                
+                if len(selected_midline_tas) > 0:
+                    # Create bar chart
+                    fig = px.bar(
+                        selected_midline_tas,
+                        x='name_ta_rep',
+                        y='Average_Midline_Score',
+                        title=f'{midline_performance_type}: 25 TAs by Average Midline Letters Correct - {ta_midline_grade_selection}',
+                        labels={'name_ta_rep': 'Teaching Assistant', 'Average_Midline_Score': 'Average Midline Score (Letters)'},
+                        color='Average_Midline_Score',
+                        color_continuous_scale='RdYlGn',
+                        text='Average_Midline_Score'
+                    )
+                    
+                    # Customize layout
+                    fig.update_layout(
+                        xaxis_title="Teaching Assistant",
+                        yaxis_title="Average Midline Score (Letters)",
+                        showlegend=False,
+                        xaxis_tickangle=-45,
+                        height=500
+                    )
+                    
+                    # Add text on bars
+                    fig.update_traces(texttemplate='%{text:.1f}', textposition='outside')
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    # Show detailed table
+                    with st.expander(f'View Detailed TA Midline {midline_performance_type} Data - {ta_midline_grade_selection}'):
+                        st.dataframe(ta_midline_filtered, use_container_width=True)
+                else:
+                    st.warning(f"No TAs found with sufficient data (5+ children assessed) for {ta_midline_grade_selection}.")
+            
+            st.divider()
             st.info("The interactive AI analysis is now available on the new 'ZazAI' page (under 2025 Results).")
 
     except Exception as e:
