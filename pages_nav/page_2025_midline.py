@@ -458,6 +458,110 @@ def show():
             
             # AI Analysis has been moved to the dedicated 'ZazAI' page
             st.divider()
+            
+            # Top TAs by Children's Improvement
+            with st.container():
+                st.header("TAs by Children's Improvement (Baseline to Midline)")
+                st.info("This shows TAs ranked by the average improvement of their students from baseline to midline assessments. You can choose Top or Bottom Performers.")
+                
+                # Filter controls for TA improvement
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    ta_grade_selection = st.selectbox(
+                        "Select Grade for TA Improvement Analysis:",
+                        ["Grade R", "Grade 1"],
+                        key="ta_improvement_grade_selector"
+                    )
+                
+                with col2:
+                    performance_type = st.selectbox(
+                        "Show:",
+                        ["Top Performers", "Bottom Performers"],
+                        key="ta_performance_type_selector"
+                    )
+                
+                # Filter data by selected grade
+                initial_df_grade = initial_df[initial_df['grade_label'] == ta_grade_selection]
+                midline_df_grade = midline_df[midline_df['grade_label'] == ta_grade_selection]
+                
+                # Match children between baseline and midline using name and school
+                # Create unique identifiers for matching
+                initial_df_grade['child_id'] = initial_df_grade['name_first_learner'].astype(str) + '_' + initial_df_grade['school_rep'].astype(str)
+                midline_df_grade['child_id'] = midline_df_grade['name_first_learner'].astype(str) + '_' + midline_df_grade['school_rep'].astype(str)
+                
+                # Get baseline scores
+                baseline_scores = initial_df_grade[['child_id', 'letters_correct_a1', 'name_ta_rep']].copy()
+                baseline_scores.columns = ['child_id', 'baseline_score', 'baseline_ta']
+                
+                # Get midline scores  
+                midline_scores = midline_df_grade[['child_id', 'letters_correct_a1', 'name_ta_rep']].copy()
+                midline_scores.columns = ['child_id', 'midline_score', 'midline_ta']
+                
+                # Merge to find children who have both baseline and midline scores
+                improvement_data = pd.merge(baseline_scores, midline_scores, on='child_id', how='inner')
+                
+                # Calculate improvement for each child
+                improvement_data['improvement'] = improvement_data['midline_score'] - improvement_data['baseline_score']
+                
+                # Use the midline TA for ranking (as they're responsible for the improvement)
+                ta_improvement = improvement_data.groupby('midline_ta').agg(
+                    Average_Improvement=('improvement', 'mean'),
+                    Number_of_Children=('child_id', 'count'),
+                    Baseline_Average=('baseline_score', 'mean'),
+                    Midline_Average=('midline_score', 'mean')
+                ).reset_index()
+                
+                # Round averages
+                ta_improvement['Average_Improvement'] = ta_improvement['Average_Improvement'].round(1)
+                ta_improvement['Baseline_Average'] = ta_improvement['Baseline_Average'].round(1)
+                ta_improvement['Midline_Average'] = ta_improvement['Midline_Average'].round(1)
+                
+                # Filter for TAs who assessed at least 5 children (to ensure meaningful data)
+                ta_improvement_filtered = ta_improvement[ta_improvement['Number_of_Children'] >= 5]
+                
+                # Sort by average improvement (ascending for bottom performers, descending for top)
+                ascending_order = performance_type == "Bottom Performers"
+                ta_improvement_filtered = ta_improvement_filtered.sort_values(by='Average_Improvement', ascending=ascending_order)
+                
+                # Take top/bottom 25 TAs to keep chart readable
+                selected_tas = ta_improvement_filtered.head(25)
+                
+                if len(selected_tas) > 0:
+                    # Create bar chart
+                    fig = px.bar(
+                        selected_tas,
+                        x='midline_ta',
+                        y='Average_Improvement',
+                        title=f'{performance_type}: 25 TAs by Average Student Improvement (Letters Correct) - {ta_grade_selection}',
+                        labels={'midline_ta': 'Teaching Assistant', 'Average_Improvement': 'Average Improvement (Letters)'},
+                        color='Average_Improvement',
+                        color_continuous_scale='RdYlGn',
+                        text='Average_Improvement'
+                    )
+                    
+                    # Customize layout
+                    fig.update_layout(
+                        xaxis_title="Teaching Assistant",
+                        yaxis_title="Average Improvement (Letters)",
+                        showlegend=False,
+                        xaxis_tickangle=-45,
+                        height=500
+                    )
+                    
+                    # Add text on bars
+                    fig.update_traces(texttemplate='%{text:.1f}', textposition='outside')
+                    
+                    st.plotly_chart(fig, use_container_width=True)
+                    
+                    
+                    # Show detailed table
+                    with st.expander(f'View Detailed TA {performance_type} Data - {ta_grade_selection}'):
+                        st.dataframe(ta_improvement_filtered, use_container_width=True)
+                else:
+                    st.warning(f"No TAs found with sufficient data (5+ matched children between baseline and midline) for {ta_grade_selection}.")
+            
+            st.divider()
             st.info("The interactive AI analysis is now available on the new 'ZazAI' page (under 2025 Results).")
 
     except Exception as e:
