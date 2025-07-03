@@ -1,84 +1,101 @@
 import streamlit as st
-import streamlit_authenticator as stauth
 
-cookie_name = st.secrets["auth"]["cookie_name"]
-signature_key = st.secrets["auth"]["signature_key"]
+st.set_page_config(layout="wide", page_title="ZZ Data Portal", page_icon="bar-chart")
 
-# --- Page configuration ---
-st.set_page_config(layout="wide", page_title="ZZ Data Portal")
 
-# --- Load credentials from secrets ---
-# Your .streamlit/secrets.toml should have a [credentials] section as shown above.
-credentials = st.secrets["credentials"]
-names = credentials["names"]
-usernames = credentials["usernames"]
-passwords = credentials["passwords"]  # In production, store hashed passwords!
+# --- Credentials ---
+credentials = {
+    'zazi': 'izandi'
+}
 
-# Generate hashed passwords for demonstration.
-# (Run this once to generate hashed passwords, then store and reuse the hashed versions.)
-hashed_passwords = stauth.Hasher(passwords).generate()
+# --- Login/Logout Logic ---
+if 'user' not in st.session_state:
+    st.session_state.user = None
 
-# --- Initialize the authenticator ---
-authenticator = stauth.Authenticate(
-    names, usernames, hashed_passwords,
-    cookie_name, signature_key,
-    cookie_expiry_days=30
-)
+def login():
+    st.sidebar.markdown("---")
+    st.sidebar.header("Login")
+    username = st.sidebar.text_input("Username", key="username")
+    password = st.sidebar.text_input("Password", type="password", key="password")
 
-# Display the login widget in the sidebar.
-name, authentication_status, username = authenticator.login("Login", "sidebar")
+    if st.sidebar.button("Login"):
+        if username in credentials and credentials[username] == password:
+            st.session_state.user = username
+            st.rerun()
+        else:
+            st.sidebar.error("Incorrect username or password")
+            st.session_state.user = None
+    st.sidebar.text("Log in for more detailed views.")
 
-# Import the page functions
-from pages_nav.home_page import show as home_show
-from pages_nav.page_2025_midline import show as midline_2025_show
-from pages_nav.page_2025_baseline import show as baseline_2025_show
-from pages_nav.page_2024_letter_knowledge import show as letter_knowledge_show
-from pages_nav.page_2024_word_reading import show as word_reading_show
-from pages_nav.page_2024_new_schools import show as new_schools_show
-from pages_nav.page_2024_sessions import show as sessions_show
-from pages_nav.page_2023_results import show as results_2023_show
-from pages_nav.page_research import show as research_show
+def logout():
+    if st.sidebar.button("Logout"):
+        st.session_state.user = None
+        st.rerun()
 
-# --- Define page structure ---
-if authentication_status:
-    # All pages available when authenticated
-    pages = {
-        "Home": [
-            st.Page(home_show, title="Home", icon="🏠")
-        ],
-        "2025 Results": [
-            st.Page(midline_2025_show, title="Midline", icon="📊"),
-            st.Page(baseline_2025_show, title="Baseline", icon="📋"),
-        ],
-        "2024 Results": [
-            st.Page(letter_knowledge_show, title="Letter Knowledge", icon="📝"),
-            st.Page(word_reading_show, title="Word Reading", icon="📖"),
-            st.Page(new_schools_show, title="New Schools Analysis", icon="🏫"),
-            st.Page(sessions_show, title="Sessions Analysis", icon="📈"),
-        ],
-        "2023 Results": [
-            st.Page(results_2023_show, title="2023 Analysis", icon="📋"),
-        ],
-        "Research & Benchmarks": [
-            st.Page(research_show, title="Research & Benchmarks", icon="🔬"),
-        ]
-    }
-    # Provide a logout button in the sidebar if logged in.
-    authenticator.logout("Logout", "sidebar")
-elif authentication_status is False:
-    st.sidebar.error("Username/password is incorrect")
-    pages = {
-        "Home": [
-            st.Page(home_show, title="Home", icon="🏠")
-        ]
-    }
-else:  # authentication_status is None: no login attempt yet.
-    pages = {
-        "Home": [
-            st.Page(home_show, title="Home", icon="🏠")
-        ]
-    }
+if st.session_state.user:
+    logout()
+else:
+    login()
 
-# --- Create navigation ---
+# --- Page Definitions ---
+home_page = st.Page("new_pages/home_page.py", icon="🏠", title="Home", default=True)
+
+
+#2023 Pages
+results_page_23 = st.Page("new_pages/2023/6_2023 Results.py", icon="📊", title="2023 Results", url_path="results_23")
+
+# 2024 Pages
+letter_knowledge_page_24 = st.Page("new_pages/2024/letter_knowledge_2024.py", icon="📝",title="2024 Letter Knowledge", url_path="letter_knowledge_24")
+word_reading_page_24 = st.Page("new_pages/2024/word_reading_2024.py", icon="📖", title="2024 Word Reading", url_path="word_reading_24")
+new_schools_page_24 = st.Page("new_pages/2024/new_schools_2024.py", icon="🏫", title="2024 New Schools", url_path="new_schools_24")
+session_analysis_page_24 = st.Page("new_pages/2024/session_analysis_2024.py", icon="📈", title="2024 Session Analysis", url_path="session_analysis_24")
+
+#2025 Pages
+baseline_page_25 = st.Page("new_pages/2025/baseline_2025.py", icon="📖", title="2025 Baseline", url_path="baseline_25")
+midline_page_25 = st.Page("new_pages/2025/midline_2025.py", icon="📊", title="2025 Midline", url_path="midline_25")
+sessions_page_25 = st.Page("new_pages/2025/sessions_2025.py", icon="📈", title="2025 Sessions", url_path="sessions_25")
+
+# Research & Other Pages
+research_page = st.Page("new_pages/Research & Benchmarks.py", icon="🔍", title="Research & Benchmarks", url_path="research")
+year_comparisons_page = st.Page("new_pages/Year_Comparisons.py", icon="🔍", title="Year Comparisons", url_path="year_comparisons")
+
+# --- Navigation ---
+pages_2024_public = [letter_knowledge_page_24, word_reading_page_24, new_schools_page_24, session_analysis_page_24]
+pages_2024_internal = []
+
+pages_2025_public = [ midline_page_25, baseline_page_25,sessions_page_25]
+pages_2025_internal = []
+
+pages_research_public = [research_page]
+pages_research_internal = [year_comparisons_page]
+
+pages_2023 = [results_page_23]
+
+pages_2024 = pages_2024_public
+if st.session_state.user:
+    pages_2024 += pages_2024_internal
+    
+pages_2025 = pages_2025_public
+if st.session_state.user:
+    pages_2025 += pages_2025_internal
+    
+pages_research = pages_research_public
+if st.session_state.user:
+    pages_research += pages_research_internal
+    
+
+pages = {
+    "Home": [home_page],
+    "2025": pages_2025,
+    "2024": pages_2024,
+    "2023": pages_2023,
+    "Research & Benchmarks": pages_research,
+}
+
+
 pg = st.navigation(pages)
+
+if not st.session_state.user:
+     st.warning("Please log in to access internal content.")
+
 pg.run()

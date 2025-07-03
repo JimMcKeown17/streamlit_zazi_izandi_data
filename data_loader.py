@@ -2,6 +2,37 @@ import pandas as pd
 import os
 import streamlit as st
 import openpyxl
+from process_survey_cto_updated import process_egra_data
+
+
+def load_zazi_izandi_2025():
+    ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+
+    @st.cache_data
+    def load_egra_data(children_filename: str, ta_filename: str):
+        """
+        Caches the DataFrame loading and processing so it doesn't
+        re-run on every Streamlit re-execution or widget change.
+        """
+        children_path = os.path.join(ROOT_DIR, "data", children_filename)
+        ta_path       = os.path.join(ROOT_DIR, "data", ta_filename)
+
+        df, df_ecd = process_egra_data(
+            children_file=children_path,
+            ta_file=ta_path
+        )
+        return df, df_ecd
+    if 'user' in st.session_state and st.session_state.user:
+        df_full, df_ecd = load_egra_data(
+                    children_filename="ZZ - EGRA form [Eastern Cape]-assessment_repeat - Jun 17.csv",
+                    ta_filename="ZZ - EGRA form [Eastern Cape] - Jun 17.csv"
+                )
+    else:
+        df_full, df_ecd = load_egra_data(
+                    children_filename="ZZ - EGRA form [Eastern Cape]-assessment_repeat - Jun 17 - anonymized.csv",
+                    ta_filename="ZZ - EGRA form [Eastern Cape] - Jun 17 - anonymized.csv"
+                )
+    return df_full, df_ecd
 
 
 def load_zazi_izandi_new_schools_2024():
