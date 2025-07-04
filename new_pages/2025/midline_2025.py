@@ -47,8 +47,7 @@ def display_midline():
                 st.metric("TAs That Submitted Results (1+ Children)", f'{len(ta_counts)}')
 
             st.divider()
-
-            # Add the three charts from 1_Letter Knowledge.py
+            
             with st.container():
                 st.subheader('Letter EGRA Improvement')
 
@@ -90,6 +89,60 @@ def display_midline():
 
                 with st.expander('Click to view data:'):
                     st.dataframe(egra_summary)
+            
+            st.divider()
+
+            with st.container():
+                st.header("📝 Letter Knowledge Performance")
+                
+                # Grade selection for letter knowledge performance
+                performance_grade = st.selectbox(
+                    "Select Grade for Letter Knowledge Performance:",
+                    ["Grade 1", "Grade R"],
+                    key="letter_knowledge_performance_grade_selector"
+                )
+                
+                # Set threshold based on grade selection
+                performance_threshold = 40 if performance_grade == "Grade 1" else 20
+                
+                # Filter data by selected grade
+                performance_data = midline_df[midline_df['grade_label'] == performance_grade]
+                
+                if not performance_data.empty:
+                    # Performance metrics for selected grade
+                    avg_letters = performance_data['letters_correct'].mean()
+                    median_letters = performance_data['letters_correct'].median()
+                    above_threshold_count = (performance_data['letters_correct'] >= performance_threshold).sum()
+                    above_threshold_percent = (above_threshold_count / len(performance_data) * 100) if len(performance_data) > 0 else 0
+                    
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("Average Letters Correct", f"{avg_letters:.1f}")
+                    with col2:
+                        st.metric("Median Letters Correct", f"{median_letters:.1f}")
+                    with col3:
+                        st.metric(f"Children Above Benchmark (≥{performance_threshold})", above_threshold_count)
+                    with col4:
+                        st.metric("Percentage Above Benchmark", f"{above_threshold_percent:.1f}%")
+                    
+                    # Distribution histogram
+                    fig_hist = px.histogram(
+                        performance_data,
+                        x='letters_correct',
+                        nbins=20,
+                        title=f"Distribution of Letter Knowledge Scores - {performance_grade}",
+                        labels={'letters_correct': 'Letters Correct', 'count': 'Number of Children'}
+                    )
+                    
+                    # Add vertical line at grade-appropriate benchmark
+                    fig_hist.add_vline(x=performance_threshold, line_dash="dash", line_color="red", 
+                                    annotation_text=f"Benchmark ({performance_threshold})", annotation_position="top")
+                    
+                    st.plotly_chart(fig_hist, use_container_width=True)
+                else:
+                    st.warning(f"No data available for {performance_grade}")
+            # Add the three charts from 1_Letter Knowledge.py
+
 
             st.divider()
 
@@ -305,6 +358,82 @@ def display_midline():
                 st.dataframe(school_letter_score_summary, use_container_width=True)
 
             st.divider()
+            
+            st.divider()
+            
+            st.header("🔍 Individual School Analysis")
+            
+            # Grade selection for individual school analysis
+            col_grade, col_school = st.columns(2)
+            
+            with col_grade:
+                selected_grade = st.selectbox(
+                    "Select Grade for analysis:",
+                    ["Grade 1", "Grade R"],
+                    key="individual_school_grade_selector"
+                )
+            
+            with col_school:
+                selected_center = st.selectbox(
+                    "Select a School for detailed analysis:",
+                    options=sorted(midline_df['school_rep'].unique()),
+                    key="ecd_center_selector"
+                )
+            
+            # Set threshold based on grade selection
+            threshold = 40 if selected_grade == "Grade 1" else 20
+            
+            # Filter data by both school and grade
+            center_data = midline_df[
+                (midline_df['school_rep'] == selected_center) & 
+                (midline_df['grade_label'] == selected_grade)
+            ]
+            
+            if not center_data.empty:
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.subheader(f"📊 {selected_center} - {selected_grade} Metrics")
+                    center_children = len(center_data)
+                    center_avg = center_data['letters_correct'].mean() if 'letters_correct' in center_data.columns else 0
+                    center_above_threshold = (center_data['letters_correct'] >= threshold).sum() if 'letters_correct' in center_data.columns else 0
+                    center_percent_threshold = (center_above_threshold / center_children * 100) if center_children > 0 else 0
+                    
+                    st.metric("Children Assessed", center_children)
+                    st.metric("Average Letters Correct", f"{center_avg:.1f}")
+                    st.metric(f"Above Benchmark (≥{threshold})", f"{center_above_threshold} ({center_percent_threshold:.1f}%)")
+                
+                with col2:
+                    st.subheader(f"📈 Score Distribution - {selected_center} ({selected_grade})")
+                    # Show distribution of scores for the selected grade
+                    if 'letters_correct' in center_data.columns and len(center_data) > 0:
+                        # Create score ranges manually
+                        def categorize_score(score):
+                            if score < 10:
+                                return "0-9"
+                            elif score < 20:
+                                return "10-19"
+                            elif score < 30:
+                                return "20-29"
+                            elif score < 40:
+                                return "30-39"
+                            elif score < 50:
+                                return "40-49"
+                            else:
+                                return "50+"
+                        
+                        center_data_copy = center_data.copy()
+                        center_data_copy['score_range'] = center_data_copy['letters_correct'].apply(categorize_score)
+                        score_dist = center_data_copy['score_range'].value_counts()
+                        
+                        # Ensure all categories are present with 0 counts if missing
+                        all_categories = ["0-9", "10-19", "20-29", "30-39", "40-49", "50+"]
+                        score_dist = score_dist.reindex(all_categories, fill_value=0)
+                        
+                        st.bar_chart(score_dist)
+            else:
+                st.warning(f"No data available for {selected_center} - {selected_grade}")
+
 
             # Baseline vs Midline Comparison by School
             with st.container():
