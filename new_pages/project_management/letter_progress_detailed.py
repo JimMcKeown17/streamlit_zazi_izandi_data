@@ -270,7 +270,7 @@ def create_grade_charts(grade_summary):
 
 
 def main():
-    st.title("📚 Letter Progress Dashboard")
+    st.title("📚 Letter Progress by Teacher Assistant")
 
     # Fetch all data once
     all_data = fetch_all_letter_progress()
@@ -278,66 +278,6 @@ def main():
     if not all_data:
         st.warning("No data available. Please check your Django server connection.")
         return
-
-    # Display overall metrics
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Total TAs", all_data['metadata']['total_tas'])
-    with col2:
-        st.metric("Total Groups", all_data['metadata']['total_groups'])
-    with col3:
-        st.metric("Total Schools", all_data['metadata']['total_schools'])
-
-    st.divider()
-    # Prepare grade summary data
-    grade_summary = prepare_grade_summary(all_data)
-    
-    # Grade averages
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric(
-            "Grade R Average Progress", 
-            f"{grade_summary['grade_r_avg']:.1f}%",
-            help="Average progress across all Grade R TAs"
-        )
-    with col2:
-        st.metric(
-            "Grade 1 Average Progress", 
-            f"{grade_summary['grade_1_avg']:.1f}%", 
-            help="Average progress across all Grade 1 TAs"
-        )
-    with col3:
-        # Calculate overall average
-        all_grades = []
-        for school_data in all_data['data_by_school'].values():
-            for ta_data in school_data['ta_progress'].values():
-                grade = (ta_data.get('grade') or '').strip()
-                if grade in ['Grade R', 'Grade 1']:
-                    all_grades.append(ta_data['summary']['average_progress'])
-        
-        overall_avg = sum(all_grades) / len(all_grades) if all_grades else 0
-        st.metric(
-            "Overall Average Progress",
-            f"{overall_avg:.1f}%",
-            help="Average progress across all grades"
-        )
-    
-    # Grade progress charts
-    charts = create_grade_charts(grade_summary)
-    
-    if charts:
-        st.subheader("Progress by School and Grade")
-        chart_cols = st.columns(2)
-        
-        if 'R' in charts:
-            with chart_cols[0]:
-                st.plotly_chart(charts['R'], use_container_width=True)
-        
-        if '1' in charts:
-            with chart_cols[1]:
-                st.plotly_chart(charts['1'], use_container_width=True)
-    
-    st.divider()
     
     # Show summary for all schools
     st.header("All Schools Summary")
