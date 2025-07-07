@@ -3,10 +3,11 @@ import requests
 import pandas as pd
 from datetime import datetime
 import json
+import plotly.express as px
 
 # Configuration
-# DJANGO_API_URL = "http://zazi-izandi.co.za/api/letter-progress/"
-DJANGO_API_URL = "http://localhost:8000/api/letter-progress/"
+DJANGO_API_URL = "http://zazi-izandi.co.za/api/letter-progress/"
+# DJANGO_API_URL = "http://localhost:8000/api/letter-progress/"
 
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
@@ -172,6 +173,102 @@ def prepare_ai_data_complete(all_data):
     return ai_data
 
 
+def prepare_grade_summary(all_data):
+    """Prepare grade-specific summary data for dashboard"""
+    grade_data = {'Grade R': [], 'Grade 1': []}
+    school_grade_data = {}
+    
+    for school_name, school_data in all_data['data_by_school'].items():
+        school_grade_data[school_name] = {'Grade R': [], 'Grade 1': []}
+        
+        for ta_name, ta_data in school_data['ta_progress'].items():
+            grade = (ta_data.get('grade') or '').strip()
+            if grade in ['Grade R', 'Grade 1']:
+                ta_avg_progress = ta_data['summary']['average_progress']
+                grade_data[grade].append(ta_avg_progress)
+                school_grade_data[school_name][grade].append(ta_avg_progress)
+    
+    # Calculate averages
+    summary = {
+        'grade_r_avg': sum(grade_data['Grade R']) / len(grade_data['Grade R']) if grade_data['Grade R'] else 0,
+        'grade_1_avg': sum(grade_data['Grade 1']) / len(grade_data['Grade 1']) if grade_data['Grade 1'] else 0,
+        'school_averages': {}
+    }
+    
+    # Calculate school averages by grade
+    for school, grades in school_grade_data.items():
+        summary['school_averages'][school] = {
+            'Grade R': sum(grades['Grade R']) / len(grades['Grade R']) if grades['Grade R'] else 0,
+            'Grade 1': sum(grades['Grade 1']) / len(grades['Grade 1']) if grades['Grade 1'] else 0
+        }
+    
+    return summary
+
+
+def create_grade_charts(grade_summary):
+    """Create bar charts for grade progress by school"""
+    school_data = []
+    
+    for school, grades in grade_summary['school_averages'].items():
+        if grades['Grade R'] > 0:  # Only include schools with Grade R data
+            school_data.append({
+                'School': school,
+                'Grade': 'Grade R',
+                'Average Progress': grades['Grade R']
+            })
+        if grades['Grade 1'] > 0:  # Only include schools with Grade 1 data
+            school_data.append({
+                'School': school,
+                'Grade': 'Grade 1', 
+                'Average Progress': grades['Grade 1']
+            })
+    
+    if school_data:
+        df = pd.DataFrame(school_data)
+        
+        # Create separate charts for each grade
+        grade_r_df = df[df['Grade'] == 'Grade R']
+        grade_1_df = df[df['Grade'] == 'Grade 1']
+        
+        charts = {}
+        
+        if not grade_r_df.empty:
+            # Sort by Average Progress descending
+            grade_r_df = grade_r_df.sort_values('Average Progress', ascending=False)
+            charts['R'] = px.bar(
+                grade_r_df, 
+                x='School', 
+                y='Average Progress',
+                title='Average Progress by School - Grade R',
+                color_discrete_sequence=['#ffc107']
+            )
+            charts['R'].update_layout(
+                xaxis_title="School",
+                yaxis_title="Average Progress (%)",
+                yaxis=dict(range=[0, 100])
+            )
+        
+        if not grade_1_df.empty:
+            # Sort by Average Progress descending
+            grade_1_df = grade_1_df.sort_values('Average Progress', ascending=False)
+            charts['1'] = px.bar(
+                grade_1_df, 
+                x='School', 
+                y='Average Progress',
+                title='Average Progress by School - Grade 1',
+                color_discrete_sequence=['#28a745']
+            )
+            charts['1'].update_layout(
+                xaxis_title="School",
+                yaxis_title="Average Progress (%)",
+                yaxis=dict(range=[0, 100])
+            )
+        
+        return charts
+    
+    return {}
+
+
 def main():
     st.title("📚 Letter Progress Dashboard")
 
@@ -182,54 +279,78 @@ def main():
         st.warning("No data available. Please check your Django server connection.")
         return
 
-    # School filter
-    col1, col2, col3 = st.columns([2, 3, 3])
-    with col1:
-        schools = ["All Schools"] + all_data.get('schools', [])
-        selected_school = st.selectbox(
-            "Select School",
-            schools,
-            index=0
-        )
-
     # Display overall metrics
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total TAs", all_data['metadata']['total_tas'])
     with col2:
-        if selected_school == "All Schools":
-            st.metric("Total TAs", all_data['metadata']['total_tas'])
-        else:
-            school_data = all_data['data_by_school'].get(selected_school, {})
-            st.metric("Total TAs", school_data.get('summary', {}).get('total_tas', 0))
-
+        st.metric("Total Groups", all_data['metadata']['total_groups'])
     with col3:
-        if selected_school == "All Schools":
-            st.metric("Total Groups", all_data['metadata']['total_groups'])
-        else:
-            school_data = all_data['data_by_school'].get(selected_school, {})
-            st.metric("Total Groups", school_data.get('summary', {}).get('total_groups', 0))
+        st.metric("Total Schools", all_data['metadata']['total_schools'])
 
     st.divider()
+    # Prepare grade summary data
+    grade_summary = prepare_grade_summary(all_data)
+    
+    # Grade averages
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric(
+            "Grade R Average Progress", 
+            f"{grade_summary['grade_r_avg']:.1f}%",
+            help="Average progress across all Grade R TAs"
+        )
+    with col2:
+        st.metric(
+            "Grade 1 Average Progress", 
+            f"{grade_summary['grade_1_avg']:.1f}%", 
+            help="Average progress across all Grade 1 TAs"
+        )
+    with col3:
+        # Calculate overall average
+        all_grades = []
+        for school_data in all_data['data_by_school'].values():
+            for ta_data in school_data['ta_progress'].values():
+                grade = (ta_data.get('grade') or '').strip()
+                if grade in ['Grade R', 'Grade 1']:
+                    all_grades.append(ta_data['summary']['average_progress'])
+        
+        overall_avg = sum(all_grades) / len(all_grades) if all_grades else 0
+        st.metric(
+            "Overall Average Progress",
+            f"{overall_avg:.1f}%",
+            help="Average progress across all grades"
+        )
+    
+    # Grade progress charts
+    charts = create_grade_charts(grade_summary)
+    
+    if charts:
+        st.subheader("Progress by School and Grade")
+        chart_cols = st.columns(2)
+        
+        if 'R' in charts:
+            with chart_cols[0]:
+                st.plotly_chart(charts['R'], use_container_width=True)
+        
+        if '1' in charts:
+            with chart_cols[1]:
+                st.plotly_chart(charts['1'], use_container_width=True)
+    
+    st.divider()
+    
+    # Show summary for all schools
+    st.header("All Schools Summary")
 
-    # Display data based on selection
-    if selected_school == "All Schools":
-        # Show summary for all schools
-        st.header("All Schools Summary")
+    # Create tabs for each school
+    if all_data['schools']:
+        tabs = st.tabs(all_data['schools'])
 
-        # Create tabs for each school
-        if all_data['schools']:
-            tabs = st.tabs(all_data['schools'])
-
-            for idx, school in enumerate(all_data['schools']):
-                with tabs[idx]:
-                    display_school_data(all_data['data_by_school'][school], all_data['letter_sequence'])
-        else:
-            st.info("No school data available")
+        for idx, school in enumerate(all_data['schools']):
+            with tabs[idx]:
+                display_school_data(all_data['data_by_school'][school], all_data['letter_sequence'])
     else:
-        # Show data for selected school
-        school_data = all_data['data_by_school'].get(selected_school)
-        if school_data:
-            display_school_data(school_data, all_data['letter_sequence'])
-        else:
-            st.info(f"No data available for {selected_school}")
+        st.info("No school data available")
 
 
 main()
