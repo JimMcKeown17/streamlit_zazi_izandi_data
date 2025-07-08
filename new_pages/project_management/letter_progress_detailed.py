@@ -76,7 +76,7 @@ def analyze_flagged_tas(all_data):
     }
 
 
-def render_letter_grid(letters_sequence, progress_index):
+def render_letter_grid(letters_sequence, progress_index, rightmost_letter=None):
     """Render the letter progress grid"""
     cols = st.columns(26)  # 26 letters
 
@@ -84,12 +84,21 @@ def render_letter_grid(letters_sequence, progress_index):
         with cols[idx]:
             if idx <= progress_index:
                 # Completed letter - yellow background
-                st.markdown(
-                    f"<div style='background-color: #ffc107; border: 1px solid #ddd; "
-                    f"padding: 4px; text-align: center; border-radius: 4px;'>"
-                    f"<b>{letter}</b></div>",
-                    unsafe_allow_html=True
-                )
+                # Highlight the rightmost letter differently if provided
+                if rightmost_letter and letter == rightmost_letter:
+                    st.markdown(
+                        f"<div style='background-color: #ff9800; border: 2px solid #ff6b00; "
+                        f"padding: 4px; text-align: center; border-radius: 4px;'>"
+                        f"<b>{letter}</b></div>",
+                        unsafe_allow_html=True
+                    )
+                else:
+                    st.markdown(
+                        f"<div style='background-color: #ffc107; border: 1px solid #ddd; "
+                        f"padding: 4px; text-align: center; border-radius: 4px;'>"
+                        f"<b>{letter}</b></div>",
+                        unsafe_allow_html=True
+                    )
             else:
                 # Not completed letter - gray background
                 st.markdown(
@@ -145,12 +154,23 @@ def display_school_data(school_data, letter_sequence):
 
                 with col2:
                     st.caption(f"Progress: {group_data['progress_percentage']:.0f}%")
+                    # Show rightmost letter if available
+                    if 'rightmost_letter' in group_data and group_data['rightmost_letter']:
+                        st.caption(f"Current letter: {group_data['rightmost_letter']}")
 
                 with col3:
                     st.caption(f"Sessions: {group_data['session_count']}")
 
-                # Letter progress grid
-                render_letter_grid(letter_sequence, group_data['progress_index'])
+                # Letter progress grid - pass rightmost_letter if available
+                render_letter_grid(
+                    letter_sequence, 
+                    group_data['progress_index'],
+                    group_data.get('rightmost_letter')
+                )
+
+                # Show debug info if available (only in development)
+                if 'debug_info' in group_data and st.checkbox(f"Show debug info for {group_name}", key=f"debug_{ta_name}_{group_name}"):
+                    st.json(group_data['debug_info'])
 
                 # Additional info for AI context (not in expander due to nesting limitation)
                 st.markdown("**Session Details:**")
