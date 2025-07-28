@@ -4,6 +4,18 @@ import streamlit as st
 import openpyxl
 from process_survey_cto_updated import process_egra_data
 
+def load_zazi_izandi_2025_tp():
+    ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+    xhosa_filename = "survey575_egra-letters-isixhosa_masinyusane_2025-07-28_10-43.csv"
+    english_filename = "survey578_egra-letters-english_masinyusane_2025-07-28_10-43.csv"
+    afrikaans_filename = "survey576_egra-letters-afrikaans_masinyusane_2025-07-28_10-45.csv"
+    xhosa_path = os.path.join(ROOT_DIR, "data/TeamPact", xhosa_filename)
+    english_path = os.path.join(ROOT_DIR, "data/TeamPact", english_filename)
+    afrikaans_path = os.path.join(ROOT_DIR, "data/TeamPact", afrikaans_filename)
+    xhosa_df = pd.read_csv(xhosa_path)
+    english_df = pd.read_csv(english_path)
+    afrikaans_df = pd.read_csv(afrikaans_path)
+    return xhosa_df, english_df, afrikaans_df
 
 def load_zazi_izandi_2025():
     ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))

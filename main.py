@@ -55,21 +55,23 @@ baseline_page_25 = st.Page("new_pages/2025/baseline_2025.py", icon="📖", title
 midline_page_25 = st.Page("new_pages/2025/midline_2025.py", icon="📊", title="2025 Midline", url_path="midline_25")
 sessions_page_25 = st.Page("new_pages/2025/sessions_2025.py", icon="📈", title="2025 Sessions", url_path="sessions_25")
 midline_ecd_page_25 = st.Page("new_pages/2025/midline_2025_ecd.py", icon="🏫", title="2025 ECD Midline", url_path="midline_ecd_25")
-
+teampact_page_25 = st.Page("new_pages/2025/teampact.py", icon="🏫", title="2025 TeamPact", url_path="teampact_25")
 # Research & Other Pages
+# agent_analyze_page = st.Page("agents/agent_analyze/agent.py", icon="🤖", title="ZaziAnalyze", url_path="agent_analyze")
 research_page = st.Page("new_pages/Research & Benchmarks.py", icon="🔍", title="Research & Benchmarks", url_path="research")
 year_comparisons_page = st.Page("new_pages/Year_Comparisons.py", icon="🔍", title="Year Comparisons", url_path="year_comparisons")
 
 # Project Management Pages
 letter_progress_25 = st.Page("new_pages/project_management/letter_progress.py", icon="🔍", title="Letter Progress", url_path="letter_progress_25")
 letter_progress_detailed_25 = st.Page("new_pages/project_management/letter_progress_detailed.py", icon="🔍", title="Letter Progress Detailed", url_path="letter_progress_detailed_25")
+school_reports_page = st.Page("new_pages/project_management/school_reports.py", icon="📊", title="School Reports", url_path="school_reports")
 
 # --- Navigation ---
 pages_2024_public = [letter_knowledge_page_24, word_reading_page_24, new_schools_page_24, session_analysis_page_24]
 pages_2024_internal = []
 
 pages_2025_public = [ midline_page_25, baseline_page_25,sessions_page_25, midline_ecd_page_25, ]
-pages_2025_internal = []
+pages_2025_internal = [teampact_page_25]
 
 pages_research_public = [research_page]
 pages_research_internal = [year_comparisons_page]
@@ -77,7 +79,7 @@ pages_research_internal = [year_comparisons_page]
 pages_2023 = [results_page_23]
 
 pages_project_management = []
-pages_project_management_internal = [letter_progress_25, letter_progress_detailed_25]
+pages_project_management_internal = [letter_progress_25, letter_progress_detailed_25, school_reports_page]
 
 pages_2024 = pages_2024_public
 if st.session_state.user:
