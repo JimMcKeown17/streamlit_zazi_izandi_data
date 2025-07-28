@@ -172,36 +172,56 @@ def display_2025_teampact():
     with st.container():
         st.subheader("Percentage Above Grade 1 Benchmark (40lpm)")
         
-        # Calculate percentages above benchmark (40) for Grade 1 and Grade 2
-        grade_data = []
-
-        for grade in ['Grade 1', 'Grade 2']:
+        # Create two columns for side-by-side pie charts
+        col1, col2 = st.columns(2)
+        
+        for i, grade in enumerate(['Grade 1', 'Grade 2']):
+            # Calculate data for this grade
             above_40 = df[(df['Grade'] == grade) & (df['Total cells correct - EGRA Letters'] > 40)]
+            at_or_below_40 = df[(df['Grade'] == grade) & (df['Total cells correct - EGRA Letters'] <= 40)]
             total = df[df['Grade'] == grade]
             
             n_above_40 = len(above_40)
+            n_at_or_below_40 = len(at_or_below_40)
             n_total = len(total)
-            pct_above_40 = (n_above_40 / n_total) * 100 if n_total > 0 else 0
             
-            grade_data.append({
-                'Grade': grade,
-                'Percentage_Above_40': pct_above_40,
-                'Count_Above_40': n_above_40,
-                'Total_Count': n_total
-            })
-
-        benchmark_df = pd.DataFrame(grade_data)
-
-        fig_benchmark = px.bar(
-            benchmark_df, 
-            x='Grade', 
-            y='Percentage_Above_40',
-            title='Percentage of Learners Above Grade 1 Benchmark (40lpm)',
-            labels={'Percentage_Above_40': 'Percentage Above 40', 'Grade': 'Grade'},
-            color='Grade'
-        )
-
-        st.plotly_chart(fig_benchmark, use_container_width=True)
+            if n_total > 0:
+                # Create pie chart data
+                labels = ['Above 40lpm', 'At or Below 40lpm']
+                values = [n_above_40, n_at_or_below_40]
+                colors = ['#00cc44', '#ff4444']  # Green for above, red for below
+                
+                # Create pie chart
+                fig_pie = go.Figure(data=[go.Pie(
+                    labels=labels,
+                    values=values,
+                    marker_colors=colors,
+                    textinfo='label+percent',
+                    textposition='auto'
+                )])
+                
+                fig_pie.update_layout(
+                    title=f'{grade}<br>Total: {n_total} children',
+                    showlegend=False,
+                    height=500,
+                    margin=dict(t=80, b=20, l=20, r=20)
+                )
+                
+                # Display in appropriate column
+                if i == 0:
+                    with col1:
+                        st.plotly_chart(fig_pie, use_container_width=True)
+                else:
+                    with col2:
+                        st.plotly_chart(fig_pie, use_container_width=True)
+            else:
+                # Handle case where no data exists for this grade
+                if i == 0:
+                    with col1:
+                        st.warning(f"No data available for {grade}")
+                else:
+                    with col2:
+                        st.warning(f"No data available for {grade}")
 
     st.divider()
     with st.container():
@@ -261,5 +281,21 @@ def display_2025_teampact():
                 st.metric("Max Score", f"{scores.max():.0f}")
         else:
             st.warning(f"No data available for {selected_grade_hist}")
+
+    st.divider()
+    st.subheader("Extra Data Checks")
+    
+    with st.expander("Teacher Assistants with Low Assessment Counts"):
+        assessments_per_TA = df.groupby('Collected By').agg({
+            'First Name': 'count',
+        }).reset_index()
+        assessments_per_TA = assessments_per_TA.sort_values(by='First Name', ascending=False)
+        low_count_TAs = assessments_per_TA[assessments_per_TA['First Name'] < 15]
+        
+        if len(low_count_TAs) > 0:
+            st.write(f"**{len(low_count_TAs)} Teacher Assistants** have completed fewer than 15 assessments:")
+            st.dataframe(low_count_TAs.rename(columns={'First Name': 'Assessment Count'}), use_container_width=True)
+        else:
+            st.success("All Teacher Assistants have completed 15 or more assessments!")
 
 display_2025_teampact()
