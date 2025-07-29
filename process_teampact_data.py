@@ -60,6 +60,7 @@ def process_teampact_data(xhosa_df: pd.DataFrame, english_df: pd.DataFrame, afri
     afrikaans_df[common_cols]], ignore_index=True)
 
     df_all.columns = df_all.columns.str.strip()
+    df_all = df_all[df_all['Email'] != 'stanfordvusisamora@gmail.com']
     
     
     return df_all  
