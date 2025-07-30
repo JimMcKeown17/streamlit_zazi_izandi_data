@@ -48,6 +48,10 @@ def display_2025_teampact():
         st.metric("Teacher Assistants", df['Collected By'].nunique())
     with col6:
         st.metric("Schools", df['Program Name'].nunique())
+    with col7:
+        ta_counts = df.groupby('Collected By')['First Name'].count()
+        active_tas = (ta_counts > 10).sum()
+        st.metric("Active TAs (>10 assessments)", active_tas)
         
     st.divider()
     with st.container():
