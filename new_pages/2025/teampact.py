@@ -55,25 +55,56 @@ def display_2025_teampact():
         
     st.divider()
     with st.container():
-        st.subheader("EGRA Scores by Grade")
+        # Add toggle for median/mean (default to median)
+        col_title, col_toggle = st.columns([3, 1])
+        with col_title:
+            st.subheader("EGRA Scores by Grade")
+        with col_toggle:
+            use_mean = st.toggle("📊 Show Mean", value=False, key="grade_mean_toggle")
+        
+        # Choose aggregation method based on toggle (default to median)
+        stat_method = 'mean' if use_mean else 'median'
+        stat_label = 'Mean' if use_mean else 'Median'
+        
         agg_results = df.groupby('Grade').agg({
         'First Name': 'count',
-        'Total cells correct - EGRA Letters': 'mean'
+        'Total cells correct - EGRA Letters': stat_method
             }).reset_index()
+        
         fig = px.bar(agg_results, x='Grade', y='Total cells correct - EGRA Letters', color='Grade',
-                     category_orders={'Grade': ['Grade R', 'Grade 1', 'Grade 2']})
+                     category_orders={'Grade': ['Grade R', 'Grade 1', 'Grade 2']},
+                     title=f'{stat_label} EGRA Letter Scores by Grade')
+        
+        # Update y-axis label to reflect the statistic being shown
+        fig.update_yaxes(title=f'{stat_label} Correct Letters')
+        
         st.plotly_chart(fig)    
         
     st.divider()
     with st.container():
-        st.subheader("EGRA Scores by Language")
+        # Add toggle for median/mean (default to median)
+        col_title2, col_toggle2 = st.columns([3, 1])
+        with col_title2:
+            st.subheader("EGRA Scores by Language")
+        with col_toggle2:
+            use_mean = st.toggle("📊 Show Mean", value=False, key="language_mean_toggle")
+        
+        # Choose aggregation method based on toggle (default to median)
+        stat_method = 'mean' if use_mean else 'median'
+        stat_label = 'Mean' if use_mean else 'Median'
+        
         agg_results = df.groupby(['Language', 'Grade']).agg({
         'First Name': 'count',
-        'Total cells correct - EGRA Letters': 'mean'
+        'Total cells correct - EGRA Letters': stat_method
             }).reset_index()
     
         fig = px.bar(agg_results, x='Language', y='Total cells correct - EGRA Letters', color='Grade', barmode='group',
-                     category_orders={'Grade': ['Grade R', 'Grade 1', 'Grade 2']})
+                     category_orders={'Grade': ['Grade R', 'Grade 1', 'Grade 2']},
+                     title=f'{stat_label} EGRA Letter Scores by Language')
+        
+        # Update y-axis label to reflect the statistic being shown
+        fig.update_yaxes(title=f'{stat_label} Correct Letters')
+        
         st.plotly_chart(fig)
         
     st.divider()
