@@ -6,6 +6,7 @@ import os
 from datetime import datetime as dt
 from dotenv import load_dotenv
 from data_loader import load_zazi_izandi_2025
+from create_letter_tracker import create_letter_tracker
 
 # Load environment variables
 load_dotenv()
@@ -762,6 +763,59 @@ def display_midline():
             
             st.divider()
             st.info("The interactive AI analysis is now available on the new 'ZazAI' page (under 2025 Results).")
+
+            st.divider()
+            
+            # Data Export Tools section
+            with st.container():
+                st.subheader("Data Export Tools")
+                st.info("Export tools for generating letter trackers and datasets.")
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    if st.button("Generate Letter Tracker CSV"):
+                        try:
+                            # Use midline data for letter tracker
+                            letter_tracker_df = create_letter_tracker(midline_df, export_csv=False)
+                            csv = letter_tracker_df.to_csv(index=False)
+                            st.download_button(
+                                label="Download Letter Tracker (Midline)",
+                                data=csv,
+                                file_name="Letter_Tracker_Midline.csv",
+                                mime="text/csv",
+                            )
+                            st.success("Letter Tracker generated successfully!")
+                        except Exception as e:
+                            st.error(f"Error generating Letter Tracker: {str(e)}")
+
+                with col2:
+                    if st.button("Generate Combined Dataset"):
+                        try:
+                            # Create combined dataset with assessment phase indicator
+                            initial_df_copy = initial_df.copy()
+                            midline_df_copy = midline_df.copy()
+                            
+                            # Add assessment phase column
+                            initial_df_copy['assessment_phase'] = 'Initial'
+                            midline_df_copy['assessment_phase'] = 'Midline'
+                            
+                            # Combine the datasets
+                            combined_df = pd.concat([initial_df_copy, midline_df_copy], ignore_index=True)
+                            
+                            # Get current date for filename
+                            date = dt.today().strftime('%Y-%m-%d')
+                            # Convert combined DataFrame to CSV
+                            csv = combined_df.to_csv(index=False)
+                            st.download_button(
+                                label="Download Combined Dataset",
+                                data=csv,
+                                file_name=f"combined_initial_midline_data_{date}.csv",
+                                mime="text/csv",
+                            )
+                            st.success("Combined dataset ready for download!")
+                        except Exception as e:
+                            st.error(f"Error generating combined dataset: {str(e)}")
 
     except Exception as e:
         st.error(f"Error loading data: {e}") 

@@ -205,25 +205,31 @@ def display_2025_teampact():
 
     st.divider()
     with st.container():
-        st.subheader("Percentage Above Grade 1 Benchmark (40lpm)")
+        # Add title and slider for dynamic threshold
+        col_title3, col_slider = st.columns([3, 1])
+        with col_title3:
+            st.subheader("Percentage Above Benchmark")
+        with col_slider:
+            # Dynamic slider for lpm threshold
+            lpm_threshold = st.slider("Set LPM Threshold", min_value=10, max_value=50, value=40, step=5, key="lpm_threshold_slider")
         
         # Create two columns for side-by-side pie charts
         col1, col2 = st.columns(2)
         
         for i, grade in enumerate(['Grade 1', 'Grade 2']):
-            # Calculate data for this grade
-            above_40 = df[(df['Grade'] == grade) & (df['Total cells correct - EGRA Letters'] > 40)]
-            at_or_below_40 = df[(df['Grade'] == grade) & (df['Total cells correct - EGRA Letters'] <= 40)]
+            # Calculate data for this grade using dynamic threshold
+            above_threshold = df[(df['Grade'] == grade) & (df['Total cells correct - EGRA Letters'] > lpm_threshold)]
+            at_or_below_threshold = df[(df['Grade'] == grade) & (df['Total cells correct - EGRA Letters'] <= lpm_threshold)]
             total = df[df['Grade'] == grade]
             
-            n_above_40 = len(above_40)
-            n_at_or_below_40 = len(at_or_below_40)
+            n_above_threshold = len(above_threshold)
+            n_at_or_below_threshold = len(at_or_below_threshold)
             n_total = len(total)
             
             if n_total > 0:
-                # Create pie chart data
-                labels = ['Above 40lpm', 'At or Below 40lpm']
-                values = [n_above_40, n_at_or_below_40]
+                # Create pie chart data with dynamic labels
+                labels = [f'Above {lpm_threshold}lpm', f'At or Below {lpm_threshold}lpm']
+                values = [n_above_threshold, n_at_or_below_threshold]
                 colors = ['#00cc44', '#ff4444']  # Green for above, red for below
                 
                 # Create pie chart
@@ -257,6 +263,63 @@ def display_2025_teampact():
                 else:
                     with col2:
                         st.warning(f"No data available for {grade}")
+        
+        # Add expander with school-level breakdown
+        with st.expander("📊 School-Level Breakdown"):
+            # Filter for Grade 1 and Grade 2 only since that's what we're analyzing above
+            grade_1_2_df = df[df['Grade'].isin(['Grade 1', 'Grade 2'])]
+            
+            if len(grade_1_2_df) > 0:
+                # Create summary by Program Name and Grade
+                school_summary = []
+                
+                for school in grade_1_2_df['Program Name'].unique():
+                    for grade in ['Grade 1', 'Grade 2']:
+                        school_grade_data = grade_1_2_df[
+                            (grade_1_2_df['Program Name'] == school) & 
+                            (grade_1_2_df['Grade'] == grade)
+                        ]
+                        
+                        if len(school_grade_data) > 0:
+                            above_count = len(school_grade_data[school_grade_data['Total cells correct - EGRA Letters'] > lpm_threshold])
+                            total_count = len(school_grade_data)
+                            below_count = total_count - above_count
+                            percentage_above = (above_count / total_count * 100) if total_count > 0 else 0
+                            
+                            school_summary.append({
+                                'School': school,
+                                'Grade': grade,
+                                'Total Children': total_count,
+                                f'Above {lpm_threshold}lpm': above_count,
+                                f'At/Below {lpm_threshold}lpm': below_count,
+                                '% Above Threshold': f"{percentage_above:.1f}%"
+                            })
+                
+                if school_summary:
+                    summary_df = pd.DataFrame(school_summary)
+                    
+                    # Sort by school name and then by grade
+                    summary_df = summary_df.sort_values(['School', 'Grade'])
+                    
+                    st.dataframe(summary_df, use_container_width=True, hide_index=True)
+                    
+                    # Add summary statistics
+                    st.write("**Summary:**")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        total_schools = summary_df['School'].nunique()
+                        st.metric("Schools Analyzed", total_schools)
+                    with col2:
+                        total_children = summary_df['Total Children'].sum()
+                        st.metric("Total Children", total_children)
+                    with col3:
+                        total_above = summary_df[f'Above {lpm_threshold}lpm'].sum()
+                        overall_percentage = (total_above / total_children * 100) if total_children > 0 else 0
+                        st.metric("Overall % Above Threshold", f"{overall_percentage:.1f}%")
+                else:
+                    st.warning("No data available for analysis")
+            else:
+                st.warning("No Grade 1 or Grade 2 data available")
 
     st.divider()
     with st.container():
