@@ -6,9 +6,9 @@ from process_survey_cto_updated import process_egra_data
 
 def load_zazi_izandi_2025_tp():
     ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
-    xhosa_filename = "survey575_egra-letters-isixhosa_masinyusane_2025-07-31_11-19.csv"
-    english_filename = "survey578_egra-letters-english_masinyusane_2025-07-31_11-16.csv"
-    afrikaans_filename = "survey576_egra-letters-afrikaans_masinyusane_2025-07-31_11-18.csv"
+    xhosa_filename = "survey575_egra-letters-isixhosa_masinyusane_2025-08-04_11-37.csv"
+    english_filename = "survey578_egra-letters-english_masinyusane_2025-08-04_11-40.csv"
+    afrikaans_filename = "survey576_egra-letters-afrikaans_masinyusane_2025-08-04_11-39.csv"
     xhosa_path = os.path.join(ROOT_DIR, "data/Teampact", xhosa_filename)
     english_path = os.path.join(ROOT_DIR, "data/Teampact", english_filename)
     afrikaans_path = os.path.join(ROOT_DIR, "data/Teampact", afrikaans_filename)
