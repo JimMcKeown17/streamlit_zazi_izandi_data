@@ -12,6 +12,7 @@ import plotly.express as px
 import streamlit as st
 import gradio as gr
 
+
 load_dotenv(override=True)
 
 
@@ -72,7 +73,7 @@ If you need to know the number of children on the programme, you can use the get
 
 
 # We need to set root directory so we can find the zz_data_process_23.py file. I should obviously move this into a better named directory, will do so in the future.
-root_dir = os.path.abspath(os.path.join(os.getcwd(), '..', '..'))
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 if root_dir not in sys.path:
     sys.path.append(root_dir)
 
@@ -108,7 +109,7 @@ def import_2024_results():
     
     return endline
 
-root_dir = os.path.abspath(os.path.join(os.getcwd(), '..', '..'))
+root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 if root_dir not in sys.path:
     sys.path.append(root_dir)
     
@@ -225,8 +226,14 @@ async def chat_async(message, history):
 def chat(message, history):
     return asyncio.run(chat_async(message, history))
 
-gr.ChatInterface(
-    fn=chat,
-    title="Zazi iZandi Supervisor Chat",
-    description="Ask anything about the 2023, 2024, or 2025 literacy programme data.",
-).launch()
+def create_gradio_interface():
+    """Create and return the Gradio ChatInterface for embedding in Streamlit"""
+    return gr.ChatInterface(
+        fn=chat,
+        title="Zazi iZandi AI Assistant",
+        description="Ask anything about the 2023, 2024, or 2025 literacy programme data.",
+    )
+
+# Only launch if running directly (not when imported)
+if __name__ == "__main__":
+    create_gradio_interface().launch()

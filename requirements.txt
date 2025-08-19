@@ -16,3 +16,4 @@ sqlalchemy
 scipy==1.11.4
 sendgrid
 openai-agents
+streamlit-gradio

@@ -57,7 +57,7 @@ sessions_page_25 = st.Page("new_pages/2025/sessions_2025.py", icon="📈", title
 midline_ecd_page_25 = st.Page("new_pages/2025/midline_2025_ecd.py", icon="🏫", title="2025 ECD Midline", url_path="midline_ecd_25")
 teampact_page_25 = st.Page("new_pages/2025/teampact.py", icon="🏫", title="2025 TeamPact", url_path="teampact_25")
 # Research & Other Pages
-# agent_analyze_page = st.Page("agents/agent_analyze/agent.py", icon="🤖", title="ZaziAnalyze", url_path="agent_analyze")
+ai_assistant_page = st.Page("new_pages/ai_assistant.py", icon="🤖", title="Zazi Bot", url_path="ai_assistant")
 research_page = st.Page("new_pages/Research & Benchmarks.py", icon="🔍", title="Research & Benchmarks", url_path="research")
 year_comparisons_page = st.Page("new_pages/Year_Comparisons.py", icon="🔍", title="Year Comparisons", url_path="year_comparisons")
 
@@ -74,7 +74,7 @@ pages_2025_public = [ midline_page_25, baseline_page_25,sessions_page_25, midlin
 pages_2025_internal = [teampact_page_25]
 
 pages_research_public = [research_page]
-pages_research_internal = [year_comparisons_page]
+pages_research_internal = [ai_assistant_page, year_comparisons_page]
 
 pages_2023 = [results_page_23]
 
