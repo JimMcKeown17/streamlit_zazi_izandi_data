@@ -298,8 +298,12 @@ def display_2025_teampact():
                 if school_summary:
                     summary_df = pd.DataFrame(school_summary)
                     
-                    # Sort by school name and then by grade
-                    summary_df = summary_df.sort_values(['School', 'Grade'])
+                    # Convert percentage string to numeric for sorting, then sort by % Above Threshold descending
+                    summary_df['% Above Threshold Numeric'] = summary_df['% Above Threshold'].str.rstrip('%').astype(float)
+                    summary_df = summary_df.sort_values('% Above Threshold Numeric', ascending=False)
+                    
+                    # Remove the numeric column before displaying
+                    summary_df = summary_df.drop('% Above Threshold Numeric', axis=1)
                     
                     st.dataframe(summary_df, use_container_width=True, hide_index=True)
                     
@@ -320,6 +324,61 @@ def display_2025_teampact():
                     st.warning("No data available for analysis")
             else:
                 st.warning("No Grade 1 or Grade 2 data available")
+        
+        # Add Grade 1 only breakdown
+        with st.expander("📊 Grade 1 Only - School Breakdown"):
+            # Filter for Grade 1 only
+            grade_1_df = df[df['Grade'] == 'Grade 1']
+            
+            if len(grade_1_df) > 0:
+                # Create summary by Program Name for Grade 1 only
+                grade_1_summary = []
+                
+                for school in grade_1_df['Program Name'].unique():
+                    school_data = grade_1_df[grade_1_df['Program Name'] == school]
+                    
+                    if len(school_data) > 0:
+                        above_count = len(school_data[school_data['Total cells correct - EGRA Letters'] > lpm_threshold])
+                        total_count = len(school_data)
+                        below_count = total_count - above_count
+                        percentage_above = (above_count / total_count * 100) if total_count > 0 else 0
+                        
+                        grade_1_summary.append({
+                            'School': school,
+                            'Total Children': total_count,
+                            f'Above {lpm_threshold}lpm': above_count,
+                            f'At/Below {lpm_threshold}lpm': below_count,
+                            '% Above Threshold': percentage_above
+                        })
+                
+                if grade_1_summary:
+                    grade_1_df_summary = pd.DataFrame(grade_1_summary)
+                    
+                    # Sort by % Above Threshold in descending order
+                    grade_1_df_summary = grade_1_df_summary.sort_values('% Above Threshold', ascending=False)
+                    
+                    # Format the percentage column for display
+                    grade_1_df_summary['% Above Threshold'] = grade_1_df_summary['% Above Threshold'].apply(lambda x: f"{x:.1f}%")
+                    
+                    st.dataframe(grade_1_df_summary, use_container_width=True, hide_index=True)
+                    
+                    # Add summary statistics for Grade 1
+                    st.write("**Grade 1 Summary:**")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        total_schools_g1 = len(grade_1_summary)
+                        st.metric("Grade 1 Schools", total_schools_g1)
+                    with col2:
+                        total_children_g1 = sum([s['Total Children'] for s in grade_1_summary])
+                        st.metric("Total Grade 1 Children", total_children_g1)
+                    with col3:
+                        total_above_g1 = sum([s[f'Above {lpm_threshold}lpm'] for s in grade_1_summary])
+                        overall_percentage_g1 = (total_above_g1 / total_children_g1 * 100) if total_children_g1 > 0 else 0
+                        st.metric("Grade 1 % Above Threshold", f"{overall_percentage_g1:.1f}%")
+                else:
+                    st.warning("No Grade 1 data available for analysis")
+            else:
+                st.warning("No Grade 1 data available")
 
     st.divider()
     with st.container():
