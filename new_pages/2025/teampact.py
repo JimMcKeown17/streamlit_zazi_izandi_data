@@ -17,20 +17,57 @@ def display_2025_teampact():
     if 'user' not in st.session_state:
         st.session_state.user = None
 
-
     st.title("2025 TeamPact Assessments")
+    
+    # Add data source toggle
+    st.sidebar.header("📊 Data Source")
+    use_api = st.sidebar.toggle("Use API instead of CSV files", value=False, key="api_toggle")
+    
+    if use_api:
+        st.sidebar.info("🔄 Using TeamPact API")
+        # Add API token check
+        import os
+        import dotenv
+        dotenv.load_dotenv()
+        api_token = os.getenv("TEAMPACT_API_TOKEN")
+        if not api_token:
+            st.sidebar.error("⚠️ TEAMPACT_API_TOKEN not set in environment")
+    else:
+        st.sidebar.info("📁 Using CSV files")
     
     # Read and process data
     try:
-        xhosa_df, english_df, afrikaans_df = load_zazi_izandi_2025_tp()
+        if use_api:
+            # Import the new API loader function
+            from data_loader import load_zazi_izandi_2025_tp_api
+            result = load_zazi_izandi_2025_tp_api()
+            
+            if result and all(df is not None for df in result):
+                xhosa_df, english_df, afrikaans_df = result
+            else:
+                st.error("Failed to load API data")
+                return
+        else:
+            # Use existing CSV loader
+            xhosa_df, english_df, afrikaans_df = load_zazi_izandi_2025_tp()
+        
+        # Process data (same for both CSV and API)
         df = process_teampact_data(xhosa_df, english_df, afrikaans_df)
         
         if df.empty:
             st.warning("⚠️ No assessment data was found.")
+            return
+        
+        # Add comparison metrics if switching between sources
+        if use_api:
+            st.success(f"📡 API Data Loaded: {len(df)} total assessments")
+        else:
+            st.info(f"📁 CSV Data Loaded: {len(df)} total assessments")
         
     except Exception as e:
         st.error(f"Error loading data: {e}")
         st.error(traceback.format_exc())
+        return
         
     # Okay, let's create some charts!
     col1, col2, col3, col4 = st.columns(4)
