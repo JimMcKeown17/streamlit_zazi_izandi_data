@@ -3,3 +3,6 @@ secrets.toml
 .env
 /env/
 env/
+
+# Large data files
+data/ecd_data_*.json
