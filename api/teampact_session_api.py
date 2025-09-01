@@ -85,13 +85,13 @@ def fetch_and_save_data():
         
         for i, record in enumerate(all_data):
             try:
-                # Extract main record data
-                session_data = record.get('session', {})
-                participant_data = record.get('participant', {})
-                user_data = record.get('user', {})
-                class_data = record.get('class', {})
-                program_data = record.get('program', {})
-                org_data = record.get('organization', {})
+                # Extract main record data with null safety
+                session_data = record.get('session') or {}
+                participant_data = record.get('participant') or {}
+                user_data = record.get('user') or {}
+                class_data = record.get('class') or {}
+                program_data = record.get('program') or {}
+                org_data = record.get('organization') or {}
                 
                 # Handle session tags - extract all letter names and group IDs
                 session_tags = session_data.get('session_tags', [])
@@ -114,15 +114,15 @@ def fetch_and_save_data():
                 tag_ids_str = ','.join(tag_ids) if tag_ids else ''
                 group_ids_str = ','.join(set(group_ids)) if group_ids else ''  # Use set to avoid duplicates
                 
-                # Extract location data
-                location = session_data.get('location', {})
+                # Extract location data with null safety
+                location = session_data.get('location') or {}
                 latitude = location.get('lat') if location else session_data.get('latitude')
                 longitude = location.get('lng') if location else session_data.get('longitude')
                 
-                # Handle roll call records
-                roll_call = record.get('roll_call_records', {})
-                pre_status = roll_call.get('pre', {}).get('status', '') if roll_call else ''
-                post_status = roll_call.get('post', {}).get('status', '') if roll_call else ''
+                # Handle roll call records with null safety
+                roll_call = record.get('roll_call_records') or {}
+                pre_status = (roll_call.get('pre') or {}).get('status', '') if roll_call else ''
+                post_status = (roll_call.get('post') or {}).get('status', '') if roll_call else ''
                 
                 # Create comprehensive flat record
                 flat_record = {
@@ -211,6 +211,34 @@ def fetch_and_save_data():
                 
             except Exception as e:
                 print(f"Skipping record {i+1} due to error: {e}")
+                print(f"  Record keys: {list(record.keys()) if isinstance(record, dict) else 'Not a dict'}")
+                if isinstance(record, dict):
+                    # Check what's None vs what exists
+                    session_val = record.get('session')
+                    participant_val = record.get('participant')
+                    user_val = record.get('user')
+                    class_val = record.get('class')
+                    program_val = record.get('program')
+                    roll_call_val = record.get('roll_call_records')
+                    
+                    print(f"  Data availability:")
+                    print(f"    session: {'None' if session_val is None else 'Present' if session_val else 'Empty dict'}")
+                    print(f"    participant: {'None' if participant_val is None else 'Present' if participant_val else 'Empty dict'}")
+                    print(f"    user: {'None' if user_val is None else 'Present' if user_val else 'Empty dict'}")
+                    print(f"    class: {'None' if class_val is None else 'Present' if class_val else 'Empty dict'}")
+                    print(f"    program: {'None' if program_val is None else 'Present' if program_val else 'Empty dict'}")
+                    print(f"    roll_call_records: {'None' if roll_call_val is None else 'Present' if roll_call_val else 'Empty dict'}")
+                    
+                    # Show what basic fields are available
+                    basic_fields = ['id', 'session_id', 'participant_id', 'user_id', 'attendance_status', 'participant_name']
+                    available_basics = [f for f in basic_fields if record.get(f) is not None]
+                    print(f"    Available basic fields: {available_basics}")
+                    
+                    # Show if any nested data exists
+                    if session_val and isinstance(session_val, dict):
+                        session_keys = list(session_val.keys())[:5]  # First 5 keys
+                        print(f"    Session keys (first 5): {session_keys}")
+                
                 skipped_records += 1
                 continue
         
