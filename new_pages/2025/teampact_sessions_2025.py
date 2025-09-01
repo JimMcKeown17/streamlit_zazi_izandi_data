@@ -275,19 +275,36 @@ def display_session_analysis(df):
     # EA ACTIVITY TABLE - PAST 10 WEEKDAYS
     st.subheader("EA Session Activity - Past 10 Weekdays")
     
-    # School type filter for this section
-    ea_school_type_filter = st.selectbox(
-        "Filter by School Type:",
-        options=["Primary School", "ECD", "All"],
-        index=0,  # Default to Primary School
-        key="ea_activity_filter"
-    )
+    # Create two columns for the filters
+    filter_col1, filter_col2 = st.columns(2)
     
-    # Apply filter for EA activity section
+    with filter_col1:
+        # School type filter for this section
+        ea_school_type_filter = st.selectbox(
+            "Filter by School Type:",
+            options=["Primary School", "ECD", "All"],
+            index=0,  # Default to Primary School
+            key="ea_activity_filter"
+        )
+    
+    with filter_col2:
+        # Mentor filter for this section
+        mentor_options = ["All mentors"] + list(mentors_to_schools.keys())
+        ea_mentor_filter = st.selectbox(
+            "Filter by Mentor:",
+            options=mentor_options,
+            index=0,  # Default to All mentors
+            key="ea_mentor_filter"
+        )
+    
+    # Apply filters for EA activity section
+    ea_filtered_df = df.copy()
+    
     if ea_school_type_filter != "All":
-        ea_filtered_df = df[df['school_type'] == ea_school_type_filter]
-    else:
-        ea_filtered_df = df
+        ea_filtered_df = ea_filtered_df[ea_filtered_df['school_type'] == ea_school_type_filter]
+    
+    if ea_mentor_filter != "All mentors":
+        ea_filtered_df = ea_filtered_df[ea_filtered_df['mentor'] == ea_mentor_filter]
     
     # Create the activity table
     activity_table = create_ea_activity_table(ea_filtered_df)
@@ -297,7 +314,14 @@ def display_session_analysis(df):
         col1, col2 = st.columns([1, 1])
         
         with col1:
-            filter_text = f" ({ea_school_type_filter})" if ea_school_type_filter != "All" else ""
+            # Create filter text for display
+            filter_parts = []
+            if ea_school_type_filter != "All":
+                filter_parts.append(ea_school_type_filter)
+            if ea_mentor_filter != "All mentors":
+                filter_parts.append(f"Mentor: {ea_mentor_filter}")
+            
+            filter_text = f" ({', '.join(filter_parts)})" if filter_parts else ""
             st.info(f"**Here's a breakdown of how many days each EA has worked over the past 10 weekdays{filter_text}.**")
             
             # Create breakdown of Total Active Days
@@ -361,8 +385,8 @@ def display_session_analysis(df):
         # Add summary info
         active_weekdays = len([col for col in activity_table.columns if col not in ['Total Active Days', 'Work_Category']])
         summary_text = f"Showing {total_eas} Education Assistants across {active_weekdays} most recent weekdays"
-        if ea_school_type_filter != "All":
-            summary_text += f" ({ea_school_type_filter} only)"
+        if filter_parts:
+            summary_text += f" ({', '.join(filter_parts)} only)"
         st.info(summary_text)
     else:
         st.warning("No session data available for the activity table.")
