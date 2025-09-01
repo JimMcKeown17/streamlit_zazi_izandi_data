@@ -275,15 +275,30 @@ def display_session_analysis(df):
     # EA ACTIVITY TABLE - PAST 10 WEEKDAYS
     st.subheader("EA Session Activity - Past 10 Weekdays")
     
+    # School type filter for this section
+    ea_school_type_filter = st.selectbox(
+        "Filter by School Type:",
+        options=["Primary School", "ECD", "All"],
+        index=0,  # Default to Primary School
+        key="ea_activity_filter"
+    )
+    
+    # Apply filter for EA activity section
+    if ea_school_type_filter != "All":
+        ea_filtered_df = df[df['school_type'] == ea_school_type_filter]
+    else:
+        ea_filtered_df = df
+    
     # Create the activity table
-    activity_table = create_ea_activity_table(filtered_df)
+    activity_table = create_ea_activity_table(ea_filtered_df)
     
     if not activity_table.empty:
         # ACTIVE DAYS BREAKDOWN AND PIE CHART
         col1, col2 = st.columns([1, 1])
         
         with col1:
-            st.info("**Here's a breakdown of how many days each EA has worked over the past 10 weekdays.**")
+            filter_text = f" ({ea_school_type_filter})" if ea_school_type_filter != "All" else ""
+            st.info(f"**Here's a breakdown of how many days each EA has worked over the past 10 weekdays{filter_text}.**")
             
             # Create breakdown of Total Active Days
             active_days_counts = activity_table['Total Active Days'].value_counts().sort_index(ascending=False)
@@ -300,7 +315,7 @@ def display_session_analysis(df):
         
         with col2:   
             
-            st.info("**Charting the distribution of days worked by EAs (over the past 10 weekdays).**")         
+            st.info(f"**Charting the distribution of days worked by EAs (over the past 10 weekdays{filter_text}).**")         
             # Create work frequency categories
             def categorize_work_frequency(days):
                 if days == 0:
@@ -316,11 +331,25 @@ def display_session_analysis(df):
             activity_table['Work_Category'] = activity_table['Total Active Days'].apply(categorize_work_frequency)
             category_counts = activity_table['Work_Category'].value_counts()
             
-            # Create pie chart
+            # Create pie chart with custom colors
+            chart_title = f"Days Worked Distribution by EAs{filter_text}"
+            
+            # Define color mapping
+            color_map = {
+                "0 days": "#FF0000",      # RED
+                "1-3 days": "#FFB3B3",   # Light red
+                "4-6 days": "#6495ED",   # Streamlit info blue
+                "7+ days": "#0000FF"     # Dark blue
+            }
+            
+            # Create ordered colors list based on category_counts index
+            colors = [color_map.get(category, "#CCCCCC") for category in category_counts.index]
+            
             fig_pie = px.pie(
                 values=category_counts.values,
                 names=category_counts.index,
-                title="Days Worked Distribution by EAs"
+                title=chart_title,
+                color_discrete_sequence=colors
             )
             st.plotly_chart(fig_pie, use_container_width=True)
         
@@ -331,7 +360,10 @@ def display_session_analysis(df):
         
         # Add summary info
         active_weekdays = len([col for col in activity_table.columns if col not in ['Total Active Days', 'Work_Category']])
-        st.info(f"Showing {total_eas} Education Assistants across {active_weekdays} most recent weekdays")
+        summary_text = f"Showing {total_eas} Education Assistants across {active_weekdays} most recent weekdays"
+        if ea_school_type_filter != "All":
+            summary_text += f" ({ea_school_type_filter} only)"
+        st.info(summary_text)
     else:
         st.warning("No session data available for the activity table.")
     
