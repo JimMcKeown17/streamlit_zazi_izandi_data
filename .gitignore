@@ -7,3 +7,5 @@ env/
 # Large data files
 data/ecd_data_*.json
 data/latest.json
+
+data/latest.csv

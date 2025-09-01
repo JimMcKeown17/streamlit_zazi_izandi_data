@@ -6,6 +6,9 @@ from datetime import datetime, timedelta
 import plotly.express as px
 import plotly.graph_objects as go
 
+print(f"DEBUG: Token check at startup: {bool(os.getenv('TEAMPACT_API_TOKEN'))}")
+print(f"DEBUG: Token length: {len(os.getenv('TEAMPACT_API_TOKEN', ''))}")
+
 # Add the project root to the path so we can import the API module
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
