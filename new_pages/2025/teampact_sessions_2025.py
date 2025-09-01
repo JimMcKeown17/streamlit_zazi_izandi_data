@@ -87,6 +87,44 @@ def create_session_views(df):
     
     return daily_summary, weekly_summary, assistant_summary
 
+def create_ea_activity_table(df):
+    """Create EA activity table for past 10 weekdays"""
+    
+    # Get unique session dates and sort them
+    df['session_date'] = pd.to_datetime(df['session_started_at']).dt.date
+    df['session_datetime'] = pd.to_datetime(df['session_started_at'])
+    
+    # Filter to weekdays only (Monday=0, Sunday=6, so weekdays are 0-4)
+    weekday_df = df[df['session_datetime'].dt.weekday < 5]
+    unique_weekdays = sorted(weekday_df['session_date'].unique(), reverse=True)
+    
+    # Get the past 10 weekdays
+    past_10_dates = unique_weekdays[:10]
+    
+    if len(past_10_dates) == 0:
+        return pd.DataFrame()
+    
+    # Use the same logic as elsewhere in the code, but with weekday-filtered data
+    daily_sessions = weekday_df.groupby(['user_name', 'session_date', 'session_id']).first().reset_index()
+    
+    # Count sessions per EA per day
+    ea_daily_counts = daily_sessions.groupby(['user_name', 'session_date']).size().reset_index()
+    ea_daily_counts.columns = ['user_name', 'session_date', 'session_count']
+    
+    # Create pivot table with past 10 dates as columns
+    pivot_table = ea_daily_counts.pivot(index='user_name', columns='session_date', values='session_count')
+    
+    # Filter to only past 10 dates and reorder columns chronologically (most recent first)
+    pivot_table = pivot_table.reindex(columns=past_10_dates, fill_value=0)
+    
+    # Add total column showing number of active days
+    pivot_table['Total Active Days'] = (pivot_table > 0).sum(axis=1)
+    
+    # Sort by total active days descending
+    pivot_table = pivot_table.sort_values('Total Active Days', ascending=False)
+    
+    return pivot_table
+
 def display_session_analysis(df):
     """Display comprehensive session analysis dashboard"""
     
@@ -225,6 +263,69 @@ def display_session_analysis(df):
         title=f"Average Sessions per Day ({school_type_filter})"
     )
     st.plotly_chart(fig_avg, use_container_width=True)
+    
+    # EA ACTIVITY TABLE - PAST 10 WEEKDAYS
+    st.subheader("EA Session Activity - Past 10 Weekdays")
+    
+    # Create the activity table
+    activity_table = create_ea_activity_table(filtered_df)
+    
+    if not activity_table.empty:
+        # ACTIVE DAYS BREAKDOWN AND PIE CHART
+        col1, col2 = st.columns([1, 1])
+        
+        with col1:
+            st.info("**Here's a breakdown of how many days each EA has worked over the past 10 weekdays.**")
+            
+            # Create breakdown of Total Active Days
+            active_days_counts = activity_table['Total Active Days'].value_counts().sort_index(ascending=False)
+            total_eas = len(activity_table)
+            
+            # Create breakdown table
+            breakdown_df = pd.DataFrame({
+                'No. of Days Worked': active_days_counts.index,
+                'Counto of EAs': active_days_counts.values,
+                'Percentage of EAs': (active_days_counts.values / total_eas * 100).round(1)
+            })
+            
+            st.dataframe(breakdown_df, use_container_width=True, hide_index=True)
+        
+        with col2:   
+            
+            st.info("**Charting the distribution of days worked by EAs (over the past 10 weekdays).**")         
+            # Create work frequency categories
+            def categorize_work_frequency(days):
+                if days == 0:
+                    return "0 days"
+                elif 1 <= days <= 3:
+                    return "1-3 days"
+                elif 4 <= days <= 6:
+                    return "4-6 days"
+                else:
+                    return "7+ days"
+            
+            # Apply categorization
+            activity_table['Work_Category'] = activity_table['Total Active Days'].apply(categorize_work_frequency)
+            category_counts = activity_table['Work_Category'].value_counts()
+            
+            # Create pie chart
+            fig_pie = px.pie(
+                values=category_counts.values,
+                names=category_counts.index,
+                title="Days Worked Distribution by EAs"
+            )
+            st.plotly_chart(fig_pie, use_container_width=True)
+        
+        st.divider()
+        
+        st.markdown("**Number of sessions run by each EA on each weekday (Monday-Friday)**")
+        st.dataframe(activity_table.drop('Work_Category', axis=1), use_container_width=True)
+        
+        # Add summary info
+        active_weekdays = len([col for col in activity_table.columns if col not in ['Total Active Days', 'Work_Category']])
+        st.info(f"Showing {total_eas} Education Assistants across {active_weekdays} most recent weekdays")
+    else:
+        st.warning("No session data available for the activity table.")
     
 
 def display_data_quality(df):
