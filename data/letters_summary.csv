@@ -1,8 +1,13 @@
 session_id,session_started_at,user_name,class_name,program_name,letters_taught,num_letters_taught,participant_total,attended_total,attended_percentage,session_text,session_date
+3765815,2025-09-01T12:04:23.000000Z,Obuhle Dyeli,1 A - Group 1 - Amanzi,Amanzi Primary School,"p,s,z",3,8,4,50.0,"Today we introduced the following Sounds ""p.s and z"" they know the sounds, 3 learners are absent today",2025-09-01
+3765790,2025-09-01T11:53:46.000000Z,Ntomboxolo Makupula,1A-Group 1-Molefe,Molefe Senior Primary School,"p,z",2,7,6,85.7,The session was good and we reviewed u and introduce z and p,2025-09-01
 3765608,2025-09-01T11:26:51.000000Z,Ashleigh Dolph,1 C - Graduate - Van Der Kemp,Van Der Kemp Primary School,"p,y",2,7,7,100.0,,2025-09-01
 3765584,2025-09-01T11:24:43.000000Z,Abongile Masola,R B-Group 3-Vukanibantu,Vukanibantu Primary School,"n,j",2,7,7,100.0,,2025-09-01
+3765875,2025-09-01T11:23:47.000000Z,Shannon Josephs,2 B-Group 2-Strelitzia,Strelitzia Primary School,"d,l",2,7,7,100.0,Reviewed letter sounds n and m. Introduced letter sounds d and l. I wrote the letter sounds with words on the boards  so that the learners could each spell a word with the letter sounds we covered today.,2025-09-01
+3766524,2025-09-01T11:15:46.000000Z,Unathi Soko-Qukubana,2 A - Group 2 - Magqabi,Magqabi Primary School,"m,k,p,q,x,f",6,6,6,100.0,,2025-09-01
 3765575,2025-09-01T11:15:17.000000Z,Sinesipho Zake,1 B - Group 2 - Swartkops,Swartkops Primary School,"a,b",2,7,7,100.0,"They are struggling but am trying to be patient with them, they play alot",2025-09-01
 3765582,2025-09-01T11:14:51.000000Z,Ntomboxolo Makupula,1A-Group 4-Molefe,Molefe Senior Primary School,"g,x",2,6,6,100.0,The session was good and we reviewed b and introduce x and g,2025-09-01
+3765887,2025-09-01T11:14:34.000000Z,Shaunita Van Der Merwe,1 D - Group 2 - Seagull,Seagull Primary School,"o,m,n,a,u,i,e,b,d,s",10,9,7,77.8,,2025-09-01
 3765550,2025-09-01T11:08:19.000000Z,Sinethemba Mofu,1 B - Group 3 - Spencer Mabija,Spencer Mabija Combined School,"r,c,j",3,8,6,75.0,,2025-09-01
 3765558,2025-09-01T11:06:33.000000Z,Unathi Mnqumeni,R A-Group 2-Stephen Nkomo Senior,Stephen Nkomo Senior Primary School,"k,m",2,7,4,57.1,"4 out 7 learners were present I took one learners from group 4 Liyolatha Thoba because only 2 learners were present in her group and I also added 1 learner that  was the only one present in her group Avuma Veli. I reviewed ""B"" and ""L"" and introduced ""K"" a",2025-09-01
 3765477,2025-09-01T11:01:27.000000Z,Nthabeleng Rantho,1 A - Group 1 - Khulile,Khulile Primary School,"o,a,u",3,5,2,40.0,2/2 bayamazi a no o nda introduce  U,2025-09-01
@@ -13,6 +18,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3765535,2025-09-01T10:54:13.000000Z,Zukisiwe Lomani,1 B-Group 4-Enkwenkwezini Public,Enkwenkwezini Public Primary School,"o,u",2,6,4,66.7,,2025-09-01
 3765587,2025-09-01T10:54:07.000000Z,Nosiphiwo Mgoduka,2 B - Graduate - W B Tshume,W B Tshume Primary School,"c,z",2,19,0,0.0,,2025-09-01
 3765345,2025-09-01T10:51:16.000000Z,Bongiwe Mbusi,1 A - Group 3 - Canzibe,Canzibe Primary School,"l,b",2,7,4,57.1,Lear are able to read and write. They can also play scortch.,2025-09-01
+3766518,2025-09-01T10:49:03.000000Z,Unathi Soko-Qukubana,2 A - Group 1 - Magqabi,Magqabi Primary School,"p,f,q,x,m,k",6,6,6,100.0,,2025-09-01
 3765404,2025-09-01T10:46:50.000000Z,Ndzondelelo Mkuzangwe,R A - Group 3 - Vezubuhle,Vezubuhle Primary School,"i,a,u,e,b,o",6,8,7,87.5,"1 learner is absent 1/7 learner need more attention on letter sounds especial I,u and e",2025-09-01
 3765395,2025-09-01T10:46:17.000000Z,Fadilia Kekana,1 B - Group 5 - Seagull,Seagull Primary School,"l,t",2,6,1,16.7,Students knows all letter sounds,2025-09-01
 3765400,2025-09-01T10:46:13.000000Z,Vonique Natang,1 A - Group 6 - Seagull,Seagull Primary School,"m,d",2,6,2,33.3,M and d were introduced. 2 learners absent. Both learners that were in the session knew the two new letters. Brunique and Elijah are part of the graduates.,2025-09-01
@@ -20,11 +26,15 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3765398,2025-09-01T10:45:42.000000Z,Sinovuyo  Ndongeni,PreR - Group 4 - Arise and Shine,Arise and Shine ECD,"t,q",2,3,3,100.0,"Lungile can recognize letter Tt, Qq and Rr.Khanyisa can recognize letter TT and Qq, struggling with Rr Sibusisiwe can recognize letter Tt, struggling with Qq and Rr.We also did letter writing and container game",2025-09-01
 3765541,2025-09-01T10:45:31.000000Z,Siphosethu Mampangashe,R A - Group 1 - Elufefeni,Elufefeni Primary School,"o,i",2,8,7,87.5,,2025-09-01
 3765386,2025-09-01T10:45:17.000000Z,Iphendule Ndayi,1 A - Group 3 - Pendla,Pendla Primary School,"o,i,a,u",4,7,7,100.0,"Learners are familiar with sounds o i a ,4/7 with u",2025-09-01
+3765883,2025-09-01T10:44:27.000000Z,Shaunita Van Der Merwe,1 D - Group 1 - Seagull,Seagull Primary School,"o,a,i,u,e,b,n,m,d,s",10,8,5,62.5,,2025-09-01
 3765344,2025-09-01T10:44:02.000000Z,Ashleigh Dolph,1 C - Group 1 - Van Der Kemp,Van Der Kemp Primary School,"b,f",2,7,7,100.0,,2025-09-01
+3765771,2025-09-01T10:42:15.000000Z,Shandre Calvert,1 B-Group 2-Sapphire Road,Sapphire Road Primary School,,0,7,6,85.7,"One is absent, they still a bit confused with putting the word with the correct letter sound. Gets distracted very easily. We played the hand clap game sounding out the letter and putting the word with the letter. And draw the letter in the air, did this ",2025-09-01
 3765426,2025-09-01T10:40:48.000000Z,Hlumela Ntloko,R A - Group 2 - BJ Mnyanda,BJ Mnyanda Primary School,"u,c",2,8,8,100.0,Learners  know the letter sounds  perfectly but am still struggling with discipline  because some groups  have only  naughty leaerns,2025-09-01
 3765549,2025-09-01T10:40:41.000000Z,Sinethemba Mofu,1 B - Group 2 - Spencer Mabija,Spencer Mabija Combined School,"t,q,r",3,8,8,100.0,,2025-09-01
 3765557,2025-09-01T10:40:16.000000Z,Unathi Mnqumeni,R A-Group 1-Stephen Nkomo Senior,Stephen Nkomo Senior Primary School,"k,m",2,7,6,85.7,"One learners was absent therefore I took one learner from group 4 Karabelo Rangope and added her to the group because only 2 learners from her group are present. I introduced ""K"" and ""M"".",2025-09-01
+3767681,2025-09-01T10:37:18.000000Z,Sibongile Busakwe,R A - Group 1 - Aaron Gqadu,Aaron Gqadu Primary School,"a,e,i,o",4,8,6,75.0,Today I introduced letter o,2025-09-01
 3765282,2025-09-01T10:36:36.000000Z,Thandiwe Dyantyi,1 A - Group 1 - Masakhane,Masakhane Public School,"e,b",2,10,6,60.0,Some couldn't differentiate b and B but some could.,2025-09-01
+3765978,2025-09-01T10:35:24.000000Z,Thandile Dibela,2 B-Group 4-Colleen Glen Farm School,Colleen Glen Farm School,"o,i",2,6,3,50.0,"I am working by the book , my group 4 everyone was present , and everyone did well with the two Zandis I introduced. We played Khetha isandi isifundele sona and every child In this group participated and did well they seem to know both these letters sound",2025-09-01
 3765277,2025-09-01T10:35:09.000000Z,Emihle Xoli,2A-Group 2-Mnqophiso,Mnqophiso Primary School,,0,9,2,22.2,"Both learners can read, recognize and write n, c and t sounds but struggle with j,q and g sounds.",2025-09-01
 3765350,2025-09-01T10:34:52.000000Z,Nerine Brink,R A-Group 3-Kruisrivier,Kruisrivier Primary School,"r,d,m,h,g,l",6,6,5,83.3,"We reviewed r, h and m and introduced g, d and l. We played the memory and snap game.",2025-09-01
 3765270,2025-09-01T10:32:20.000000Z,Nthabeleng Rantho,1 B-Group 2-Khulile,Khulile Primary School,"b,o,i",3,7,4,57.1,3/4 bayakwaz .. lihlume B funeka simphinde kwakho,2025-09-01
@@ -38,6 +48,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3765254,2025-09-01T10:27:21.000000Z,Carlin Stowman,1 A - Group 2 - Bethvale,Bethvale Primary School,"n,c",2,8,8,100.0,,2025-09-01
 3765586,2025-09-01T10:26:59.000000Z,Nosiphiwo Mgoduka,2 B - Graduate - W B Tshume,W B Tshume Primary School,"z,c",2,19,4,21.1,,2025-09-01
 3765216,2025-09-01T10:26:32.000000Z,Shadé Mahana,1 C - Group 3 - Abraham Levy,Abraham Levy Primary School,"s,e",2,7,7,100.0,There is only 2/7 learners that needs to stay focused on the letter sounds,2025-09-01
+3765895,2025-09-01T10:25:39.000000Z,Asive Masimini,1 A - Group 3 - Aaron Gqadu,Aaron Gqadu Primary School,"g,l",2,7,6,85.7,,2025-09-01
 3765588,2025-09-01T10:25:07.000000Z,Liyema Mbuqu,2 A - Group 1 - W B Tshume,W B Tshume Primary School,"u,o",2,8,6,75.0,,2025-09-01
 3765206,2025-09-01T10:23:14.000000Z,Nomahlubi Nkosinkulu,1 A - Group 3 - Cebelihle,Cebelihle Primary School,"e,b",2,7,7,100.0,Learners are still struggling with the letter b.,2025-09-01
 3765617,2025-09-01T10:22:34.000000Z,Abigail Reid,1 A - Group 2 - Abraham Levy,Abraham Levy Primary School,"m,d",2,8,8,100.0,"All learners present are able to identify, sound out and write the letters m and d.",2025-09-01
@@ -49,6 +60,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3765318,2025-09-01T10:16:45.000000Z,Alfredoline Damons,R B - Group 2 - Jubilee Park,Jubilee Park Primary School,i,1,7,2,28.6,,2025-09-01
 3765197,2025-09-01T10:16:41.000000Z,Nikita Schambreel,1 B - Group 3 - Boet Jegels,Boet Jegels Primary School,"o,i",2,7,4,57.1,All 4 learners can sound and recognise the letters i and o,2025-09-01
 3765548,2025-09-01T10:12:56.000000Z,Sinethemba Mofu,1 B - Group 1 - Spencer Mabija,Spencer Mabija Combined School,"b,l,m",3,8,6,75.0,,2025-09-01
+3767945,2025-09-01T10:12:24.000000Z,Marven Chandler,R B - Group 3 - Bethvale,Bethvale Primary School,"h,k",2,8,7,87.5,,2025-09-01
 3765169,2025-09-01T10:12:16.000000Z,Alinda Turwana,PreR - Group 5 - Njongozabantu,Njongozabantu Day Care,"a,e,i",3,3,2,66.7,We did A E I on our session.,2025-09-01
 3765164,2025-09-01T10:10:10.000000Z,Nerine Brink,R A - Group 2 - Kruisrivier,Kruisrivier Primary School,"t,p,n,c,k,m,h,r",8,7,5,71.4,"2 learners are absent. We reviewed n, t,, p, k,c and introduced m ,r and h. We played the memory game game and snap.",2025-09-01
 3765203,2025-09-01T10:10:00.000000Z,Rayvial Coetzee,R C - Group 3 - Bethvale,Bethvale Primary School,"n,m,s,e,d,l",6,6,6,100.0,"Revised on m, n, s and introduced d and l. Played the board game",2025-09-01
@@ -58,12 +70,16 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3765151,2025-09-01T10:06:18.000000Z,Amberoziа Klaasen,1 A - Group 3 - Van Der Kemp,Van Der Kemp Primary School,"a,n,m,b",4,6,6,100.0,,2025-09-01
 3765142,2025-09-01T10:06:17.000000Z,Phiwokuhle Mtukwane,R A - Group 1 - Masakhane,Masakhane Public School,"a,u",2,7,6,85.7,6/6 don't sound U,2025-09-01
 3765144,2025-09-01T10:05:46.000000Z,Joy Bambie,1 D - Group 1 - Sapphire Road,Sapphire Road Primary School,"o,i,a,u,e,b,l,m,k,p,s,h,z,n,d,y,f,v",18,8,8,100.0,,2025-09-01
+3765893,2025-09-01T10:03:22.000000Z,Asive Masimini,1 A - Group 2 - Aaron Gqadu,Aaron Gqadu Primary School,"g,l",2,7,5,71.4,,2025-09-01
 3765130,2025-09-01T10:02:45.000000Z,Akhikhaya Gxasheka,2 A-Group 1-Kleinskool,Kleinskool Community Primary School,"a,p",2,6,6,100.0,,2025-09-01
 3765118,2025-09-01T10:01:08.000000Z,Ashternecha Billet,1 C - Graduate - Bethvale,Bethvale Primary School,"n,m",2,12,6,50.0,,2025-09-01
 3765385,2025-09-01T10:00:59.000000Z,Iphendule Ndayi,1 A - Group 2 - Pendla,Pendla Primary School,,0,8,8,100.0,"6/7 with o ,3/7 with i ,learners are getting familiar with a ,we'll revisit the sounds on the next session",2025-09-01
 3765610,2025-09-01T10:00:26.000000Z,Simamkele Lolwana,R A - Group 1 - W B Tshume,W B Tshume Primary School,"o,i",2,8,7,87.5,Some of them the sessions are still new to them they struggling to know the  sounds but I trust we will get there,2025-09-01
+3766267,2025-09-01T09:59:33.000000Z,Yonela Kayingo,R B - Group 2 - Siyaphambili,Siyaphambili Public School,"o,i",2,8,5,62.5,,2025-09-01
 3765063,2025-09-01T09:59:16.000000Z,Alinda Turwana,PreR - Group 4 - Njongozabantu,Njongozabantu Day Care,"a,e,i",3,3,2,66.7,We did A E I sounds they are still struggling with some sounds,2025-09-01
+3765976,2025-09-01T09:58:57.000000Z,Thandile Dibela,2 B-Group 3-Colleen Glen Farm School,Colleen Glen Farm School,"o,i",2,6,5,83.3,"I am working by the book , only 3 of them were present. All of them did well with IZandi that we learnt.",2025-09-01
 3765108,2025-09-01T09:58:43.000000Z,Carlin Stowman,1 A - Group 1 - Bethvale,Bethvale Primary School,"c,n",2,8,4,50.0,,2025-09-01
+3765764,2025-09-01T09:58:25.000000Z,Nwabisa Dodi,R C-Group 5-Isaac Booi Senior,Isaac Booi Senior Primary School,"z,w",2,7,7,100.0,"The session was fairly successful,My kids were co-operating and well behaved, just that I couldn't take a picture of them after the session because we got disturbed and they had to leave.Either than that the session went well.",2025-09-01
 3765098,2025-09-01T09:57:09.000000Z,Sinesipho Hina,R A - Group 3 - Ikhwezelihle,Ikhwezelihle Primary School,"l,e",2,7,2,28.6,,2025-09-01
 3765105,2025-09-01T09:56:22.000000Z,Siphokazi Bongco,1 A-Group 2-Daniels Public,Daniels Public Primary School,"z,h",2,7,7,100.0,They know both letter,2025-09-01
 3765119,2025-09-01T09:56:03.000000Z,Shannon Josephs,2 B - Group 1 - Strelitzia,Strelitzia Primary School,"a,u",2,8,6,75.0,Reviewed letter sounds o and i. Introduced letter sounds a and u. Playing the games provided with the learners can become a bit chaotic. I wrote the words starting with the letter sounds and let the learners choose a word to spell.,2025-09-01
@@ -76,15 +92,23 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3765452,2025-09-01T09:51:51.000000Z,Lee Coleman,R A - Group 2 - Bethvale,Bethvale Primary School,,0,7,6,85.7,,2025-09-01
 3765317,2025-09-01T09:50:03.000000Z,Alfredoline Damons,R B - Group 1 - Jubilee Park,Jubilee Park Primary School,i,1,8,2,25.0,Learners need to review a and o again but seems to master the i that I introduced 2 learners absent.,2025-09-01
 3765060,2025-09-01T09:48:03.000000Z,Mbalentle Qawukeni,PreR - Group 5 - Koester ECD,Koester Day Care,"j,w,d,p",4,5,4,80.0,"Uluphiwo, Khazimla and Iyakha can identify P, W, D, J. Othalive can identify P, D, K but struggles with W. We played match the letters as our activity.",2025-09-01
+3766021,2025-09-01T09:45:06.000000Z,Robin Classen,1 A - Group 3 - DR A W Habelgaarn,DR A W Habelgaarn Primary School,"b,u",2,12,4,33.3,Learners knows letters,2025-09-01
 3765184,2025-09-01T09:44:55.000000Z,Fadilia Kekana,1 B - Group 2 - Seagull,Seagull Primary School,"t,l",2,7,1,14.3,,2025-09-01
 3765058,2025-09-01T09:44:38.000000Z,Rayvial Coetzee,R C - Group 2 - Bethvale,Bethvale Primary School,"s,m,n,e",4,7,5,71.4,,2025-09-01
 3765071,2025-09-01T09:44:35.000000Z,Ndzondelelo Mkuzangwe,R A - Group 1 - Vezubuhle,Vezubuhle Primary School,"e,b,o,i,a,u",6,8,7,87.5,1/7 learner strugles sandi4/7 need to revise sandi u1/7 need to rvise sandi b,2025-09-01
+3767943,2025-09-01T09:44:33.000000Z,Marven Chandler,R B - Group 2 - Bethvale,Bethvale Primary School,"h,k",2,9,9,100.0,,2025-09-01
 3765050,2025-09-01T09:43:28.000000Z,Taryn Lamont,1 A - Group 4 - Jubilee Park,Jubilee Park Primary School,"o,i,a",3,15,6,40.0,,2025-09-01
 3765036,2025-09-01T09:42:36.000000Z,Nicolae Prinsloo,1 B - Group 3 - Astra,Astra Primary School,"l,o",2,6,6,100.0,Matthias knew there sounds aswell as a aliyah learners were assisting the other learners and they gave me a lot of words.,2025-09-01
+3765891,2025-09-01T09:40:26.000000Z,Asive Masimini,1 A - Group 1 - Aaron Gqadu,Aaron Gqadu Primary School,"g,l",2,8,5,62.5,,2025-09-01
 3765010,2025-09-01T09:39:36.000000Z,Akhikhaya Gxasheka,2 A - Graduate - Kleinskool Community,Kleinskool Community Primary School,"a,p",2,6,4,66.7,,2025-09-01
+3766264,2025-09-01T09:38:07.000000Z,Yonela Kayingo,R B - Group 4 - Siyaphambili,Siyaphambili Public School,"e,k",2,8,8,100.0,,2025-09-01
 3765011,2025-09-01T09:37:22.000000Z,Nerine Brink,R A - Group 1 - Kruisrivier,Kruisrivier Primary School,"n,t,c,k,h,r",6,7,5,71.4,"We played memory game and snap.And I introduced h and r. We reviewed n, t, c and k.",2025-09-01
 3764999,2025-09-01T09:37:22.000000Z,Ashternecha Billet,1 C - Graduate - Bethvale,Bethvale Primary School,"n,m",2,12,6,50.0,,2025-09-01
 3764997,2025-09-01T09:36:06.000000Z,Alinda Turwana,PreR - Group 3 - Njongozabantu,Njongozabantu Day Care,"a,e,i",3,4,4,100.0,Today's session was good we did A E I,2025-09-01
+3766034,2025-09-01T09:35:18.000000Z,Thezarene Louw,1 C-Group 5-Seagull,Seagull Primary School,"n,e,u,a,i,m,d,o,s,t,b",11,7,6,85.7,,2025-09-01
+3766183,2025-09-01T09:35:18.000000Z,Thezarene Louw,1 C-Group 5-Seagull,Seagull Primary School,"n,e,u,a,i,m,d,o,s,t,b",11,7,6,85.7,,2025-09-01
+3766184,2025-09-01T09:35:18.000000Z,Thezarene Louw,1 C-Group 5-Seagull,Seagull Primary School,"n,e,u,a,i,m,d,o,s,t,b",11,7,6,85.7,,2025-09-01
+3766033,2025-09-01T09:35:18.000000Z,Thezarene Louw,1 C-Group 5-Seagull,Seagull Primary School,"n,e,u,a,i,m,d,o,s,t,b",11,7,6,85.7,,2025-09-01
 3764977,2025-09-01T09:35:07.000000Z,Junaida Mcpherson,1 D - Group 4 - Triomf,Triomf Primary School,"o,i,a,u,e,b,l,m",8,7,7,100.0,,2025-09-01
 3764975,2025-09-01T09:35:05.000000Z,Nazlie Rockman,1B-Group 3-Sanctor,Sanctor Primary School,,0,7,7,100.0,,2025-09-01
 3764961,2025-09-01T09:34:34.000000Z,Joy Bambie,1 D - Group 2 - Sapphire Road,Sapphire Road Primary School,"b,e,u,a,i,o,l,m,k,s,h,z,d,y,n,f,v,p",18,7,7,100.0,"They knew their sounding, since they are doing assessments as well.",2025-09-01
@@ -107,14 +131,20 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3764932,2025-09-01T09:19:02.000000Z,Amberoziа Klaasen,1 A - Group 2 - Van Der Kemp,Van Der Kemp Primary School,"a,m,n,d",4,5,4,80.0,,2025-09-01
 3765056,2025-09-01T09:18:03.000000Z,Rayvial Coetzee,R C - Group 1 - Bethvale,Bethvale Primary School,"n,m,s,e",4,7,4,57.1,,2025-09-01
 3764926,2025-09-01T09:16:53.000000Z,Nicolae Prinsloo,1 B - Group 2 - Astra,Astra Primary School,"l,o",2,7,6,85.7,Micayla went to library but she came back with the letter L so she knew how to sound it out and identifing the letterEnricus couldn't give me a word of it but could sound it out and identify the letters aswell as Christiano they are similar but with the O,2025-09-01
+3767940,2025-09-01T09:16:43.000000Z,Marven Chandler,R B - Group 1 - Bethvale,Bethvale Primary School,"k,h",2,8,7,87.5,,2025-09-01
+3766263,2025-09-01T09:16:33.000000Z,Yonela Kayingo,R B - Group 3 - Siyaphambili,Siyaphambili Public School,"i,a",2,9,5,55.6,,2025-09-01
+3765776,2025-09-01T09:15:45.000000Z,Shadé Bartlett,R B - Group 5 - Swartkops,Swartkops Primary School,,0,7,7,100.0,,2025-09-01
 3765052,2025-09-01T09:15:12.000000Z,Anthea Lentoor,1 A - Group 1 - Jubilee Park,Jubilee Park Primary School,"o,i,a",3,15,5,33.3,2 of the 5 leaners know the letters a o and 3 not,2025-09-01
 3764907,2025-09-01T09:13:13.000000Z,Ashternecha Billet,1 C - Group 4 - Bethvale,Bethvale Primary School,"n,m",2,7,5,71.4,,2025-09-01
 3764917,2025-09-01T09:12:15.000000Z,Chantell Sparks,PreR - Group 4 - Msobomvu ECD,Msobomvu ECD,"d,n",2,5,4,80.0,They still struggling to recognize focusing sounds1 absent,2025-09-01
 3764902,2025-09-01T09:12:01.000000Z,Asiphe Vanqa,R A-Group 3-Gertrude Shope Senior,Gertrude Shope Senior Primary School,"a,u,e",3,7,6,85.7,More practice is needed,2025-09-01
 3764899,2025-09-01T09:11:27.000000Z,Nazlie Rockman,1B-Group 2-Sanctor,Sanctor Primary School,,0,8,7,87.5,,2025-09-01
-3764904,2025-09-01T09:10:43.000000Z,Zikhona Dingile,PreR - Group 4 - Msobomvu,Msobomvu ECD,"v,x",2,6,6,100.0,All six were present....did review and introduced new letters...,2025-09-01
 3765499,2025-09-01T09:10:43.000000Z,Logan Fick,R A-Group 3-DR A W Habelgaarn,DR A W Habelgaarn Primary School,"l,m",2,8,3,37.5,Learners knows how to sound and identify the letters,2025-09-01
+3764904,2025-09-01T09:10:43.000000Z,Zikhona Dingile,PreR - Group 4 - Msobomvu,Msobomvu ECD,"v,x",2,6,6,100.0,All six were present....did review and introduced new letters...,2025-09-01
+3765769,2025-09-01T09:09:37.000000Z,Shandre Calvert,1 B - Group 1 - Sapphire Road,Sapphire Road Primary School,"a,l,s",3,7,6,85.7,Recap on A and L and introduce lettet S. They did very good even with the new letter. One child absent,2025-09-01
 3764898,2025-09-01T09:08:32.000000Z,Sinesipho Hina,R A - Group 1 - Ikhwezelihle,Ikhwezelihle Primary School,"i,e",2,7,4,57.1,"Inokuhle likes to play and do not want to learn, others are trying to learn but easily forget.",2025-09-01
+3767009,2025-09-01T09:07:30.000000Z,Tutula Nozakuzaku,R A - Group 3 - Vukanibantu,Vukanibantu Primary School,"l,m",2,7,4,57.1,All the understand vowels but still need some time to understand the  vowels specially M there are 2 learners struggling with both letters,2025-09-01
+3765763,2025-09-01T09:04:30.000000Z,Nwabisa Dodi,R C-Group 4-Isaac Booi Senior,Isaac Booi Senior Primary School,"o,i",2,7,6,85.7,"The session was very much successful,All my kids were co-operating and were very much focused and well behaved.I enjoyed this session a lot.",2025-09-01
 3764891,2025-09-01T09:04:30.000000Z,Esihle Yali,PreR - Group 3 - Ilitha Lethu,Ilitha Lethu Day Care,"b,l,f",3,5,5,100.0,"Abongile know b,l,f. Lupholwethu also remember b,l,f, Cacela, Inothando and Luphawu know f only doesn't know b,l.",2025-09-01
 3765147,2025-09-01T09:02:14.000000Z,Mfundo Jali,1A-Group 3-Stephen Mazungula,Stephen Mazungula Senior Primary School,"a,e,l,d",4,7,5,71.4,2 learners are absent,2025-09-01
 3764846,2025-09-01T09:01:35.000000Z,ZimvoZomtha Zici,PreR- Group 4- Green,Green Apple ECD,,0,7,3,42.9,,2025-09-01
@@ -132,6 +162,9 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3764865,2025-09-01T08:52:41.000000Z,Aphiwe Ntontela,PreR - Group 4 - Koester,Koester Day Care,"r,p,t",3,5,5,100.0,"Game played: Jump to the letter Iyana is struggling with Rr, Tt Azingce ,Kozangawe and Asiphe they know Rr,Tt,PpUngakuthi takes his time to say the letter",2025-09-01
 3764859,2025-09-01T08:52:14.000000Z,Mbalentle Qawukeni,PreR - Group 3 - Koester ECD,Koester Day Care,"j,i,d,o",4,5,4,80.0,"Likuwe, Athalive and Oyintando can identify V, J, I, D and O. Khazimla can identify V, J, I, and O but struggles with D. Alunamda was absent. And we played jump to letter as our activity.",2025-09-01
 3764853,2025-09-01T08:51:04.000000Z,Nicolae Prinsloo,1 B - Group 1 - Astra,Astra Primary School,"l,o",2,7,6,85.7,"They were excellent all my learners they know the letters they can identity it and they can sound it out, only caleb got help from the learners with the 0 word",2025-09-01
+3766029,2025-09-01T08:51:04.000000Z,Thezarene Louw,1 C-Group 4-Seagull,Seagull Primary School,"n,j,c,r,q,g",6,7,5,71.4,,2025-09-01
+3766030,2025-09-01T08:51:04.000000Z,Thezarene Louw,1 C-Group 4-Seagull,Seagull Primary School,"n,j,c,r,q,g",6,7,5,71.4,,2025-09-01
+3765775,2025-09-01T08:48:47.000000Z,Shadé Bartlett,R B - Group 4 - Swartkops,Swartkops Primary School,"o,i,a",3,8,8,100.0,,2025-09-01
 3764843,2025-09-01T08:48:00.000000Z,Nopasika Mbali,PreR - Group 1 - Livuse,Livuse ECD,"w,k,t",3,4,3,75.0,Lina and Apolisi know this letters. Onako not sure of t but forgot w letter,2025-09-01
 3764833,2025-09-01T08:46:44.000000Z,Nazlie Rockman,1B-Group 1-Sanctor,Sanctor Primary School,,0,8,8,100.0,,2025-09-01
 3764857,2025-09-01T08:46:14.000000Z,Sibabalwe Booysen,R A-Group 2-Mqhayi Senior,Mqhayi Senior Primary School,"i,o",2,5,4,80.0,"I have introduced the letter sounds o,i but they were not cover in the first topic",2025-09-01
@@ -143,10 +176,12 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3764809,2025-09-01T08:42:39.000000Z,Zikhona Dingile,PreR - Group 3 - Msobomvu,Msobomvu ECD,"b,l",2,8,7,87.5,One learner was absent...All seven  learners recognised both letter B and L...,2025-09-01
 3764981,2025-09-01T08:41:25.000000Z,Zanele Zephe,PreR - Group 3 - Green Apple ECD,Green Apple ECD,"t,g",2,7,5,71.4,"Cwenga, Kumnkani and Iviwe reviewed all learners. Lizalise did G, Luncumo did W and G.",2025-09-01
 3765528,2025-09-01T08:40:06.000000Z,Inathi Toyise,1 A-Group 3-Colleen Glen Farm School,Colleen Glen Farm School,"g,q",2,8,5,62.5,,2025-09-01
+3765768,2025-09-01T08:39:33.000000Z,Shandre Calvert,1 B-Group 4-Sapphire Road,Sapphire Road Primary School,,0,6,5,83.3,,2025-09-01
 3764841,2025-09-01T08:39:32.000000Z,Akhona Mcophele,1 A-Group 3-Elufefeni,Elufefeni Primary School,,0,7,4,57.1,,2025-09-01
 3764787,2025-09-01T08:39:16.000000Z,Kyla Slabbert,R B-Group 3-Republic,Republic Primary School,"n,f,d,o,s,k,m,l,e,u,b,a,i,t",14,7,7,100.0,7 out of 7 knew their sounds,2025-09-01
 3764795,2025-09-01T08:39:00.000000Z,Jolene Saul,R A - Group 2 - Astra,Astra Primary School,"o,i,a,u",4,7,6,85.7,Learners still need some help with identifying and naming sounds. Reinforcement necessary,2025-09-01
 3764856,2025-09-01T08:38:52.000000Z,Buhle Mangcangaza,1 D - Group 5 - Joe Slovo,Joe Slovo Primary School,"e,b",2,7,6,85.7,,2025-09-01
+3767000,2025-09-01T08:37:28.000000Z,Tutula Nozakuzaku,R A - Group 2 - Vukanibantu,Vukanibantu Primary School,"l,m",2,8,8,100.0,"All the learners the vowels, but only 2 are still struggling with the vowels specially L, the learners still needs some time to understand the letters.",2025-09-01
 3764779,2025-09-01T08:37:20.000000Z,ZimvoZomtha Zici,PreR- Group 2- Green,Green Apple ECD,"n,y,k",3,7,4,57.1,Only 4 kids were present in this group. They were all able to recognize the reviewed letters,2025-09-01
 3764745,2025-09-01T08:36:59.000000Z,Sinesipho Madlingozi,RA-Group 3-Mdengentonga,Mdengentonga Primary School,"e,u,a,i",4,7,5,71.4,,2025-09-01
 3764837,2025-09-01T08:34:23.000000Z,Andisiwe Hashe,2 A - Group 1 - Ntyatyambo,Ntyatyambo Primary School,"k,j",2,7,7,100.0,,2025-09-01
@@ -166,6 +201,8 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3764878,2025-09-01T08:13:58.000000Z,Simamkele Dastile,PreR - Group 1 - Bavumeleni,Bavumeleni ECD,,0,5,4,80.0,Busy with hand writing,2025-09-01
 3764722,2025-09-01T08:12:14.000000Z,Zikhona Dingile,PreR - Group 2 - Msobomvu,Msobomvu ECD,"i,o",2,5,2,40.0,Three learners were absent...out of the two one recognised the letters other one is struggling with both letters,2025-09-01
 3764723,2025-09-01T08:10:53.000000Z,Chantell Sparks,PreR - Group 1 - Msobomvu ECD,Msobomvu ECD,"a,u",2,6,3,50.0,3 absent They still struggling to recognize the focusing letters,2025-09-01
+3766797,2025-09-01T08:10:49.000000Z,Tutula Nozakuzaku,R A - Group 1 - Vukanibantu,Vukanibantu Primary School,"l,m",2,8,7,87.5,"All the learner's understood the vowels, some struggled but the learners still needs some time to learn this vowels M and L.",2025-09-01
+3766980,2025-09-01T08:10:49.000000Z,Tutula Nozakuzaku,R A - Group 1 - Vukanibantu,Vukanibantu Primary School,"l,m",2,8,7,87.5,"All the learner's understood the vowels, some struggled but the learners still needs some time to learn this vowels M and L.",2025-09-01
 3764719,2025-09-01T08:10:05.000000Z,Yolanda Lumkile,R B - Group 2 - Emsengeni,Emsengeni Primary School,"p,s",2,18,2,11.1,"Soga  luphindo Hempe lethokuhle Makohliso Asiphokuhle Santi sophumelela Kwakhanya Yakayaka Lizani Liqhame- absentLose  oviwe - absentMali Lulonke - absentReview letters-  m and kCover letters- p and sGame -""khetha isandi """,2025-09-01
 3765368,2025-09-01T08:06:09.000000Z,Ntombizanele Jim,1 A - Group 4 - KwaNoxolo,KwaNoxolo Primary School,"w,g,x",3,8,7,87.5,Learners can identify and recognise the letters but still need recap on g. We didletter writting and Container game,2025-09-01
 3764711,2025-09-01T08:03:45.000000Z,Anelisa Pienaar,1 B - Group 1 - BJ Mnyanda,BJ Mnyanda Primary School,"i,h",2,7,7,100.0,Learner's are familiar with the letter sounds and they confident to pronounce the letters.,2025-09-01
@@ -186,11 +223,14 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3764877,2025-09-01T07:48:45.000000Z,Simamkele Dastile,PreR - Group 2 - Bavumeleni,Bavumeleni ECD,,0,4,3,75.0,Analo Sesam Hlelolenkosi busy with hand work,2025-09-01
 3764654,2025-09-01T07:47:54.000000Z,Esihle Yali,PreR - Group 2 - Ilitha Lethu,Ilitha Lethu Day Care,"v,x,g,m",4,4,3,75.0,"Ahlume know m,v,x,g. Oyintando know m,v,x struggles with g. Ahlumile also know m,v,x struggles with g. Othandwayo is absent.",2025-09-01
 3764662,2025-09-01T07:45:25.000000Z,Vuyokazi Mafunda,PreR - Group 2 - Siyabulela,Siyabulela Pre-School,"t,g",2,5,4,80.0,"Inam was absent todayNdinani,amlindile,lubambo and libubomi were able to recall the letter sounds and able to pronounse the letter sounds.",2025-09-01
+3765973,2025-09-01T07:45:00.000000Z,Thandile Dibela,2 B-Group 1-Colleen Glen Farm School,Colleen Glen Farm School,"o,i",2,7,6,85.7,"We have covered o, i majority of them knew ezi Zandi but one Alulutho is struggling with remembering Capital Letter (I) but the rest of them are doing well , we had also sang /played the Khetha isandi usifundele sona  they loved it.",2025-09-01
 3765367,2025-09-01T07:44:52.000000Z,Ntombizanele Jim,1 A - Group 3 - KwaNoxolo,KwaNoxolo Primary School,"n,d,y",3,8,7,87.5,,2025-09-01
 3764642,2025-09-01T07:43:04.000000Z,Chantell Sparks,PreR - Group 2 - Msobomvu ECD,Msobomvu ECD,"a,u",2,5,3,60.0,2 absentThey still struggling to recognize,2025-09-01
 3764646,2025-09-01T07:43:03.000000Z,Yolanda Lumkile,R B - Group 6 - Emsengeni,Emsengeni Primary School,"p,s",2,4,2,50.0,"Avele Kutase Melokuhle Mvebe Linothando Bekela Qhamani Mabhayi- absentSumeya Solani Kwakhanya Yakayaka Amahle levelReview  m and kCover letters- p and sGame - "" khetha isandi """,2025-09-01
 3764665,2025-09-01T07:43:00.000000Z,Fadilia Kekana,1 B - Group 1 - Seagull,Seagull Primary School,"l,t",2,7,4,57.1,Students show some improvement on the letter sounds,2025-09-01
 3764631,2025-09-01T07:42:35.000000Z,Zikhona Dingile,PreR - Group 1 - Msobomvu,Msobomvu ECD,"i,o",2,7,4,57.1,Three learners were absent...out of the four learners only one learner could recognise the letters,2025-09-01
+3766026,2025-09-01T07:42:14.000000Z,Thezarene Louw,1 C-Group 6-Seagull,Seagull Primary School,"s,e,u,a,i,m,d,b,o,t,n,l",12,7,4,57.1,,2025-09-01
+3766027,2025-09-01T07:42:14.000000Z,Thezarene Louw,1 C-Group 6-Seagull,Seagull Primary School,"s,e,u,a,i,m,d,b,o,t,n,l",12,7,4,57.1,,2025-09-01
 3764629,2025-09-01T07:42:01.000000Z,Vuyolwethu Mdzinwa,PreR - Group 3 - Kids College,Kids College ECD,"v,x,g",3,3,1,33.3,"Adiel is absent.Zanele - he knows the letter Xx ,introduced the letter Gg..not sure about the letter Vv.",2025-09-01
 3764650,2025-09-01T07:41:52.000000Z,Vonique Natang,1 A - Group 4 - Seagull,Seagull Primary School,"m,d",2,7,6,85.7,One learner absent. 5 learner knew the introduced letter m after the session. Only 1 learner knew the new letter d after the session.,2025-09-01
 3764627,2025-09-01T07:40:39.000000Z,Thandiwe Dyantyi,2 A - Group 1 - Masakhane,Masakhane Public School,"e,b",2,6,3,50.0,"They did well, some just forget the names startinh with letter E",2025-09-01
@@ -211,8 +251,8 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3764819,2025-09-01T07:30:37.000000Z,Nolonwabo Matinise,1 B - Group 2 - Cebelihle,Cebelihle Primary School,"a,u",2,7,5,71.4,3 learners wers able to recognise both letters. 2 struggled to give me names statting with the letters.,2025-09-01
 3764564,2025-09-01T07:28:58.000000Z,Khanyisa Thembani,RA-Group 6-Nosipho,Nosipho Primary School,"o,i",2,4,3,75.0,2/3 learners understand and recognise the letters.,2025-09-01
 3764587,2025-09-01T07:28:54.000000Z,Nopasika Mbali,PreR - Group 4 - Livuse,Livuse ECD,"s,f,r,c",4,4,4,100.0,"Luphawo forgot r. Liya,Onela and Zenande know this letters",2025-09-01
-3764575,2025-09-01T07:28:40.000000Z,Akhikhaya Gxasheka,2 A-Group 1-Kleinskool,Kleinskool Community Primary School,,0,6,6,100.0,,2025-09-01
 3764576,2025-09-01T07:28:40.000000Z,Akhikhaya Gxasheka,2 A-Group 1-Kleinskool,Kleinskool Community Primary School,,0,6,6,100.0,,2025-09-01
+3764575,2025-09-01T07:28:40.000000Z,Akhikhaya Gxasheka,2 A-Group 1-Kleinskool,Kleinskool Community Primary School,,0,6,6,100.0,,2025-09-01
 3764579,2025-09-01T07:28:31.000000Z,Lisakhanya Kume,PreR - Group 2 - Bavumeleni ECD,Bavumeleni ECD,"x,g",2,4,3,75.0,"Regrouped Group 3  Anganathi  , Libubomi, Olumiyo, Qhayiya  they know letters  X, G",2025-09-01
 3764591,2025-09-01T07:27:54.000000Z,Ayabukwa Mama,1 B - Group 2 - Vukanibantu,Vukanibantu Primary School,"a,i",2,7,7,100.0,,2025-09-01
 3764566,2025-09-01T07:27:45.000000Z,Ashleigh Dolph,1 C-Group 2-Van Der Kemp,Van Der Kemp Primary School,"f,b",2,6,6,100.0,,2025-09-01
@@ -236,6 +276,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3764536,2025-09-01T07:11:42.000000Z,Vuyokazi Mafunda,PreR - Group 1 - Siyabulela,Siyabulela Pre-School,"g,t",2,5,5,100.0,"Alunamda didn't say a word today.Mihlali,avoluhle and Milisa are able to recognize and recall the letter sounds g and t.Tanaswa is struggling with letter sounds g.",2025-09-01
 3764633,2025-09-01T07:11:38.000000Z,Robin Classen,1 A - Group 1 - DR A W Habelgaarn,DR A W Habelgaarn Primary School,"b,u",2,8,6,75.0,2learners struggle to adapt to letters keeps on forgetting,2025-09-01
 3764785,2025-09-01T07:09:37.000000Z,Kyla Slabbert,R B - Group 1 - Republic,Republic Primary School,"o,i,a,u,e,b,l,m,k,s,n,d,f,t",14,9,8,88.9,8 out of 8 knew their sounds,2025-09-01
+3767877,2025-09-01T07:07:48.000000Z,Ambesa Brikwa,1 A-Group 4-Vezubuhle,Vezubuhle Primary School,"i,o",2,6,6,100.0,,2025-09-01
 3764499,2025-09-01T07:07:03.000000Z,Jolene Saul,R A - Group 5 - Astra,Astra Primary School,"o,i,a,u",4,6,4,66.7,Learners can identify and name the sounds respectively.,2025-09-01
 3764584,2025-09-01T07:05:10.000000Z,Nopasika Mbali,PreR - Group 5 - Livuse,Livuse ECD,"t,j,g",3,4,3,75.0,They are sure of this letter,2025-09-01
 3764508,2025-09-01T07:05:04.000000Z,Thandiwe Dyantyi,2 A - Graduate - Masakhane,Masakhane Public School,"e,b",2,9,3,33.3,They remembered every sounds we did before the E and B,2025-09-01
@@ -254,6 +295,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3765485,2025-09-01T06:43:41.000000Z,Logan Fick,R A - Group 1 - DR A W Habelgaarn,DR A W Habelgaarn Primary School,"l,m",2,8,8,100.0,We did the letter sounds l&m today they were all helping each other.,2025-09-01
 3764448,2025-09-01T06:41:02.000000Z,Esethu Nomxanya,1 A-Group 1-Isaac Booi Senior,Isaac Booi Senior Primary School,"u,e,a",3,8,8,100.0,"I reviewed the 2 letter sounds, which where o and i. All my learners remembered these 2 letter sounds.I introduced 3 letter sounds which were, a, u and e, we practiced how to write them. We also played a game, and I hammered these 3 letter sounds. I t was",2025-09-01
 3764379,2025-09-01T06:39:34.000000Z,Khanyisa Thembani,RA-Group 4-Nosipho,Nosipho Primary School,"o,i",2,7,2,28.6,2/2 learners understand and recognise the letters.,2025-09-01
+3767876,2025-09-01T06:39:15.000000Z,Ambesa Brikwa,1 A-Group 3-Vezubuhle,Vezubuhle Primary School,"i,o",2,6,6,100.0,,2025-09-01
 3764331,2025-09-01T06:22:31.000000Z,Vuyolwethu Mdzinwa,PreR - Group 1 - Kids College,Kids College ECD,"q,f,g",3,4,3,75.0,"Ayokha,Hlaluminathi, and Lisolwethu knows all the letters I have taught them .We did a letter writing of the letter Gg,Ff,and Qq. Ahluma is absent in our session.",2025-09-01
 3759065,2025-08-29T11:08:18.000000Z,Ivonia Rossouw,2 D-Group 2-Cedarberg,Cedarberg Primary School,"n,d,s,u,i,m",6,5,4,80.0,We review U and I again.3 out of 6 learners knows the letters sounds S and N.2 out of the 6 learners knows the new letter sounds D and M.,2025-08-29
 3758920,2025-08-29T11:07:44.000000Z,Zukisiwe Lomani,1 B-Group 2-Enkwenkwezini Public,Enkwenkwezini Public Primary School,"o,u",2,7,7,100.0,"They all cooperate well.. they rembered previous letter sounds A and b, the new ones O and U",2025-08-29
@@ -299,6 +341,8 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3758742,2025-08-29T09:34:55.000000Z,Mfundo Jali,1A-Group 2-Stephen Mazungula,Stephen Mazungula Senior Primary School,"a,e,l,d",4,8,7,87.5,1 leaner was absent,2025-08-29
 3758814,2025-08-29T09:34:28.000000Z,Shaunita Van Der Merwe,1 D - Group 3 - Seagull,Seagull Primary School,"o,i,a,u,e,b,n,s,m,d",10,7,3,42.9,,2025-08-29
 3758734,2025-08-29T09:34:08.000000Z,Ashley Vaaltyn,2B-Group 5- Winterberg,Winterberg Primary School,"u,e",2,6,6,100.0,,2025-08-29
+3766024,2025-08-29T09:33:24.000000Z,Thezarene Louw,1 C-Group 3-Seagull,Seagull Primary School,"n,u,e,b,a,m,i,d,o,s",10,7,6,85.7,,2025-08-29
+3766025,2025-08-29T09:33:24.000000Z,Thezarene Louw,1 C-Group 3-Seagull,Seagull Primary School,"n,u,e,b,a,m,i,d,o,s",10,7,6,85.7,,2025-08-29
 3758747,2025-08-29T09:33:22.000000Z,Portia Tsibaphi,1 A-Group 1-Gertrude Shope Senior,Gertrude Shope Senior Primary School,"u,a,i,o",4,7,7,100.0,Aqhama and Luphiwo need more sessions,2025-08-29
 3758741,2025-08-29T09:32:42.000000Z,Vonique Natang,1 A - Group 3 - Seagull,Seagull Primary School,"m,d",2,7,7,100.0,Letters m and d were introduced. Only 3 knew m after the session and only one learner knew d after the lesson.,2025-08-29
 3758743,2025-08-29T09:32:41.000000Z,Fadilia Kekana,1 B - Group 3 - Seagull,Seagull Primary School,"m,d",2,7,6,85.7,2 out of 6 students are still struggling with m u sound,2025-08-29
@@ -316,8 +360,8 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3758705,2025-08-29T09:11:42.000000Z,Lynique Finnis,R B-Group 4-Van Der Kemp,Van Der Kemp Primary School,"i,s,u,e",4,7,7,100.0,,2025-08-29
 3758768,2025-08-29T09:11:31.000000Z,Sinoxolo Mkwambi,1 A - Group 4 - Nosipho,Nosipho Primary School,"b,u,i,o",4,7,4,57.1,All 4 kids were respond well to the activity and giving examples of the letters.,2025-08-29
 3765313,2025-08-29T09:10:28.000000Z,Alfredoline Damons,R A - Group 3 - Jubilee Park,Jubilee Park Primary School,i,1,6,2,33.3,The letter I introduced was i but the letter a and o still need to be reviewed again on next session.,2025-08-29
-3758701,2025-08-29T09:09:42.000000Z,Mfundo Jali,1A-Group 1-Stephen Mazungula,Stephen Mazungula Senior Primary School,,0,8,7,87.5,1 learner is absent,2025-08-29
 3758724,2025-08-29T09:09:42.000000Z,Cassidy Jenniker,R A-Group 2-Van Der Kemp,Van Der Kemp Primary School,s,1,6,6,100.0,I did S and H,2025-08-29
+3758701,2025-08-29T09:09:42.000000Z,Mfundo Jali,1A-Group 1-Stephen Mazungula,Stephen Mazungula Senior Primary School,,0,8,7,87.5,1 learner is absent,2025-08-29
 3758667,2025-08-29T09:09:21.000000Z,Abongile Brown,1 A - Group 3 - Mnqophiso,Mnqophiso Primary School,,0,7,0,0.0,They are all absent today,2025-08-29
 3758770,2025-08-29T09:06:02.000000Z,Nwabisa Dodi,R C-Group 1-Isaac Booi Senior,Isaac Booi Senior Primary School,"a,u",2,8,8,100.0,"The session was fairly successful,A bit of playing and being disruptive was involved but at least it was manageable.Iyana needs a little bit of assistance though and I promise to work on it.The session was good.",2025-08-29
 3758689,2025-08-29T09:05:40.000000Z,Abongile Damana,1 A-Group 4-Van Stadens Reserve School,Van Stadens Reserve School,"n,c",2,7,7,100.0,All 7 learners know their vowels but still struggling with letter R,2025-08-29
@@ -342,6 +386,8 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3758923,2025-08-29T08:39:20.000000Z,Thandiwe Dyantyi,2 A - Graduate - Masakhane,Masakhane Public School,"e,b",2,9,6,66.7,They did very well all of them knows their sounds,2025-08-29
 3758662,2025-08-29T08:36:35.000000Z,Chantell Sparks,PreR - Group 1 - Msobomvu ECD,Msobomvu ECD,"a,u",2,6,4,66.7,2 absentOnly 1 recognize focusing letters3 struggling to recognize,2025-08-29
 3758642,2025-08-29T08:34:59.000000Z,Bongeka Masango,1 A-Group 3-Jarvis Gqamlana Public,Jarvis Gqamlana Public Primary School,"r,s,d",3,7,6,85.7,,2025-08-29
+3758652,2025-08-29T08:34:41.000000Z,Zikhona Dingile,PreR - Group 1 - Msobomvu,Msobomvu ECD,,0,0,0,0.0,,2025-08-29
+3758669,2025-08-29T08:34:41.000000Z,Zikhona Dingile,PreR - Group 1 - Msobomvu,Msobomvu ECD,,0,0,0,0.0,,2025-08-29
 3758712,2025-08-29T08:34:41.000000Z,Zikhona Dingile,PreR - Group 1 - Msobomvu,Msobomvu ECD,"i,o",2,7,5,71.4,Out of the seven learners only two learners were absent....two learners are still struggling to recognise both letters,2025-08-29
 3758692,2025-08-29T08:34:34.000000Z,Akhikhaya Gxasheka,2 A - Graduate - Kleinskool Community,Kleinskool Community Primary School,"m,s",2,6,6,100.0,,2025-08-29
 3764350,2025-08-29T08:34:02.000000Z,Lisakhanya Kume,PreR - Group 4 - Bavumeleni ECD,Bavumeleni ECD,"w,v,z",3,4,3,75.0,"RegroupedGroup 4Kungawofrom 5, Sinesipho, Akhulule from group 5, Indalo, Azukisiwe",2025-08-29
@@ -364,7 +410,9 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3758614,2025-08-29T08:05:49.000000Z,Sese Finya,1 A - Group 4 - Joe Slovo,Joe Slovo Primary School,"o,i",2,6,5,83.3,All the learners know very well all the letters O and i,2025-08-29
 3758573,2025-08-29T08:04:19.000000Z,Cecily Erasmus,1B-Group 4-Kwanoxolo,KwaNoxolo Primary School,"o,i",2,7,3,42.9,All 3 learners know o 2 learners know both o and i Played board and memory game,2025-08-29
 3758578,2025-08-29T08:04:18.000000Z,Zikhona Dingile,PreR - Group 3 - Msobomvu,Msobomvu ECD,"b,l",2,8,5,62.5,Out of eight leaners three were absent....out of the five two of them can  recognised both letters,2025-08-29
+3758579,2025-08-29T08:03:45.000000Z,Abongile Damana,1 A-Group 2-Van Stadens Reserve School,Van Stadens Reserve School,,0,0,0,0.0,,2025-08-29
 3758587,2025-08-29T08:03:45.000000Z,Abongile Damana,1 A-Group 2-Van Stadens Reserve School,Van Stadens Reserve School,"n,c",2,7,6,85.7,Still struggling with 4 learners 2 they are engaging during session,2025-08-29
+3758575,2025-08-29T08:01:56.000000Z,Chantell Sparks,PreR - Group 3 - Msobomvu ECD,Msobomvu ECD,"a,u",2,4,4,100.0,1 absent Only 1 recognize both focusing letter 1 recognize u1 struggling to recognize focusing letters,2025-08-29
 3758585,2025-08-29T08:01:31.000000Z,Bongeka Masango,1 A-Group 1-Jarvis Gqamlana Public,Jarvis Gqamlana Public Primary School,"c,s,r",3,7,3,42.9,,2025-08-29
 3758598,2025-08-29T08:00:56.000000Z,Ntombizanele Jim,1 A - Group 3 - KwaNoxolo,KwaNoxolo Primary School,"y,f,w",3,8,8,100.0,Learners  can identify the letters also they recognise and we did letter writting and board game,2025-08-29
 3758570,2025-08-29T08:00:48.000000Z,Esoyolo Siganga,PreR - Group 2 - Mzamomhle ECD,Mzamomhle Edu-care,"h,z",2,4,3,75.0,Amyoli was yet again put in group 1. Abenathi from group 2 is absent. Learners are struggling with letter h.,2025-08-29
@@ -410,6 +458,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3758568,2025-08-29T07:30:02.000000Z,Sinethemba Mofu,1 B - Group 2 - Spencer Mabija,Spencer Mabija Combined School,"d,f,y",3,8,6,75.0,,2025-08-29
 3758530,2025-08-29T07:30:01.000000Z,Logan Fick,R A-Group 3-DR A W Habelgaarn,DR A W Habelgaarn Primary School,"u,b",2,8,5,62.5,Had a fun session they all help each other.,2025-08-29
 3758494,2025-08-29T07:29:56.000000Z,Asamahle Javu,PreR - Group 1 - Sakha Abantwana,Sakha Bantwana ECD,"d,y",2,8,2,25.0,"We did some review on letter D , d & letter Y , y & Kubobonke is absent .",2025-08-29
+3758553,2025-08-29T07:29:53.000000Z,Kimlynn Patrick,1 A - Group 2 - Helenvale,Helenvale Primary School,,0,0,0,0.0,,2025-08-29
 3758554,2025-08-29T07:29:53.000000Z,Kimlynn Patrick,1 A - Group 2 - Helenvale,Helenvale Primary School,"i,a",2,7,2,28.6,1/2 struggled with i sound We played the snake board game,2025-08-29
 3758505,2025-08-29T07:28:45.000000Z,Beryl-Lee Morris,R A - Group 1 - Greenville,Greenville Primary School,"a,e",2,7,7,100.0,"This session went better then yesterday most of them understood but a few was still battling with the letter A, & E.",2025-08-29
 3758597,2025-08-29T07:27:43.000000Z,Ntombizanele Jim,1 A - Group 2 - KwaNoxolo,KwaNoxolo Primary School,"p,s",2,8,6,75.0,Learners can identify the letters also they remembered previous letters.  We did letter writting and Container game,2025-08-29
@@ -501,8 +550,10 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3752320,2025-08-28T10:59:25.000000Z,Ntomboxolo Makupula,1A-Group 1-Molefe,Molefe Senior Primary School,,0,7,6,85.7,The session was good and we reviewed O and a and introduced B.Sayoli left for the toilet and did not come back,2025-08-28
 3752184,2025-08-28T10:59:16.000000Z,Unathi Mnqumeni,R A-Group 7-Stephen Nkomo Senior,Stephen Nkomo Senior Primary School,"b,l",2,7,6,85.7,"One learners was absent. I introduced ""B"" and ""L"".",2025-08-28
 3752168,2025-08-28T10:57:39.000000Z,Grace Danente,1 A - Group 3 - Funimfundo,Funimfundo Primary School,"o,u",2,7,6,85.7,"All learners were very productive in the session. They showed interest on the letter sounds and were excited of the game that we played, snake and ladders.",2025-08-28
+3752188,2025-08-28T10:56:18.000000Z,Fadilia Kekana,1 B - Group 4 - Seagull,Seagull Primary School,"m,d",2,7,7,100.0,3 out of 7 students still needs hammering on the d and b letter sound,2025-08-28
 3752057,2025-08-28T10:56:05.000000Z,Bongiwe Mbusi,1 A - Group 7 - Canzibe,Canzibe Primary School,"p,s",2,6,6,100.0,Learners are able to recognize letters small and big letters.,2025-08-28
 3752849,2025-08-28T10:54:47.000000Z,Salmaa Baatjes,1 A - Group 1 - Malabar,Malabar Primary School,"e,b",2,7,5,71.4,,2025-08-28
+3752497,2025-08-28T10:53:47.000000Z,Thezarene Louw,1 C-Group 5-Seagull,Seagull Primary School,"n,u,a,e,i,s,b,o",8,7,7,100.0,,2025-08-28
 3752483,2025-08-28T10:51:53.000000Z,Akhona Mcophele,1 A-Group 3-Elufefeni,Elufefeni Primary School,,0,7,5,71.4,,2025-08-28
 3752167,2025-08-28T10:51:39.000000Z,Luthando Smith,1 A - Group 2 - Ntyatyambo,Ntyatyambo Primary School,"h,w,j",3,6,6,100.0,"They know the letter sounds, we played a board game",2025-08-28
 3752143,2025-08-28T10:47:18.000000Z,Yonelisa Magenuka,PreR - Group 4 - St Mary,St Mary Magdelene ECD,"l,m,k,p,s,z,f,w,v,d,h,y,q,x,r,t,c,n,j,g",20,2,2,100.0,Kungo and Yamihle master the letters Onenceba (group 3 learner) he recognise most of the letters but he forgot some of them. Ingentando(group 3 learner was absent) so that's why I joined the group 3 learner on this group,2025-08-28
@@ -546,12 +597,13 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3752309,2025-08-28T10:15:14.000000Z,Khanya Kwatshube,R A - Group 7 - Canzibe,Canzibe Primary School,"o,i",2,7,7,100.0,,2025-08-28
 3752064,2025-08-28T10:13:58.000000Z,Nandipha Dakela,1 C-Group 4-K K Ncwana,K K Ncwana Primary School,,0,6,6,100.0,Learners where able to identify both letters and do letter writing.,2025-08-28
 3751850,2025-08-28T10:11:17.000000Z,Ndzondelelo Mkuzangwe,R A - Group 5 - Vezubuhle,Vezubuhle Primary School,"o,i,a,u",4,7,6,85.7,6/6 learners they recognize a and u sandi.,2025-08-28
-3751909,2025-08-28T10:09:45.000000Z,Luthando Smith,1 A - Group 1 - Ntyatyambo,Ntyatyambo Primary School,"h,w,x",3,7,7,100.0,At least they trying but they are forgetting quickly,2025-08-28
 3751849,2025-08-28T10:09:45.000000Z,Grace Danente,1 A - Group 1 - Funimfundo,Funimfundo Primary School,"o,u",2,8,8,100.0,"As we repeat our letter sounds. But this time we played a different game, snake and ladders. They were very excited about it and they showed enthusiasm.",2025-08-28
+3751909,2025-08-28T10:09:45.000000Z,Luthando Smith,1 A - Group 1 - Ntyatyambo,Ntyatyambo Primary School,"h,w,x",3,7,7,100.0,At least they trying but they are forgetting quickly,2025-08-28
 3752508,2025-08-28T10:07:55.000000Z,Siphosethu Mampangashe,R A - Group 3 - Elufefeni,Elufefeni Primary School,"m,k",2,8,6,75.0,They weretoo excited for the game and didn't pay much attention to the words,2025-08-28
 3757506,2025-08-28T10:07:17.000000Z,Abongile Damana,1 A-Group 4-Van Stadens Reserve School,Van Stadens Reserve School,,0,7,5,71.4,All 5 learners know their vowels and I added one letter which is letter B and only 2 learners knew and recognised them,2025-08-28
 3751837,2025-08-28T10:04:38.000000Z,Shaunita Van Der Merwe,1 D - Group 4 - Seagull,Seagull Primary School,"o,i,a,u,e,b,s,n",8,6,6,100.0,,2025-08-28
 3752182,2025-08-28T10:04:15.000000Z,Unathi Mnqumeni,R A-Group 4-Stephen Nkomo Senior,Stephen Nkomo Senior Primary School,"b,l",2,7,3,42.9,"Only 3 learners were present, introduced ""L"" and ""B"".",2025-08-28
+3752435,2025-08-28T10:03:19.000000Z,Akhona Mcophele,1 A-Group 4-Elufefeni,Elufefeni Primary School,,0,0,0,0.0,,2025-08-28
 3752480,2025-08-28T10:03:19.000000Z,Akhona Mcophele,1 A-Group 4-Elufefeni,Elufefeni Primary School,,0,7,6,85.7,,2025-08-28
 3752121,2025-08-28T10:02:53.000000Z,Andisiwe Hashe,2 A - Group 2 - Ntyatyambo,Ntyatyambo Primary School,"b,l",2,7,6,85.7,"Last session we did letter sounds D and N. They remembered the letters very well. I then introduced letter sounds L and B. We had a nice session, played a board game they enjoyed it too. Ayanda did not come through he is unwell and waiting to be picked up",2025-08-28
 3751823,2025-08-28T10:02:21.000000Z,Chuma Sidina,R B - Group 1 - Nomathamsanqa,Nomathamsanqa Primary School,"o,i,a,u",4,7,7,100.0,Not easy because the teacher is busy with the learners,2025-08-28
@@ -590,10 +642,12 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3751710,2025-08-28T09:42:09.000000Z,Shadé Mahana,1 C - Graduate - Abraham Levy,Abraham Levy Primary School,"p,t",2,6,5,83.3,The learners had to leave for break time. But group 4 is improving with their letter sounds,2025-08-28
 3751692,2025-08-28T09:40:35.000000Z,Esoyolo Siganga,PreR - Group 4 - Mzamomhle ECD,Mzamomhle Edu-care,"w,v,x",3,4,4,100.0,Group 4 is struggling with letter v and x. The session is 12 minutes because I was asked by the teachers to come and assist them,2025-08-28
 3752710,2025-08-28T09:39:15.000000Z,Yonela Kayingo,R B - Group 2 - Siyaphambili,Siyaphambili Public School,"o,i",2,8,7,87.5,,2025-08-28
+3752607,2025-08-28T09:36:19.000000Z,Brittany Thomson,1 A - Group 2 - Greenville,Greenville Primary School,,0,0,0,0.0,,2025-08-28
 3752608,2025-08-28T09:36:19.000000Z,Brittany Thomson,1 A - Group 2 - Greenville,Greenville Primary School,,0,8,8,100.0,,2025-08-28
 3757808,2025-08-28T09:34:12.000000Z,Ashleigh Dolph,1 C - Group 1 - Van Der Kemp,Van Der Kemp Primary School,"m,n",2,7,7,100.0,,2025-08-28
 3751690,2025-08-28T09:34:06.000000Z,Abigail Reid,1 A - Group 2 - Abraham Levy,Abraham Levy Primary School,"k,r",2,8,7,87.5,"All learners are able to identify, sound out and write the letters k and r.",2025-08-28
 3752848,2025-08-28T09:33:36.000000Z,Salmaa Baatjes,1 A-Group 5-Malabar,Malabar Primary School,"b,e",2,6,6,100.0,"1/6 learners needs to improve on the differences between a, u and e",2025-08-28
+3758504,2025-08-28T09:33:27.000000Z,Beryl-Lee Morris,R A - Group 1 - Greenville,Greenville Primary School,"a,e",2,7,7,100.0,,2025-08-28
 3751686,2025-08-28T09:32:37.000000Z,Alinda Turwana,PreR - Group 4 - Njongozabantu,Njongozabantu Day Care,"a,e,i",3,3,3,100.0,Today's session was good we did A E I sounds.,2025-08-28
 3752253,2025-08-28T09:31:39.000000Z,Sese Finya,1 A - Graduate - Joe Slovo,Joe Slovo Primary School,"l,m",2,5,5,100.0,All the learners know very well all the letters M and L.,2025-08-28
 3751846,2025-08-28T09:30:29.000000Z,Robin Classen,1 A - Group 6 - DR A W Habelgaarn,DR A W Habelgaarn Primary School,"b,u",2,8,5,62.5,Learners knows letters,2025-08-28
@@ -686,6 +740,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3758378,2025-08-28T08:05:09.000000Z,Siphokazi Stuurman,R A - Group 6 - Phakamile,Phakamile Primary School,"s,b",2,6,6,100.0,Team is getting better,2025-08-28
 3752380,2025-08-28T08:04:56.000000Z,Zanele Zephe,PreR - Group 2 - Green Apple ECD,Green Apple ECD,"y,f",2,6,5,83.3,Kungawo did Y and F and the rest of the group did review of all learners.,2025-08-28
 3751699,2025-08-28T08:04:20.000000Z,Rayvial Coetzee,R C - Group 1 - Bethvale,Bethvale Primary School,"o,i,a,u,e,m,s,n",8,7,7,100.0,"Covered letters o, i, a, u, e, s. Introduced letters m and n.",2025-08-28
+3751407,2025-08-28T08:04:20.000000Z,Rayvial Coetzee,R C - Group 1 - Bethvale,Bethvale Primary School,,0,0,0,0.0,,2025-08-28
 3751387,2025-08-28T08:03:21.000000Z,Sinovuyo Sitishi,R A-Group 6-Emzomncane,Emzomncane Primary School,"g,x",2,6,6,100.0,The session was great. It's the smartest group I have. They are quick and are able to write the letters and have a good memory.*Yemihle was present in the session.,2025-08-28
 3751384,2025-08-28T08:00:51.000000Z,Alinda Turwana,PreR - Group 1 - Njongozabantu,Njongozabantu Day Care,"c,j",2,4,4,100.0,Today's  session was good. We did C J sounds and they knew and recognize sounds.,2025-08-28
 3751372,2025-08-28T08:00:38.000000Z,Yonelisa Magenuka,PreR - Group 1 - St Mary,St Mary Magdelene ECD,"t,q,r",3,2,2,100.0,"Lulo recognise all the 3 letters, Ikho recognise Q and R. (Musical chairs)",2025-08-28
@@ -739,6 +794,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3751343,2025-08-28T07:24:45.000000Z,Kyla Slabbert,R B-Group 2-Republic,Republic Primary School,"n,s,m,e,u,a,i,b,o,d",10,7,6,85.7,6 out of 6 knew their sounds and added two new sounds d and m,2025-08-28
 3751455,2025-08-28T07:24:30.000000Z,Abongile Brown,1 A - Group 2 - Mnqophiso,Mnqophiso Primary School,"o,a",2,7,6,85.7,"they all know letter sounds , but khayone stragglers a bit with recognising .",2025-08-28
 3751285,2025-08-28T07:24:22.000000Z,Iphendule Ndayi,1 A - Group 3 - Pendla,Pendla Primary School,"o,i,a,u",4,7,7,100.0,"Learners are familiar with the sounds o i a , 3/7 with u",2025-08-28
+3756464,2025-08-28T07:24:00.000000Z,Sibongile Busakwe,R A - Group 2 - Aaron Gqadu,Aaron Gqadu Primary School,,0,0,0,0.0,,2025-08-28
 3756465,2025-08-28T07:24:00.000000Z,Sibongile Busakwe,R A - Group 2 - Aaron Gqadu,Aaron Gqadu Primary School,"a,e,i,o",4,11,10,90.9,Today I introduced letter o to them otherwise session was great,2025-08-28
 3752866,2025-08-28T07:23:55.000000Z,Cassidy Jenniker,R A-Group 3-Van Der Kemp,Van Der Kemp Primary School,,0,6,6,100.0,,2025-08-28
 3751275,2025-08-28T07:23:42.000000Z,Asamahle Javu,PreR - Group 2 - Sakha Abantwana,Sakha Bantwana ECD,"j,f",2,9,3,33.3,We did a review on J & review on F & they all still know F & J,2025-08-28
@@ -767,8 +823,8 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3751175,2025-08-28T07:05:51.000000Z,Esihle Yali,PreR - Group 1 - Ilitha Lethu,Ilitha Lethu Day Care,"w,v,x",3,5,4,80.0,,2025-08-28
 3751217,2025-08-28T07:05:21.000000Z,Qhamaninande Legodi,1 A - Group 5 - Enkululekweni,Enkululekweni Primary School,"t,q,d",3,7,5,71.4,"in a recap some of them struggled a bit to remember but atleast they new how to write them, in todays session they were excellent even though not all of them were able to identify the alphabets but they were willing to learn.",2025-08-28
 3751135,2025-08-28T07:05:14.000000Z,Nazlie Rockman,1B-Group 2-Sanctor,Sanctor Primary School,,0,8,8,100.0,"L,f,b",2025-08-28
-3751180,2025-08-28T07:03:34.000000Z,Cecily Erasmus,1B-Group 5-Kwanoxolo,KwaNoxolo Primary School,,0,6,6,100.0,1. All learners present in group.2. I added Annestacia Buys in this group since she's not added in a group.3. Chevandre Ruiters struggles to identify (i)4. All the other learners recognize and sound out (i) and (o),2025-08-28
 3764425,2025-08-28T07:03:34.000000Z,Anelisa Pienaar,1 B - Group 2 - BJ Mnyanda,BJ Mnyanda Primary School,"s,d,j",3,7,6,85.7,One learner is struggling with pronouncing the letter sounds his not shy but he can not say the sounds.,2025-08-28
+3751180,2025-08-28T07:03:34.000000Z,Cecily Erasmus,1B-Group 5-Kwanoxolo,KwaNoxolo Primary School,,0,6,6,100.0,1. All learners present in group.2. I added Annestacia Buys in this group since she's not added in a group.3. Chevandre Ruiters struggles to identify (i)4. All the other learners recognize and sound out (i) and (o),2025-08-28
 3751309,2025-08-28T07:03:18.000000Z,Sese Finya,1 A - Group 1 - Joe Slovo,Joe Slovo Primary School,"o,i",2,7,7,100.0,One out of 7 learners was struggling to write letter i,2025-08-28
 3751168,2025-08-28T07:02:28.000000Z,Ashley Vaaltyn,2B-Group 1- Winterberg,Winterberg Primary School,,0,6,4,66.7,2 learners struggled with recognising they sounds,2025-08-28
 3756311,2025-08-28T07:02:11.000000Z,Mihle Xana,PreR - Group 1 - Siyabulela ECD,Siyabulela Pre-School,"f,w",2,5,5,100.0,"We are doing review on these letter. Aluthando Is Still Struggling On Both Letters, As For Other 4 Learners They Know The letters.",2025-08-28
@@ -779,6 +835,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3751922,2025-08-28T07:00:27.000000Z,Aphiwe Daniels,PreR - Group 1 - Libhongolwethu,Libhongolwethu ECD,"i,n",2,3,2,66.7,Mklantathu know letter i and struggle with letter n.Onika know letter and struggle with letter n.,2025-08-28
 3751259,2025-08-28T07:00:07.000000Z,Alfredoline Damons,R A - Group 2 - Jubilee Park,Jubilee Park Primary School,"o,i,a",3,7,1,14.3,The letter I is still the one that learners struggle with and some not confident with the i yet....,2025-08-28
 3757738,2025-08-28T06:59:39.000000Z,Lynique Finnis,R B-Group 3-Van Der Kemp,Van Der Kemp Primary School,"a,u,i,o",4,7,7,100.0,Reflecting - a and o Introducing - i and u,2025-08-28
+3756461,2025-08-28T06:59:30.000000Z,Sibongile Busakwe,R A - Group 1 - Aaron Gqadu,Aaron Gqadu Primary School,,0,0,0,0.0,,2025-08-28
 3756462,2025-08-28T06:59:30.000000Z,Sibongile Busakwe,R A - Group 1 - Aaron Gqadu,Aaron Gqadu Primary School,"a,e,i",3,8,8,100.0,Kusenzimana but we are getting there,2025-08-28
 3751118,2025-08-28T06:57:07.000000Z,Sinovuyo Sitishi,R A - Group 4 - Emzomncane,Emzomncane Primary School,"o,b",2,6,5,83.3,They are learning and q bit forgetful but they pay attention. We played search and find.*Hlobanisa is doubled in this group.,2025-08-28
 3751269,2025-08-28T06:53:24.000000Z,Sinethemba Qwebani,R B - Group 2 - KwaNoxolo,KwaNoxolo Primary School,"a,u,i",3,11,6,54.5,they are doing very well im impressed that they can write letter Uu,2025-08-28
@@ -829,6 +886,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3744855,2025-08-27T10:41:56.000000Z,Ayabulela Manona,2 A-Group 1-Van Stadens Reserve School,Van Stadens Reserve School,,0,8,8,100.0,All of them did very well,2025-08-27
 3744566,2025-08-27T10:38:43.000000Z,Tashriqa Fourie,1 A - Graduate - Gelvan,Gelvan Primary School,"o,i,a,u",4,16,8,50.0,,2025-08-27
 3751033,2025-08-27T10:38:14.000000Z,Nazlie Rockman,1B-Group 3-Sanctor,Sanctor Primary School,,0,7,7,100.0,,2025-08-27
+3744624,2025-08-27T10:38:14.000000Z,Nazlie Rockman,1B-Group 3-Sanctor,Sanctor Primary School,,0,0,0,0.0,,2025-08-27
 3744649,2025-08-27T10:37:52.000000Z,Okuhle Ntamesi,R A - Group 2 - Ashton Gontshi,Ashton Gontshi Primary School,"a,u,m,e",4,10,8,80.0,,2025-08-27
 3744808,2025-08-27T10:36:42.000000Z,Sese Finya,1 A - Group 3 - Joe Slovo,Joe Slovo Primary School,"e,b",2,6,5,83.3,Athule didn't know the letter B,2025-08-27
 3758648,2025-08-27T10:35:01.000000Z,Portia Tsibaphi,1 A-Group 5-Gertrude Shope Senior,Gertrude Shope Senior Primary School,,0,7,7,100.0,,2025-08-27
@@ -905,6 +963,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3744091,2025-08-27T09:25:28.000000Z,Esethu Sodyesi,2 A - Graduate - Ashton Gontshi,Ashton Gontshi Primary School,,0,6,6,100.0,,2025-08-27
 3745450,2025-08-27T09:24:40.000000Z,Owam Mpani,2 A-Group 1-Esityeni Public,Esityeni Public Primary School,,0,3,3,100.0,Iyabulela Phama-he is badly struggling Lelethu Saki-he knows both letterLiyabona Philiso-he is still strugglingNtandane Ntando- he knows both lettersI also introduced letter N and S,2025-08-27
 3744178,2025-08-27T09:24:16.000000Z,Yolanda Lumkile,R B - Group 7 - Emsengeni,Emsengeni Primary School,"m,k",2,2,1,50.0,"Participants Oyisa GwanyaSimthandile KobokaMikhulu Majika Amyoli JanuaryLunathi Mdangayi - absentLuniko MadiniLwandle Nongqayi Review letters- b and lCovered letters- m and  kGame - "" khetha isandi usifunde'l""Luniko Madini and Oyisa Gwanya had a difficult",2025-08-27
+3744177,2025-08-27T09:24:16.000000Z,Yolanda Lumkile,R B - Group 7 - Emsengeni,Emsengeni Primary School,,0,0,0,0.0,,2025-08-27
 3744143,2025-08-27T09:23:03.000000Z,Shadé Mahana,1 C - Group 2 - Abraham Levy,Abraham Levy Primary School,"e,s",2,8,7,87.5,The learners still needs to focus more on the letter sound E and S,2025-08-27
 3744144,2025-08-27T09:21:40.000000Z,Tutula Nozakuzaku,R A - Group 3 - Vukanibantu,Vukanibantu Primary School,"i,o",2,7,7,100.0,All.of them understood I and only 1 did not understand letter O.,2025-08-27
 3744338,2025-08-27T09:20:23.000000Z,Anelisa Pekana,1 A - Group 2 - Mjuleni Junior,Mjuleni Junior Primary School,"m,s",2,14,6,42.9,One learner didnt know the letters After the session he knew them,2025-08-27
@@ -923,8 +982,8 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3744115,2025-08-27T09:15:27.000000Z,Esoyolo Siganga,PreR - Group 3 - Mzamomhle ECD,Mzamomhle Edu-care,"p,s,h",3,4,3,75.0,1 learner in this group is absent. Liyabona Dikoekoe did not want to participate he was quiet all the time. The other two are struggling with h.,2025-08-27
 3744137,2025-08-27T09:15:08.000000Z,Chantell Sparks,PreR - Group 3 - Msobomvu ECD,Msobomvu ECD,"a,u",2,4,4,100.0,Only 2 recognize focusing letters 2 still struggling,2025-08-27
 3744486,2025-08-27T09:13:20.000000Z,Anelisa Ndema,R B-Group 3-Gertrude Shope Senior,Gertrude Shope Senior Primary School,,0,7,6,85.7,Kungentando was too playful today,2025-08-27
-3744114,2025-08-27T09:13:14.000000Z,Linique Fortuin,R A - Group 2 - G J Louw,G J Louw Primary School,"o,i",2,8,8,100.0,Learners are helping each other with learning the sounds,2025-08-27
 3744134,2025-08-27T09:13:14.000000Z,Chulumanco Nywebeni,PreR - Group 2 - Mzamomhle,Mzamomhle Edu-care,"o,u",2,5,3,60.0,"Group 2 only 3 out of 5 are present and the learners are working hard atleast so far focus letters (o, u). Sivuyise I joined him with Gr2 kuba inguye yedwa o present on his group 3 he's struggling but hopefully his gonna get there",2025-08-27
+3744114,2025-08-27T09:13:14.000000Z,Linique Fortuin,R A - Group 2 - G J Louw,G J Louw Primary School,"o,i",2,8,8,100.0,Learners are helping each other with learning the sounds,2025-08-27
 3744103,2025-08-27T09:12:13.000000Z,Charlene Fisher,R A - Group 1 - Gelvan,Gelvan Primary School,"e,f,d",3,7,7,100.0,,2025-08-27
 3744523,2025-08-27T09:12:12.000000Z,Sinoxolo Nojoko,R B - Group 2 - K K Ncwana,K K Ncwana Primary School,"c,d",2,7,6,85.7,They dont concentrate at all but I try by all means to repeat so they know the letters.,2025-08-27
 3745109,2025-08-27T09:10:16.000000Z,Esihle Yali,PreR - Group 2 - Ilitha Lethu,Ilitha Lethu Day Care,"w,v",2,4,3,75.0,"Othandwayo is absent. Ahlume and Oyintando can identify w,v. Ahlumile know v only forget W.",2025-08-27
@@ -945,8 +1004,8 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3744039,2025-08-27T08:53:26.000000Z,Shadé Mahana,1 C - Group 3 - Abraham Levy,Abraham Levy Primary School,"e,s",2,7,6,85.7,"Group 3 is improving with their letter sounds, I introduced new letter sounds today P and T",2025-08-27
 3744052,2025-08-27T08:53:02.000000Z,Sinesipho Hina,R A - Group 2 - Ikhwezelihle,Ikhwezelihle Primary School,"b,u,a",3,7,4,57.1,"The session was great, they are struggling with b vowel.",2025-08-27
 3744285,2025-08-27T08:52:31.000000Z,Sinoxolo Jonas,1 A - Group 2 - Mjuleni Junior,Mjuleni Junior Primary School,"o,i",2,14,7,50.0,2 children are still struggling with the alphabet...,2025-08-27
-3744047,2025-08-27T08:52:03.000000Z,Tutula Nozakuzaku,R A - Group 2 - Vukanibantu,Vukanibantu Primary School,"o,i",2,8,7,87.5,Some of the learners understood letter O and I but most of them understood O more,2025-08-27
 3744037,2025-08-27T08:52:03.000000Z,Alicia Kynoch,1 C-Group 2-Triomf,Triomf Primary School,,0,7,6,85.7,"We did letters, b and l",2025-08-27
+3744047,2025-08-27T08:52:03.000000Z,Tutula Nozakuzaku,R A - Group 2 - Vukanibantu,Vukanibantu Primary School,"o,i",2,8,7,87.5,Some of the learners understood letter O and I but most of them understood O more,2025-08-27
 3744030,2025-08-27T08:51:30.000000Z,Esoyolo Siganga,PreR - Group 2 - Mzamomhle ECD,Mzamomhle Edu-care,"k,p,s",3,4,3,75.0,1 learner in this group is absent. The other learners are still struggling with p.,2025-08-27
 3744271,2025-08-27T08:50:08.000000Z,Busisiwe Ntshula,PreR - Group 3 - Emmanuel,Emmanuel Day Care,"o,u,e",3,6,4,66.7,"Siyolise knows letter E,O,U Zanokuhle Knows letter O struggles with letter E,UQuinton straggles with Letter E,O,UThyafa knows letter struggles with letter E, U",2025-08-27
 3744046,2025-08-27T08:48:32.000000Z,Nopasika Mbali,PreR - Group 1 - Livuse,Livuse ECD,"a,k,h",3,4,4,100.0,"Apolisi know this letters,Lina know letters,h .Onako not sure of letter h .Sipho know a,k letters",2025-08-27
@@ -979,6 +1038,8 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3748726,2025-08-27T08:17:59.000000Z,Aphiwe Daniels,PreR - Group 4 - Libhongolwethu,Libhongolwethu ECD,"p,r",2,4,4,100.0,Liqhawe know letter P and struggle with letter R.Ivin know letter P and struggle with letter R.Qhamiso struggle with both letters. Ndalo know letter P and struggle with letter R.,2025-08-27
 3743933,2025-08-27T08:16:16.000000Z,Iphendule Ndayi,1 A - Group 2 - Pendla,Pendla Primary School,"o,i,a",3,8,8,100.0,"6/7 with o ,4/7 with i and a",2025-08-27
 3747512,2025-08-27T08:15:47.000000Z,Rozantè Lambaatjeen,R B - Group 4 - Uitenhage,Uitenhage Primary School,"o,i,a",3,6,6,100.0,"During the session, learners were a bit disruptive but I managed to get them to pay attention. Learners were able to identify, recognize and sound the letter sounds A O and I, however 1/6 learners a little more assistance. During the next session, letter ",2025-08-27
+3747461,2025-08-27T08:15:47.000000Z,Rozantè Lambaatjeen,R B - Group 4 - Uitenhage,Uitenhage Primary School,,0,0,0,0.0,,2025-08-27
+3747395,2025-08-27T08:15:47.000000Z,Rozantè Lambaatjeen,R B - Group 4 - Uitenhage,Uitenhage Primary School,,0,0,0,0.0,,2025-08-27
 3743939,2025-08-27T08:15:14.000000Z,Anelisa Pienaar,1 B - Group 1 - BJ Mnyanda,BJ Mnyanda Primary School,"c,f,v",3,7,7,100.0,Learner's enjoy the vowel  song and confidently repeated the sounds that I introduced,2025-08-27
 3743949,2025-08-27T08:12:35.000000Z,Unathi Mnqumeni,R A-Group 3-Stephen Nkomo Senior,Stephen Nkomo Senior Primary School,,0,7,6,85.7,"We reviewed ""O"", ""I"", ""E"" and ""U"" and I introduced ""L"" and ""B"" learners are able to sound the reviewed letter on their own. One learners was absent.",2025-08-27
 3743940,2025-08-27T08:12:14.000000Z,Avela Maliza,PreR - Group 3 - Lukhanyo,Lukhanyo ECD,"u,y,w,v,x,n",6,2,2,100.0,They are doing great.,2025-08-27
@@ -1024,8 +1085,8 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3744307,2025-08-27T07:35:22.000000Z,Salmaa Baatjes,1 A - Group 2 - Malabar,Malabar Primary School,"o,i,a,u",4,7,6,85.7,2/7 learnerw need improvement on letters a and u,2025-08-27
 3744001,2025-08-27T07:35:14.000000Z,Sinovuyo Sitishi,R A - Group 3 - Emzomncane,Emzomncane Primary School,"a,e,o",3,7,6,85.7,We played search and find.. I introduced letter O.. they are peer learning and some are chaotic but other than that they are learning.,2025-08-27
 3744019,2025-08-27T07:34:12.000000Z,Buhle Pheyi,R A - Group 3 - James Ndulula,James Ndulula Primary School,"a,e",2,6,2,33.3,"2 of the 5 are present, and 1 of the two recognises the letter and 1 can't recognise it . 1 of the 5 Buhlebothando is in the other grade R class and Siphokuhle Manyandela's name is appearing two times on the group's and the game played is Container game.",2025-08-27
-3745108,2025-08-27T07:34:02.000000Z,Esihle Yali,PreR - Group 3 - Ilitha Lethu,Ilitha Lethu Day Care,"y,f",2,5,5,100.0,"Abongile, lupholwethu know Y,f. Cacela can recognise F forget y. Luphawu know y,f. Inothando does not speak.",2025-08-27
 3743771,2025-08-27T07:34:02.000000Z,Sandisiwe Mpe,R B - Group 1 - Emsengeni,Emsengeni Primary School,"o,i,a,u,e,b",6,18,7,38.9,"They did not know the letters even though we did them on Monday, they could not recognise the letters nor could they write them.",2025-08-27
+3745108,2025-08-27T07:34:02.000000Z,Esihle Yali,PreR - Group 3 - Ilitha Lethu,Ilitha Lethu Day Care,"y,f",2,5,5,100.0,"Abongile, lupholwethu know Y,f. Cacela can recognise F forget y. Luphawu know y,f. Inothando does not speak.",2025-08-27
 3743756,2025-08-27T07:33:25.000000Z,Zandile Rala,1 A - Group 3 - Nokwezi,Nokwezi Primary School,"i,b,m,s",4,7,7,100.0,They don't remember our last subjects but they know them. Introduced new alphabets and made names out of them.,2025-08-27
 3743855,2025-08-27T07:32:35.000000Z,Nkamoheleng Nkwenkwana,1 A-Group 5-West End,West End Primary School,,0,7,5,71.4,,2025-08-27
 3745556,2025-08-27T07:32:27.000000Z,Lynique Finnis,R B-Group 2-Van Der Kemp,Van Der Kemp Primary School,,0,7,6,85.7,Reflecting on a and o New letters : i and u,2025-08-27
@@ -1100,8 +1161,8 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3743717,2025-08-27T06:47:15.000000Z,Iphendule Ndayi,1 A - Group 2 - Pendla,Pendla Primary School,"o,i,a",3,8,8,100.0,"Learners are familiar with o,i and a 3/7 with u",2025-08-27
 3743990,2025-08-27T06:44:00.000000Z,Sinethemba Mofu,1 B - Group 3 - Spencer Mabija,Spencer Mabija Combined School,"w,x,z",3,8,6,75.0,Board game,2025-08-27
 3743559,2025-08-27T06:43:54.000000Z,Vuyolwethu Mdzinwa,PreR - Group 1 - Kids College,Kids College ECD,"w,t,r",3,4,3,75.0,"Ayokha ,Lisolethu,and Ahluma ,we did the review of the letter Rr,Tt,and WwAhluma - is not sure about the letter Tt,he says it's the letter Pp Ayokha and Lisolethu they know the letter Rr,Tt,Ww .Hlaluminathi is absent .",2025-08-27
-3743997,2025-08-27T06:43:24.000000Z,Sinovuyo Sitishi,R A - Group 1 - Emzomncane,Emzomncane Primary School,"a,e,o",3,7,7,100.0,They are catching up slow and very playful. But the are learning. We did letter writing they can trace and most can write letters without tracing.,2025-08-27
 3743853,2025-08-27T06:43:24.000000Z,Nkamoheleng Nkwenkwana,1 A-Group 2-West End,West End Primary School,,0,7,6,85.7,,2025-08-27
+3743997,2025-08-27T06:43:24.000000Z,Sinovuyo Sitishi,R A - Group 1 - Emzomncane,Emzomncane Primary School,"a,e,o",3,7,7,100.0,They are catching up slow and very playful. But the are learning. We did letter writing they can trace and most can write letters without tracing.,2025-08-27
 3744282,2025-08-27T06:43:14.000000Z,Sinoxolo Jonas,1 A - Group 1 - Mjuleni Junior,Mjuleni Junior Primary School,"o,i",2,12,6,50.0,We are getting there but there still 4 of them that are struggling....,2025-08-27
 3743573,2025-08-27T06:42:28.000000Z,Esethu Nomxanya,1 A-Group 3-Isaac Booi Senior,Isaac Booi Senior Primary School,,0,7,7,100.0,"The session was good, they remembered the last 2 letter sounds that I did with them, which was my review letter sounds. The letters were o and i.I introduced 2 letter sounds again, which were a and u. They seemed to have grasped the letter sounds. We prac",2025-08-27
 3743837,2025-08-27T06:42:18.000000Z,Bheki Gqadu,2 A - Group 1 - Cedarberg,Cedarberg Primary School,"k,h,r,m",4,8,7,87.5,,2025-08-27
@@ -1231,6 +1292,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3736656,2025-08-26T09:19:44.000000Z,Zikhona Dingile,PreR - Group 3 - Msobomvu,Msobomvu ECD,"b,l",2,7,7,100.0,"Sinobomi Teketa moved today to group 3 she was in group 2....2 learners did not finish the session they had to go back to class.....only two learners were struggling with letter b,l..gonna continue with reviewing",2025-08-26
 3736593,2025-08-26T09:17:54.000000Z,Shadé Bartlett,R B - Group 2 - Swartkops,Swartkops Primary School,"o,i,a",3,7,7,100.0,Very well behaved,2025-08-26
 3736613,2025-08-26T09:17:02.000000Z,Yolanda Lumkile,R B - Group 11 - Emsengeni,Emsengeni Primary School,"m,k",2,1,1,100.0,"Participants - All Present Oyisa mtiOviwe loseLuphindo SogaLethokuhle HempeLizani LiqhameLulonke Mali Asiphokuhle Makohliso Review letters- b and lCover letters - m and  kBoard game For this group I'm certified ,so next session I'll introduce p and s",2025-08-26
+3736612,2025-08-26T09:17:02.000000Z,Yolanda Lumkile,R B - Group 11 - Emsengeni,Emsengeni Primary School,,0,0,0,0.0,,2025-08-26
 3736598,2025-08-26T09:17:00.000000Z,Andile Windvoel,1 D-Group 3-Walmer,Walmer Primary School,,0,7,7,100.0,,2025-08-26
 3736576,2025-08-26T09:15:57.000000Z,Robyn De Klerk,R C - Group 3 - De Vos Malan,De Vos Malan Primary School,"a,u",2,7,5,71.4,1 out of 5 learners were able to identify the U,2025-08-26
 3736498,2025-08-26T09:15:45.000000Z,Avela Maliza,PreR - Group 2 - Lukhanyo,Lukhanyo ECD,,0,2,0,0.0,They are absent,2025-08-26
@@ -1254,6 +1316,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3737411,2025-08-26T09:00:48.000000Z,Logan Booysen,R A-Group 2-Republic,Republic Primary School,,0,6,5,83.3,4 out of 5 leaners knew a and o sounds. 1 out of 5 couldnt identify a/o sounds Going to revise both sounds tomorrow,2025-08-26
 3736517,2025-08-26T09:00:42.000000Z,Mihle Xana,PreR - Group 4 - Siyabulela ECD,Siyabulela Pre-School,"d,y",2,5,4,80.0,,2025-08-26
 3737370,2025-08-26T09:00:23.000000Z,Simanye Makwane,1 B - Group 3 - Walmer,Walmer Primary School,"u,b",2,7,7,100.0,All the learners were able to write & sound out the letter sounds covered and introduced,2025-08-26
+3737363,2025-08-26T09:00:23.000000Z,Simanye Makwane,1 B - Group 3 - Walmer,Walmer Primary School,,0,0,0,0.0,,2025-08-26
 3740107,2025-08-26T08:58:12.000000Z,Devonia Prince,1 A - Group 3 - Kruisrivier,Kruisrivier Primary School,"i,u,e,h,t",5,6,6,100.0,,2025-08-26
 3737800,2025-08-26T08:56:47.000000Z,Chantelle Mtsewu,R A-Group 6-Esityeni Public,Esityeni Public Primary School,,0,7,6,85.7,"Introduced a,i. All the learners were able to recognise the letters when playing the board game.",2025-08-26
 3736506,2025-08-26T08:54:29.000000Z,Nopasika Mbali,PreR - Group 5 - Livuse,Livuse ECD,"r,t,d",3,4,3,75.0,They all know this letter,2025-08-26
@@ -1330,6 +1393,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3736292,2025-08-26T07:39:28.000000Z,Nkamoheleng Nkwenkwana,1 A-Group 5-West End,West End Primary School,,0,7,5,71.4,,2025-08-26
 3736282,2025-08-26T07:38:39.000000Z,Erna Peacock,R A - Group 3 - Sanctor,Sanctor Primary School,"p,s,t,c",4,7,6,85.7,1 out of the 6 don't know C but we reviewed it. Also reviewed the letter sound T and S. Introduced letter sound P.This group is very strong only one learner struggling with certain sounds.Kyleigh Schutte joined the previous group (group 2).We ended the se,2025-08-26
 3736285,2025-08-26T07:38:04.000000Z,Thezarene Louw,1 C-Group 4-Seagull,Seagull Primary School,,0,7,7,100.0,,2025-08-26
+3736284,2025-08-26T07:38:04.000000Z,Thezarene Louw,1 C-Group 4-Seagull,Seagull Primary School,,0,0,0,0.0,,2025-08-26
 3736277,2025-08-26T07:36:43.000000Z,Avela Maliza,PreR - Group 4 - Lukhanyo,Lukhanyo ECD,"t,q,r,c",4,3,3,100.0,Lumitha came during the session. Enzo struggles to pronounce r and c but he's doing well. Okwe is also doing well,2025-08-26
 3736240,2025-08-26T07:35:24.000000Z,Esihle Yali,PreR - Group 3 - Ilitha Lethu,Ilitha Lethu Day Care,"y,f",2,5,5,100.0,"Luphawu know Y,F. Abongile can recognise Y,F Cacela know F he is trying with Y. Lupholwethu also know F forget Y. Inothando does not speak.",2025-08-26
 3736181,2025-08-26T07:33:59.000000Z,Amberoziа Klaasen,1 A - Group 3 - Van Der Kemp,Van Der Kemp Primary School,"o,e",2,6,4,66.7,The children are very confident of these letter sounds,2025-08-26
@@ -1340,7 +1404,9 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3736311,2025-08-26T07:30:32.000000Z,Buhle Mangcangaza,1 D - Group 4 - Joe Slovo,Joe Slovo Primary School,"o,i,a,u",4,7,6,85.7,"1) 3 out of 6 can confidently sound, write and recognise all 4 sounds. 2) Ivakele siyolo was absent 3) Siyancuma can confidently sound, write and recognise i and a but still needs hammering with sounds o and u4 ) all of them accept Siyancuma can recognise",2025-08-26
 3736228,2025-08-26T07:29:51.000000Z,Nopasika Mbali,PreR - Group 2 - Livuse,Livuse ECD,"m,l,b",3,5,4,80.0,Likuwe and phawoluhle forgotten this letter,2025-08-26
 3736545,2025-08-26T07:29:21.000000Z,Lisakhanya Cakwebe,R A - Group 2 - Lamani,Lamani Public Primary School,"b,l,m,k",4,2,1,50.0,,2025-08-26
+3736542,2025-08-26T07:29:21.000000Z,Lisakhanya Cakwebe,R A - Group 2 - Lamani,Lamani Public Primary School,,0,0,0,0.0,,2025-08-26
 3736213,2025-08-26T07:28:59.000000Z,Shanay George,R B - Group 2 - Strelitzia,Strelitzia Primary School,"o,i",2,10,8,80.0,Learner can identify write sound out of and I 1 learners needs help,2025-08-26
+3736779,2025-08-26T07:28:21.000000Z,Simamkele Dastile,PreR - Group 2 - Bavumeleni,Bavumeleni ECD,"c,j",2,4,4,100.0,"Sesam ,Hlelolenkosi,Analo are done with letter sounds busy with their names.Yamihle know letter c,j",2025-08-26
 3736317,2025-08-26T07:27:18.000000Z,Sinethemba Qwebani,R B - Group 2 - KwaNoxolo,KwaNoxolo Primary School,"o,i,a",3,11,5,45.5,They can write the letters some are mispronouncing the alphabets,2025-08-26
 3736335,2025-08-26T07:27:02.000000Z,Sinovuyo Sitishi,R A - Group 5 - Emzomncane,Emzomncane Primary School,"k,l,u",3,6,6,100.0,"I introduced letter K, they are also fast learners. A few still forget easily but they are learning.",2025-08-26
 3736232,2025-08-26T07:26:55.000000Z,Phiwokuhle Mtukwane,R A - Group 2 - Masakhane,Masakhane Public School,"a,u",2,8,6,75.0,7/7 don't recall the sounds,2025-08-26
@@ -1352,6 +1418,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3736193,2025-08-26T07:24:37.000000Z,Ashternecha Billet,1 C - Group 2 - Bethvale,Bethvale Primary School,"t,p",2,7,7,100.0,,2025-08-26
 3743580,2025-08-26T07:23:48.000000Z,Portia Tsibaphi,1 A-Group 1-Gertrude Shope Senior,Gertrude Shope Senior Primary School,,0,7,7,100.0,"I need to revisit all the covered letters especially with Luphiwo and AqhamaLetters Covered (O,A,I, U)",2025-08-26
 3736331,2025-08-26T07:22:56.000000Z,Marven Chandler,R B - Group 3 - Bethvale,Bethvale Primary School,"s,t,e,p",4,8,8,100.0,,2025-08-26
+3736329,2025-08-26T07:22:56.000000Z,Marven Chandler,R B - Group 3 - Bethvale,Bethvale Primary School,,0,0,0,0.0,,2025-08-26
 3736988,2025-08-26T07:21:19.000000Z,Aphiwe Daniels,PreR - Group 2 - Libhongolwethu,Libhongolwethu ECD,"u,s",2,4,2,50.0,Lutshintsho know how to sound both letters and she can recognize the letters.Inelayo know both letters and he can sound them.,2025-08-26
 3736101,2025-08-26T07:19:36.000000Z,Amberoziа Klaasen,1 A - Group 2 - Van Der Kemp,Van Der Kemp Primary School,"o,e",2,5,4,80.0,The children were very productive they knew these letter sounds,2025-08-26
 3736183,2025-08-26T07:19:28.000000Z,Asamahle Javu,PreR - Group 1 - Sakha Abantwana,Sakha Bantwana ECD,"m,k",2,8,3,37.5,We did a review on m & K they still remember letter m & still trying on K .,2025-08-26
@@ -1428,6 +1495,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3735896,2025-08-26T06:12:24.000000Z,Siyasanga Beya,1 C - Group 5 - KwaNoxolo,KwaNoxolo Primary School,"w,b",2,7,6,85.7,My group 5 know the letters and can identify them . We played board game.,2025-08-26
 3735899,2025-08-26T06:10:18.000000Z,Aaqilah Fakir,R A - Group 4 - Malabar,Malabar Primary School,"o,i,a,u",4,6,6,100.0,1 out of 6 knows the 4 letters. 5 need more attention.,2025-08-26
 3735944,2025-08-26T06:03:03.000000Z,Tutula Nozakuzaku,R A - Group 1 - Vukanibantu,Vukanibantu Primary School,"l,s",2,8,8,100.0,All of the learners understood both the letters L and S,2025-08-26
+3735943,2025-08-26T06:03:03.000000Z,Tutula Nozakuzaku,R A - Group 1 - Vukanibantu,Vukanibantu Primary School,,0,0,0,0.0,,2025-08-26
 3735712,2025-08-26T06:00:01.000000Z,Uyathandwa Seeland,R A - Group 1 - James Ntungwana,James Ntungwana Primary School,"a,b",2,7,6,85.7,Abantwana khange basokole ne zandi bebekhona abangazaziyo but sancedisana,2025-08-26
 3730167,2025-08-25T12:20:48.000000Z,Obuhle Dyeli,1 A - Graduate - Amanzi,Amanzi Primary School,"k,z",2,3,2,66.7,"Only 3 Leaners Struggles with ""K and Z"" , I will have to reintroduce these Words tomorrow",2025-08-25
 3730168,2025-08-25T12:12:18.000000Z,Lizalithetha Mhlobo,R A - Group 1 - Amanzi,Amanzi Primary School,"b,e",2,6,4,66.7,Three learners still need some help but the other two know.,2025-08-25
@@ -1444,6 +1512,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3729935,2025-08-25T11:07:42.000000Z,Shaan Jaftha,1 B-Group 2-Kleinskool,Kleinskool Community Primary School,,0,8,6,75.0,,2025-08-25
 3733895,2025-08-25T11:06:31.000000Z,Nthabeleng Rantho,1 B-Group 3-Khulile,Khulile Primary School,,0,7,7,100.0,2/7 not understand sounds of small letters b . Samanga and arianna,2025-08-25
 3729843,2025-08-25T11:04:48.000000Z,Grace Danente,1 A - Group 3 - Funimfundo,Funimfundo Primary School,"o,u",2,7,6,85.7,Uyathandwa is absent. All other learners were very attentive at they were introduced to new letter sounds.,2025-08-25
+3729838,2025-08-25T11:04:48.000000Z,Grace Danente,1 A - Group 3 - Funimfundo,Funimfundo Primary School,,0,0,0,0.0,,2025-08-25
 3737209,2025-08-25T11:02:41.000000Z,Iphendule Ndayi,1 A - Group 2 - Pendla,Pendla Primary School,"o,i,a,u",4,8,8,100.0,"learners are familiar with sounds o,i,a on the next session we will re visit o i a u",2025-08-25
 3729885,2025-08-25T10:59:04.000000Z,Yolanda Lumkile,R B - Group 2 - Emsengeni,Emsengeni Primary School,"m,k",2,18,4,22.2,"GradeR BGroup participants:Ayabonga Matutu Luphawo DikeAsthandile Rooi Kayla Rulumeni Iyana SizanaSimamkelele XaliZilufefe MdakaAyama Vezile Letter Review: b and lCovered letters: m  and k Game : Board game DURING THE SESSION Zilufefe did take a turn, He ",2025-08-25
 3729910,2025-08-25T10:56:05.000000Z,Siphosethu Mampangashe,R A - Group 5 - Elufefeni,Elufefeni Primary School,"i,z",2,7,6,85.7,"I had to end the session, as the parents were already outside",2025-08-25
@@ -1460,10 +1529,12 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3729926,2025-08-25T10:46:33.000000Z,Hlumela Ntloko,R A - Group 1 - BJ Mnyanda,BJ Mnyanda Primary School,"o,a,u,e,b",5,8,8,100.0,Learners were able to identify the  letters  vowels  but struggling  to pronounce them standing on their own.,2025-08-25
 3729749,2025-08-25T10:46:15.000000Z,Ndzondelelo Mkuzangwe,R A - Group 6 - Vezubuhle,Vezubuhle Primary School,"o,i",2,7,7,100.0,1/7 leaner need to revise sandi o and i,2025-08-25
 3729735,2025-08-25T10:43:23.000000Z,Sesethu Magajana,2 C-Group 2-Dumani,Dumani Primary School,,0,8,7,87.5,,2025-08-25
+3729738,2025-08-25T10:42:42.000000Z,Nomahlubi Nkosinkulu,1 A - Group 1 - Cebelihle,Cebelihle Primary School,,0,0,0,0.0,,2025-08-25
 3729739,2025-08-25T10:42:42.000000Z,Nomahlubi Nkosinkulu,1 A - Group 1 - Cebelihle,Cebelihle Primary School,"a,u",2,8,8,100.0,Leaners are still struggling with the letter a they are confusing the letter a with the letter O,2025-08-25
 3729672,2025-08-25T10:41:18.000000Z,Mbali Oliphant,1 C - Group 2 - Ilinge,Ilinge Primary School,"i,o",2,7,6,85.7,,2025-08-25
 3729698,2025-08-25T10:40:47.000000Z,Grace Danente,1 A - Group 2 - Funimfundo,Funimfundo Primary School,"o,u",2,7,7,100.0,"All learners were very interested in the session, as they were introduced to new sound letters.",2025-08-25
 3748740,2025-08-25T10:40:15.000000Z,Zandile Dyasi,2 A - Graduate - Stephen Nkomo,Stephen Nkomo Senior Primary School,"a,i",2,27,22,81.5,,2025-08-25
+3733076,2025-08-25T10:38:38.000000Z,Simanye Makwane,1 B - Group 2 - Walmer,Walmer Primary School,,0,0,0,0.0,,2025-08-25
 3733093,2025-08-25T10:38:38.000000Z,Simanye Makwane,1 B - Group 2 - Walmer,Walmer Primary School,"o,i",2,7,6,85.7,Out of 7 learners one was absent which is Lelothando Mchophele and 4 learners could not speak out the sounds covered during the session,2025-08-25
 3729733,2025-08-25T10:37:06.000000Z,Nerine Brink,R A-Group 3-Kruisrivier,Kruisrivier Primary School,,0,6,4,66.7,One learner is absent and is double on list by mistake.,2025-08-25
 3748739,2025-08-25T10:35:50.000000Z,Zandile Dyasi,2 A - Graduate - Stephen Nkomo,Stephen Nkomo Senior Primary School,"a,i",2,27,11,40.7,,2025-08-25
@@ -1531,8 +1602,8 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3729377,2025-08-25T09:31:27.000000Z,Chantell Sparks,PreR - Group 2 - Msobomvu ECD,Msobomvu ECD,"a,u",2,5,4,80.0,They still struggling to recognize a and uI took picture of for learners because the boy was distracting the class I send him to the classroom.,2025-08-25
 3729437,2025-08-25T09:30:50.000000Z,Thezarene Louw,1 C - Group 1 - Seagull,Seagull Primary School,"o,i,a,u,e,b",6,8,7,87.5,One absent,2025-08-25
 3729372,2025-08-25T09:30:10.000000Z,Fadilia Kekana,1 B - Group 1 - Seagull,Seagull Primary School,,0,7,5,71.4,,2025-08-25
-3729405,2025-08-25T09:29:39.000000Z,Vonique Natang,1 A - Group 1 - Seagull,Seagull Primary School,"o,i,a,u,e,b",6,7,5,71.4,Two learners absent.,2025-08-25
 3729938,2025-08-25T09:29:39.000000Z,Abigail Reid,1 A - Group 4 - Abraham Levy,Abraham Levy Primary School,"t,p",2,7,7,100.0,,2025-08-25
+3729405,2025-08-25T09:29:39.000000Z,Vonique Natang,1 A - Group 1 - Seagull,Seagull Primary School,"o,i,a,u,e,b",6,7,5,71.4,Two learners absent.,2025-08-25
 3729607,2025-08-25T09:28:51.000000Z,Lucia Jacobs,1 A - Group 2 - Nomathamsanqa,Nomathamsanqa Primary School,"o,i,a,u,e,b,l,m,k,p,s,h,z,n,d,y,f,v,w,x,g,t,q,r,c",25,7,7,100.0,The learners did all the letter sounds.,2025-08-25
 3729571,2025-08-25T09:25:53.000000Z,Noxolo Mbotya,1 C - Group 1 - Sapphire Road,Sapphire Road Primary School,"b,n",2,8,5,62.5,"Interrupted by feeding, still have to continue with the group. Break after feeding will continue after break",2025-08-25
 3729327,2025-08-25T09:19:30.000000Z,Shannon Josephs,2 B - Group 1 - Strelitzia,Strelitzia Primary School,"g,j",2,8,4,50.0,Reviewed letters w and h. Introduced letters g and j. All learners could sound out the letter sounds.,2025-08-25
@@ -1547,6 +1618,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3729939,2025-08-25T09:06:09.000000Z,Abigail Reid,1 A - Group 3 - Abraham Levy,Abraham Levy Primary School,"t,p",2,7,6,85.7,"All learners present are able to identify, sound out and write the letters t and p.",2025-08-25
 3729307,2025-08-25T09:06:08.000000Z,Vuyolwethu Mdzinwa,PreR - Group 1 - Kids College,Kids College ECD,"t,r,w",3,4,4,100.0,"Today with my group, they have finished all the letters,but we did a revision,I have decided to focus more in this letters (WWE,Tt,Rr). We did a peg game",2025-08-25
 3729606,2025-08-25T09:05:18.000000Z,Lucia Jacobs,1 A - Group 1 - Nomathamsanqa,Nomathamsanqa Primary School,"o,i,a,u,e,b,m,k,p,j,c,t,r,q,g,x,d,y,f,v,w,h,n,s,z,l",26,7,6,85.7,The learners know the letter sounds and they do recognise them.,2025-08-25
+3758376,2025-08-25T09:02:41.000000Z,Bongeka Masango,1 A - Group 2 - Jarvis Gqamlana,Jarvis Gqamlana Public Primary School,"m,b,i",3,5,5,100.0,Lakheni know (i &b)Alwaba knows (i & m)Bukhobam knows (all)Liyabona knows(i)Lunje know (i & m),2025-08-25
 3729258,2025-08-25T08:57:43.000000Z,Mihle Xana,PreR - Group 4 - Siyabulela ECD,Siyabulela Pre-School,z,1,5,5,100.0,,2025-08-25
 3729284,2025-08-25T08:57:38.000000Z,Andisiwe Sineli,1 B - Group 1 - C W Hendrickse,C W Hendrickse Primary School,"o,e,a,u,b,d,c",7,15,8,53.3,I introduced the letters that I markedIt was a struggle but it's getting thereThose that I did not mark is not in my class,2025-08-25
 3729250,2025-08-25T08:54:51.000000Z,Chantell Sparks,PreR - Group 3 - Msobomvu ECD,Msobomvu ECD,"a,u",2,4,4,100.0,They still struggling to recognize the focusing sounds/letters,2025-08-25
@@ -1558,6 +1630,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3729184,2025-08-25T08:44:52.000000Z,Yonelisa Magenuka,PreR - Group 2 - St Mary,St Mary Magdelene ECD,,0,3,3,100.0,"They were learning to write their names because they recognized all the letters, so I asked them individually to call out the letters that are on their names and they all did well.",2025-08-25
 3729195,2025-08-25T08:44:12.000000Z,Chulumanco Nywebeni,PreR - Group 1 - Mzamomhle,Mzamomhle Edu-care,"o,u",2,6,4,66.7,"4 out of 6 are present the learners from this group are struggling alot in recognizing letter, focus letters o&u",2025-08-25
 3729165,2025-08-25T08:44:11.000000Z,Robin Classen,1 A - Group 3 - DR A W Habelgaarn,DR A W Habelgaarn Primary School,"o,i,a,e",4,12,8,66.7,4 learners knows all letters without forgetting,2025-08-25
+3733559,2025-08-25T08:43:39.000000Z,Andiswa Takane,1 A - Group 1 - Alex Jayiya,Alex Jayiya Primary School,,0,0,0,0.0,,2025-08-25
 3733561,2025-08-25T08:43:39.000000Z,Andiswa Takane,1 A - Group 1 - Alex Jayiya,Alex Jayiya Primary School,,0,9,6,66.7,A few are having difficulties but we will get there,2025-08-25
 3729191,2025-08-25T08:43:17.000000Z,Kyla Slabbert,R B - Group 1 - Republic,Republic Primary School,"o,i,a,u",4,9,7,77.8,"7 out of 7 knew O, I , A",2025-08-25
 3729611,2025-08-25T08:42:43.000000Z,Esethu Nomxanya,1 A - Group 4 - Isaac Booi,Isaac Booi Senior Primary School,"u,e",2,7,7,100.0,"I struggled again, the App keeps freezing when I want to begin my sessions. Thus going over the recommend 20 minutes. I introduced 2 letter sounds which were u and e. Out of 7 learners, there is 1 learner, that seems forgetful, she was also struggling wit",2025-08-25
@@ -1628,6 +1701,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3723224,2025-08-22T10:45:50.000000Z,Anathi Stoot,1 A - Group 1 - J N Tulwana Junior,J N Tulwana Junior Primary School,"b,l",2,7,5,71.4,Some did show progress some fail to memorise. Simthandile Matros is in the wrong group so I did have a session with her in this group while she was supposed to be in group 2.,2025-08-22
 3723195,2025-08-22T10:42:02.000000Z,Buhle Manxoyi,1 A - Group 1 - Emzomncane,Emzomncane Primary School,"o,i",2,8,6,75.0,I had to end the session before 20 minutes end cause abazali bebese gate.in already for uzolanda abantwana besi mid game,2025-08-22
 3723227,2025-08-22T10:37:28.000000Z,Yolanda Lumkile,R B - Group 16 - Emsengeni,Emsengeni Primary School,"m,k",2,2,1,50.0,SECOND SESSION Group 3 participants  Yolisa Mpulu - presentSmangele Mti-presentLulonke Matodlana - presentEsikhona Qhushwana- presentAzosule Mbilase-presentkungawo Zono - Absent Asamkele Rafuza- presentLetter Review - b and lNew letters - m and k  Game : ,2025-08-22
+3723210,2025-08-22T10:37:28.000000Z,Yolanda Lumkile,R B - Group 16 - Emsengeni,Emsengeni Primary School,,0,0,0,0.0,,2025-08-22
 3723164,2025-08-22T10:36:22.000000Z,Alicia Kynoch,1 C-Group 3-Triomf,Triomf Primary School,,0,7,5,71.4,,2025-08-22
 3723168,2025-08-22T10:36:05.000000Z,Grace Danente,1 A - Graduate - Funimfundo,Funimfundo Primary School,"a,e,i",3,6,3,50.0,"Ayabukwa, Siphosethu and Sinazo are absent. All other 3 learners showed interest and enthusiasm.",2025-08-22
 3723165,2025-08-22T10:34:06.000000Z,Ruth Marks,1 A - Group 3 - Triomf,Triomf Primary School,"o,i",2,8,0,0.0,,2025-08-22
@@ -1661,12 +1735,14 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3723037,2025-08-22T09:44:38.000000Z,Mbali Oliphant,1 C - Group 4 - Ilinge,Ilinge Primary School,"a,e",2,7,7,100.0,The kids had fun and knew the letters .,2025-08-22
 3723022,2025-08-22T09:42:50.000000Z,Chandre Prins,R A-Group 3-Strelitzia,Strelitzia Primary School,,0,7,6,85.7,,2025-08-22
 3723033,2025-08-22T09:42:26.000000Z,Nomahlubi Nkosinkulu,1 A - Group 3 - Cebelihle,Cebelihle Primary School,"o,i",2,7,7,100.0,1/7 learners is still struggling with the letter O others understands the letters.,2025-08-22
+3723031,2025-08-22T09:42:26.000000Z,Nomahlubi Nkosinkulu,1 A - Group 3 - Cebelihle,Cebelihle Primary School,,0,0,0,0.0,,2025-08-22
 3723030,2025-08-22T09:42:26.000000Z,Nerine Brink,R A - Group 1 - Kruisrivier,Kruisrivier Primary School,"a,o,u,i",4,7,5,71.4,2 learners was absent.,2025-08-22
+3723032,2025-08-22T09:42:26.000000Z,Nomahlubi Nkosinkulu,1 A - Group 3 - Cebelihle,Cebelihle Primary School,,0,0,0,0.0,,2025-08-22
 3723023,2025-08-22T09:42:24.000000Z,Ruth Marks,1 A - Group 2 - Triomf,Triomf Primary School,"o,i",2,8,0,0.0,,2025-08-22
 3748580,2025-08-22T09:40:07.000000Z,Asive Masimini,1 A - Group 3 - Aaron Gqadu,Aaron Gqadu Primary School,"a,p",2,7,6,85.7,,2025-08-22
 3723034,2025-08-22T09:37:55.000000Z,Ndzondelelo Mkuzangwe,R A - Group 2 - Vezubuhle,Vezubuhle Primary School,"o,i",2,8,7,87.5,5/7 Sandi O ned to review3/7 Sandi I need to revise,2025-08-22
-3723001,2025-08-22T09:35:41.000000Z,Ashternecha Billet,1 C - Graduate - Bethvale,Bethvale Primary School,"e,s",2,12,5,41.7,,2025-08-22
 3726457,2025-08-22T09:35:41.000000Z,Sinesipho Zake,1 B - Group 3 - Swartkops,Swartkops Primary School,"o,i",2,7,6,85.7,,2025-08-22
+3723001,2025-08-22T09:35:41.000000Z,Ashternecha Billet,1 C - Graduate - Bethvale,Bethvale Primary School,"e,s",2,12,5,41.7,,2025-08-22
 3723099,2025-08-22T09:33:54.000000Z,Kimlynn Patrick,1 A - Group 2 - Helenvale,Helenvale Primary School,"a,u",2,7,5,71.4,5 out of 2 is present We did the A and U letter sounds 2 out of 7 struggled with the U letter soundWe played snake and ladder and hop game,2025-08-22
 3723098,2025-08-22T09:31:47.000000Z,Kimlynn Patrick,1 A - Group 2 - Helenvale,Helenvale Primary School,,0,7,5,71.4,,2025-08-22
 3726488,2025-08-22T09:28:07.000000Z,Ayanda Macekela,R A-Group 2-Fumisukoma,Fumisukoma Primary School,,0,5,3,60.0,They understand the letters very well,2025-08-22
@@ -1680,13 +1756,16 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3722969,2025-08-22T09:20:10.000000Z,Alicia Kynoch,1 C-Group 2-Triomf,Triomf Primary School,,0,7,5,71.4,,2025-08-22
 3722984,2025-08-22T09:20:04.000000Z,Zikhona Dingile,PreR - Group 3 - Msobomvu,Msobomvu ECD,"b,l",2,7,6,85.7,"Out of 7 sevens only one learner was absent.....introduced Letter b,l",2025-08-22
 3723104,2025-08-22T09:19:22.000000Z,Chulumanco Nywebeni,PreR - Group 4 - Mzamomhle,Mzamomhle Edu-care,"p,s",2,6,6,100.0,"The group is still moving and active. Lichumile uyathanda udlala hence he's behind and he forgets his letters, focus letters (p and s)Nb:ndilibele to end my session after time reminder got distracted thanks",2025-08-22
+3722967,2025-08-22T09:16:07.000000Z,Ruth Marks,1 A - Group 1 - Triomf,Triomf Primary School,,0,8,8,100.0,,2025-08-22
 3722936,2025-08-22T09:13:40.000000Z,Ndzondelelo Mkuzangwe,R A - Group 1 - Vezubuhle,Vezubuhle Primary School,"o,i",2,8,7,87.5,3/7 sandi O learners need to review2/7 sandi I learners need to revise,2025-08-22
 3722943,2025-08-22T09:12:15.000000Z,Ashternecha Billet,1 C - Graduate - Bethvale,Bethvale Primary School,"e,s",2,12,5,41.7,,2025-08-22
+3722942,2025-08-22T09:11:55.000000Z,Charlene Fisher,R A - Group 4 - Gelvan,Gelvan Primary School,"e,d,f",3,6,6,100.0,,2025-08-22
 3723272,2025-08-22T09:11:27.000000Z,Shandre Calvert,1 B-Group 2-Sapphire Road,Sapphire Road Primary School,,0,7,7,100.0,"Understood nice, two were a bit shy,but warmed up we did the board game",2025-08-22
 3722916,2025-08-22T09:06:10.000000Z,Joy Bambie,1 D - Group 2 - Sapphire Road,Sapphire Road Primary School,"o,i,a,u,e,b,l,m,k,p,s,h,n,d,f,y,v",17,7,7,100.0,"They knew the sounds strongly,the once that use to struggle.",2025-08-22
 3725811,2025-08-22T09:05:49.000000Z,Noxolo Mbotya,1 C - Group 3 - Sapphire Road,Sapphire Road Primary School,,0,7,4,57.1,,2025-08-22
 3723097,2025-08-22T09:01:41.000000Z,Kimlynn Patrick,1 A - Group 1 - Helenvale,Helenvale Primary School,"a,u",2,8,4,50.0,4 out of 7 was present 2 struggled with the letter U We played Snake and ladder and the hop game,2025-08-22
 3722981,2025-08-22T08:56:50.000000Z,Lucia Jacobs,1 A - Graduate - Nomathamsanqa,Nomathamsanqa Primary School,"m,k,p,s,h,o,i,a,u,e,b,j,c,r,q,t,g,x,w,v,f,y,n,d,z",25,15,2,13.3,The learners were able to recognise the letter sounds.,2025-08-22
+3722978,2025-08-22T08:56:50.000000Z,Lucia Jacobs,1 A - Graduate - Nomathamsanqa,Nomathamsanqa Primary School,,0,0,0,0.0,,2025-08-22
 3722911,2025-08-22T08:55:50.000000Z,Esoyolo Siganga,PreR - Group 4 - Mzamomhle ECD,Mzamomhle Edu-care,"w,v",2,4,3,75.0,One learner is absent. The other three are still struggling with letter v.,2025-08-22
 3722912,2025-08-22T08:52:53.000000Z,Chulumanco Nywebeni,PreR - Group 2 - Mzamomhle,Mzamomhle Edu-care,"o,u,b",3,5,2,40.0,"Group 2, only 2 are present and the focus letters are o & u. Group 3 only 2 are present so I thought of combining the groups together since they are doing the same letters but 1 learner from Gr3(Iminathi Seklaanti) is also doing the letter (b)",2025-08-22
 3722908,2025-08-22T08:52:45.000000Z,Nolonwabo Matinise,1 B - Group 5 - Cebelihle,Cebelihle Primary School,"o,i",2,6,6,100.0,All learners understand letters.,2025-08-22
@@ -1701,6 +1780,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3722880,2025-08-22T08:38:41.000000Z,Raylene Leonard,R B - Group 2 - Malabar,Malabar Primary School,"a,u",2,8,8,100.0,The group did well recognising and  sounding also writing lettersound a and u. Luhlelunje needs Meer attention as he could not recognise u,2025-08-22
 3725809,2025-08-22T08:37:21.000000Z,Noxolo Mbotya,1 C - Group 2 - Sapphire Road,Sapphire Road Primary School,"b,n",2,8,6,75.0,,2025-08-22
 3722906,2025-08-22T08:36:54.000000Z,Sinovuyo Sitishi,R A - Group 1 - Emzomncane,Emzomncane Primary School,"a,o,e",3,7,4,57.1,They are a slow bunch but they are trying.,2025-08-22
+3722977,2025-08-22T08:34:21.000000Z,Lucia Jacobs,1 A - Graduate - Nomathamsanqa,Nomathamsanqa Primary School,,0,0,0,0.0,,2025-08-22
 3722980,2025-08-22T08:34:21.000000Z,Lucia Jacobs,1 A - Graduate - Nomathamsanqa,Nomathamsanqa Primary School,"o,i,a,u,e,b",6,15,6,40.0,The learners were able to recognise the letter sounds.,2025-08-22
 3722873,2025-08-22T08:33:54.000000Z,Alicia Kynoch,1 C - Group 1 - Triomf,Triomf Primary School,"o,i,a,u",4,7,5,71.4,"We already did o and i, when the app was faulty but i recorded the session in the book.Was a wonderful session, Anastacia was absent and Kainan Kleinbooi and the name Kainan witbooi is actually talia witbooi",2025-08-22
 3723271,2025-08-22T08:33:42.000000Z,Shandre Calvert,1 B - Group 1 - Sapphire Road,Sapphire Road Primary School,"a,l",2,7,4,57.1,"3 were absent, we did the letters A and L they did well together but forget easily. We did the board game",2025-08-22
@@ -1755,6 +1835,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3730430,2025-08-22T06:53:29.000000Z,Marven Chandler,R B - Group 1 - Bethvale,Bethvale Primary School,"e,s",2,8,8,100.0,,2025-08-22
 3723117,2025-08-22T06:51:27.000000Z,Iphendule Ndayi,1 A - Group 2 - Pendla,Pendla Primary School,"o,i",2,8,8,100.0,"5 out of 8 learners know letter o ,on the next session we will introduce a new letter",2025-08-22
 3722742,2025-08-22T06:47:50.000000Z,Nkamoheleng Nkwenkwana,1 A - Group 1 - West End,West End Primary School,"o,i",2,8,6,75.0,,2025-08-22
+3722587,2025-08-22T06:47:50.000000Z,Nkamoheleng Nkwenkwana,1 A - Group 1 - West End,West End Primary School,,0,0,0,0.0,,2025-08-22
 3722800,2025-08-22T06:44:54.000000Z,Charlene Fisher,R A - Group 3 - Gelvan,Gelvan Primary School,"e,d,f",3,7,7,100.0,,2025-08-22
 3733538,2025-08-22T06:42:04.000000Z,Andiswa Takane,1 A-Group 3-Alex Jayiya,Alex Jayiya Primary School,,0,6,6,100.0,,2025-08-22
 3723003,2025-08-22T06:41:18.000000Z,Siphosethu Mampangashe,R A - Group 1 - Elufefeni,Elufefeni Primary School,"i,o",2,8,4,50.0,One out of 4 seemed to understand izandi but the rest kept messing around,2025-08-22
@@ -1773,6 +1854,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3716315,2025-08-21T10:41:15.000000Z,Anathi Pilingane,R A - Group 1 - Mboniselo,Mboniselo Public School,"i,o",2,8,7,87.5,In this session we use sounds o and i the session was short because it was home time. Learners had a hard time in understanding the sounds need to revisit.,2025-08-21
 3716416,2025-08-21T10:35:11.000000Z,Sinovuyo Sitishi,R A - Group 1 - Emzomncane,Emzomncane Primary School,,0,5,5,100.0,,2025-08-21
 3720733,2025-08-21T10:33:08.000000Z,Bongiwe Mbusi,1 A - Group 7 - Canzibe,Canzibe Primary School,"s,h,p",3,6,6,100.0,,2025-08-21
+3716278,2025-08-21T10:30:56.000000Z,Nomahlubi Nkosinkulu,1 A - Group 6 - Cebelihle,Cebelihle Primary School,"o,i",2,7,7,100.0,All the learners understood the letters,2025-08-21
 3716517,2025-08-21T10:29:43.000000Z,Yolisa Dara,1 A - Group 2 - K K Ncwana,K K Ncwana Primary School,"o,i",2,7,7,100.0,Most know the sounds introduced and were able to identify the sound and name words that start with letter O or I,2025-08-21
 3716271,2025-08-21T10:29:39.000000Z,Mbali Oliphant,1 C - Group 1 - Ilinge,Ilinge Primary School,a,1,8,7,87.5,The session was easy and fun the kids enjoyed,2025-08-21
 3720731,2025-08-21T10:29:24.000000Z,Bongiwe Mbusi,1 A - Group 6 - Canzibe,Canzibe Primary School,"p,s,h",3,7,7,100.0,Learners are doing very well in letter recognition.,2025-08-21
@@ -1892,6 +1974,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3708120,2025-08-20T10:26:23.000000Z,Buhle Mangcangaza,1 D - Group 4 - Joe Slovo,Joe Slovo Primary School,"o,i",2,7,7,100.0,"1) siyancuma struggles with recognition of both o and i2) 6 of them recognise, can write and sound o and i.",2025-08-20
 3707844,2025-08-20T10:20:12.000000Z,Unathi Mnqumeni,R A - Group 1 - Stephen Nkomo,Stephen Nkomo Senior Primary School,"o,i,a",3,8,7,87.5,One learner was absent. Four out of 7 learners seem to grasp the concept.,2025-08-20
 3707623,2025-08-20T10:18:15.000000Z,Thandiwe Dyantyi,1 A - Group 1 - Masakhane,Masakhane Public School,"a,u",2,6,5,83.3,Majority could write and understand the sounds.,2025-08-20
+3707494,2025-08-20T10:17:35.000000Z,Bongiwe Mbusi,1 A - Group 3 - Canzibe,Canzibe Primary School,,0,0,0,0.0,,2025-08-20
 3707592,2025-08-20T10:17:35.000000Z,Bongiwe Mbusi,1 A - Group 3 - Canzibe,Canzibe Primary School,"a,u",2,6,6,100.0,,2025-08-20
 3707474,2025-08-20T10:12:52.000000Z,Bongiwe Mbusi,1 A - Group 2 - Canzibe,Canzibe Primary School,"a,u",2,7,6,85.7,"All learners they understand the letter a and u, and they can recognize them.",2025-08-20
 3707590,2025-08-20T10:09:52.000000Z,Chantell Sparks,PreR - Group 4 - Msobomvu ECD,Msobomvu ECD,d,1,5,4,80.0,1 absentThey still struggling to recognize the focusing letters n and d,2025-08-20
@@ -1946,6 +2029,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3706441,2025-08-20T06:49:18.000000Z,Anelisa Maqholo,2 B - Group 2 - Cedarberg,Cedarberg Primary School,"o,i,a",3,8,6,75.0,,2025-08-20
 3707651,2025-08-20T06:46:56.000000Z,Abongile Brown,1 A - Group 2 - Mnqophiso,Mnqophiso Primary School,"u,o",2,7,5,71.4,"They all know the letter sound, but I still have to session just to make sure",2025-08-20
 3708418,2025-08-20T06:46:04.000000Z,Lee Coleman,R A - Group 1 - Bethvale,Bethvale Primary School,,0,7,5,71.4,,2025-08-20
+3708373,2025-08-20T06:45:23.000000Z,Ntombizanele Jim,1 A - Group 1 - KwaNoxolo,KwaNoxolo Primary School,,0,0,0,0.0,,2025-08-20
 3708374,2025-08-20T06:45:23.000000Z,Ntombizanele Jim,1 A - Group 1 - KwaNoxolo,KwaNoxolo Primary School,"b,l",2,7,3,42.9,Learners  remembered our previous letter also can recognise and identify todays letters,2025-08-20
 3707008,2025-08-20T06:39:29.000000Z,Bheki Gqadu,2 A - Group 1 - Cedarberg,Cedarberg Primary School,"o,i,a,u",4,7,7,100.0,,2025-08-20
 3706960,2025-08-20T06:39:14.000000Z,Tutula Nozakuzaku,R A - Group 1 - Vukanibantu,Vukanibantu Primary School,"t,q",2,7,7,100.0,,2025-08-20
@@ -1958,6 +2042,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3691049,2025-08-19T12:51:40.000000Z,Tutula Nozakuzaku,R A - Group 2 - Vukanibantu,Vukanibantu Primary School,"r,k",2,7,7,100.0,,2025-08-19
 3690246,2025-08-19T11:03:46.000000Z,Sheré Frazenburg,1 A - Group 3 - Strelitzia,Strelitzia Primary School,"q,j",2,7,7,100.0,,2025-08-19
 3699861,2025-08-19T11:02:10.000000Z,Sinoxolo Jonas,1 A - Graduate - Mjuleni Junior,Mjuleni Junior Primary School,,0,2,2,100.0,They know all their alphabet,2025-08-19
+3699842,2025-08-19T11:02:10.000000Z,Sinoxolo Jonas,1 A - Graduate - Mjuleni Junior,Mjuleni Junior Primary School,,0,0,0,0.0,,2025-08-19
 3690009,2025-08-19T10:46:47.000000Z,Thandiwe Dyantyi,1 A - Group 4 - Masakhane,Masakhane Public School,"a,u",2,5,5,100.0,1 leaner still needs some help,2025-08-19
 3690150,2025-08-19T10:43:30.000000Z,Yolanda Lumkile,R B - Group 4 - Emsengeni,Emsengeni Primary School,"m,k",2,7,7,100.0,Smamkele Xali and Matutu Ayabonga they struggle with both letters,2025-08-19
 3690683,2025-08-19T10:40:34.000000Z,Sinoxolo Nojoko,R B - Group 3 - K K Ncwana,K K Ncwana Primary School,"l,m",2,7,7,100.0,They know the letters but tend to forget,2025-08-19
@@ -1968,6 +2053,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3715931,2025-08-19T10:25:38.000000Z,Asive Masimini,1 A - Group 2 - Aaron Gqadu,Aaron Gqadu Primary School,"a,p",2,7,6,85.7,,2025-08-19
 3689786,2025-08-19T10:25:30.000000Z,Yamkela Bulawa,R C - Group 1 - Enkululekweni,Enkululekweni Primary School,"e,h",2,7,4,57.1,,2025-08-19
 3689991,2025-08-19T10:24:10.000000Z,Sese Finya,1 A - Group 3 - Joe Slovo,Joe Slovo Primary School,"o,i",2,6,6,100.0,One of the learners struggling to  hammering letter i,2025-08-19
+3689750,2025-08-19T10:19:14.000000Z,Bongiwe Mbusi,1 A - Group 3 - Canzibe,Canzibe Primary School,,0,0,0,0.0,,2025-08-19
 3689794,2025-08-19T10:19:14.000000Z,Bongiwe Mbusi,1 A - Group 3 - Canzibe,Canzibe Primary School,,0,7,6,85.7,Most of them they know letter O and i,2025-08-19
 3689864,2025-08-19T10:16:16.000000Z,Thandiwe Dyantyi,2 A - Graduate - Masakhane,Masakhane Public School,"a,u",2,9,5,55.6,Very participating group eager to learn!,2025-08-19
 3689702,2025-08-19T10:13:03.000000Z,Bongiwe Mbusi,1 A - Group 2 - Canzibe,Canzibe Primary School,"o,i",2,7,6,85.7,,2025-08-19
@@ -1988,6 +2074,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3690681,2025-08-19T09:34:45.000000Z,Sinoxolo Nojoko,R B - Group 1 - K K Ncwana,K K Ncwana Primary School,"a,o",2,7,7,100.0,2 learners struggle with pronouncing the letter A and O and the other one forgets all the letters.,2025-08-19
 3689980,2025-08-19T09:29:24.000000Z,Joy Bambie,1 D - Group 2 - Sapphire Road,Sapphire Road Primary School,"a,e,i,k,o,u,b,p,m,n,y,h,s,f,v,d,l",17,7,7,100.0,Three children knew there work without even telling them. And four of them did not know anything and gets confused with the b and d alot. Boardgame was used as well.,2025-08-19
 3689501,2025-08-19T09:25:43.000000Z,Yolanda Lumkile,R B - Group Group 10 - Emsengeni,Emsengeni Primary School,"m,k",2,7,4,57.1,Asiphokuhle Makohliso and Oviwe Lose struggled a bit on how to write letter m but them their peers intervened and helped .Letter K was easy everybody,2025-08-19
+3689500,2025-08-19T09:25:43.000000Z,Yolanda Lumkile,R B - Group Group 10 - Emsengeni,Emsengeni Primary School,,0,0,0,0.0,,2025-08-19
 3703039,2025-08-19T09:23:17.000000Z,Ayanda Macekela,R A - Group 1 - Fumisukoma,Fumisukoma Primary School,"o,s",2,2,2,100.0,,2025-08-19
 3689471,2025-08-19T09:23:16.000000Z,Shadé Mahana,1 C - Group 2 - Abraham Levy,Abraham Levy Primary School,"e,s",2,8,7,87.5,There are 3/8 learners that needs to focus on the letter sounds still.,2025-08-19
 3689503,2025-08-19T09:22:34.000000Z,Esoyolo Siganga,PreR - Group 4 - Mzamomhle ECD,Mzamomhle Edu-care,"y,f,w",3,4,4,100.0,In group 2 there was only two learners present so I put them in this group. Two learner's are struggling with letter w.,2025-08-19
@@ -2010,6 +2097,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3689693,2025-08-19T08:39:01.000000Z,Noxolo Mbotya,1 C - Group 5 - Sapphire Road,Sapphire Road Primary School,"n,b",2,7,6,85.7,,2025-08-19
 3690059,2025-08-19T08:35:02.000000Z,Fatima Tyres,1 D - Group 2 - Fernwood Park,Fernwood Park Primary School,,0,8,8,100.0,,2025-08-19
 3699843,2025-08-19T08:31:01.000000Z,Sinoxolo Jonas,1 A - Group 2 - Mjuleni Junior,Mjuleni Junior Primary School,,0,7,7,100.0,Two of the learners were still struggling...two learners they know the alphabet then the others were in the middle  from day1 of the session we did N and M we are still busy with the alphabets,2025-08-19
+3699815,2025-08-19T08:31:01.000000Z,Sinoxolo Jonas,1 A - Group 2 - Mjuleni Junior,Mjuleni Junior Primary School,,0,0,0,0.0,,2025-08-19
 3689192,2025-08-19T08:30:26.000000Z,Chantell Sparks,PreR - Group 1 - Msobomvu ECD,Msobomvu ECD,"i,o",2,6,5,83.3,1 absentOut 5 only 2 recognize the focusing letters 3 are still struggling,2025-08-19
 3689172,2025-08-19T08:28:56.000000Z,Zikhona Dingile,PreR - Group 1 - Msobomvu,Msobomvu ECD,"i,o",2,7,4,57.1,"Out of 7 3 were absent...out of the 4 two were struggling to recognise the letter sound i,o",2025-08-19
 3689019,2025-08-19T08:26:42.000000Z,Shadé Mahana,1 C - Graduate - Abraham Levy,Abraham Levy Primary School,"e,s",2,6,6,100.0,All the learners know the new letter sounds we started with E and S,2025-08-19
@@ -2062,11 +2150,18 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3691043,2025-08-18T11:21:06.000000Z,Tutula Nozakuzaku,R A - Group 2 - Vukanibantu,Vukanibantu Primary School,"h,x",2,7,7,100.0,,2025-08-18
 3675474,2025-08-18T11:13:54.000000Z,Marciano Costa,1 C - Group 3 - Malabar,Malabar Primary School,"o,i",2,7,7,100.0,,2025-08-18
 3690676,2025-08-18T11:10:33.000000Z,Shaan Jaftha,1 B - Group 2 - Kleinskool Community,Kleinskool Community Primary School,a,1,7,6,85.7,,2025-08-18
+3684763,2025-08-18T11:10:33.000000Z,Shaan Jaftha,1 B - Group 2 - Kleinskool Community,Kleinskool Community Primary School,,0,0,0,0.0,,2025-08-18
+3684845,2025-08-18T11:10:33.000000Z,Shaan Jaftha,1 B - Group 2 - Kleinskool Community,Kleinskool Community Primary School,,0,0,0,0.0,,2025-08-18
 3675508,2025-08-18T11:06:42.000000Z,Siphokazi Bongco,1 A - Group 4 - Daniels,Daniels Public Primary School,"o,i",2,7,7,100.0,They did well 2 learners were absent,2025-08-18
 3675420,2025-08-18T10:55:59.000000Z,Tutula Nozakuzaku,R A - Group 1 - Vukanibantu,Vukanibantu Primary School,"h,x",2,7,7,100.0,,2025-08-18
 3675201,2025-08-18T10:55:42.000000Z,Sikelelwa Moahi,1 A - Group 1 - Emsengeni,Emsengeni Primary School,,0,5,0,0.0,,2025-08-18
 3675441,2025-08-18T10:49:45.000000Z,Buhle Mangcangaza,1 D - Group 2 - Joe Slovo,Joe Slovo Primary School,"o,i",2,7,6,85.7,- They can sound both i and o- 1 or 2 struggle to sound and write ( Recap) - they struggle to recognise both sounds.,2025-08-18
 3690675,2025-08-18T10:44:42.000000Z,Shaan Jaftha,1 B - Group 1 - Kleinskool Community,Kleinskool Community Primary School,"i,o",2,7,7,100.0,,2025-08-18
+3684653,2025-08-18T10:44:42.000000Z,Shaan Jaftha,1 B - Group 1 - Kleinskool Community,Kleinskool Community Primary School,,0,0,0,0.0,,2025-08-18
+3684743,2025-08-18T10:44:42.000000Z,Shaan Jaftha,1 B - Group 1 - Kleinskool Community,Kleinskool Community Primary School,,0,0,0,0.0,,2025-08-18
+3684802,2025-08-18T10:44:42.000000Z,Shaan Jaftha,1 B - Group 1 - Kleinskool Community,Kleinskool Community Primary School,,0,0,0,0.0,,2025-08-18
+3684813,2025-08-18T10:44:42.000000Z,Shaan Jaftha,1 B - Group 1 - Kleinskool Community,Kleinskool Community Primary School,,0,0,0,0.0,,2025-08-18
+3684891,2025-08-18T10:44:42.000000Z,Shaan Jaftha,1 B - Group 1 - Kleinskool Community,Kleinskool Community Primary School,,0,0,0,0.0,,2025-08-18
 3675404,2025-08-18T10:43:45.000000Z,Salmaa Baatjes,1 A - Group 1 - Malabar,Malabar Primary School,"o,i",2,8,8,100.0,3/8 learner need improvement on letters o and i,2025-08-18
 3675296,2025-08-18T10:42:56.000000Z,Siphokazi Bongco,1 A - Group 3 - Daniels,Daniels Public Primary School,"o,i",2,7,5,71.4,They did well with both letters,2025-08-18
 3680602,2025-08-18T10:41:58.000000Z,Ranee Pillay,1 D - Group 4 - Malabar,Malabar Primary School,"o,i,a,u",4,7,7,100.0,,2025-08-18
@@ -2089,6 +2184,9 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3675455,2025-08-18T09:36:29.000000Z,Akhikhaya Gxasheka,2 A - Group 1 - Kleinskool Community,Kleinskool Community Primary School,"o,i",2,4,3,75.0,,2025-08-18
 3674834,2025-08-18T09:36:16.000000Z,Marven Chandler,R B - Group 2 - Bethvale,Bethvale Primary School,"o,i,a,u",4,8,7,87.5,,2025-08-18
 3674768,2025-08-18T09:36:04.000000Z,Zikhona Dingile,PreR - Group 4 - Msobomvu,Msobomvu ECD,"d,y",2,6,6,100.0,All 6 learners were present....only two struugling with letter Y...still gonna continue  with review,2025-08-18
+3680348,2025-08-18T09:35:58.000000Z,Ranee Pillay,1 D - Group 3 - Malabar,Malabar Primary School,,0,0,0,0.0,,2025-08-18
+3680361,2025-08-18T09:35:58.000000Z,Ranee Pillay,1 D - Group 3 - Malabar,Malabar Primary School,,0,0,0,0.0,,2025-08-18
+3680371,2025-08-18T09:35:58.000000Z,Ranee Pillay,1 D - Group 3 - Malabar,Malabar Primary School,,0,0,0,0.0,,2025-08-18
 3680600,2025-08-18T09:35:58.000000Z,Ranee Pillay,1 D - Group 3 - Malabar,Malabar Primary School,"o,i,a,u",4,7,5,71.4,,2025-08-18
 3674755,2025-08-18T09:34:57.000000Z,Chuma Sidina,R B - Group 1 - Nomathamsanqa,Nomathamsanqa Primary School,"o,i",2,7,6,85.7,,2025-08-18
 3674750,2025-08-18T09:27:30.000000Z,Salmaa Baatjes,1 A - Group 4 - Malabar,Malabar Primary School,"o,i",2,7,5,71.4,5 learners knew both o and i,2025-08-18
@@ -2132,16 +2230,20 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3674168,2025-08-18T07:01:19.000000Z,Anathi Baka,R A - Group 1 - Vuba Junior,Vuba Junior Primary School,"a,u",2,7,5,71.4,I introduced A and U and they were all able to listen and identify the two sounds,2025-08-18
 3681275,2025-08-18T06:53:52.000000Z,Abongile Brown,1 A - Group 1 - Mnqophiso,Mnqophiso Primary School,"o,u",2,8,4,50.0,they are still struggling on recognise the letters,2025-08-18
 3674081,2025-08-18T06:41:58.000000Z,Ruth Denston,R C - Group 1 - Dietrich,Dietrich Primary School,"i,o",2,8,8,100.0,2/8 learners could identify the letter sounds i and o.6/8 could not identify the letter sounds i and o.,2025-08-18
+3699793,2025-08-18T06:41:10.000000Z,Sinoxolo Jonas,1 A - Group 1 - Mjuleni Junior,Mjuleni Junior Primary School,,0,0,0,0.0,,2025-08-18
 3699814,2025-08-18T06:41:10.000000Z,Sinoxolo Jonas,1 A - Group 1 - Mjuleni Junior,Mjuleni Junior Primary School,,0,8,7,87.5,,2025-08-18
 3674221,2025-08-18T06:28:01.000000Z,Nolonwabo Matinise,1 B - Group 2 - Cebelihle,Cebelihle Primary School,"o,i",2,8,6,75.0,"One learner is struggling with both letters, the other one is not able to mention a name starting with the letter without mentioning ""ka""",2025-08-18
 3674442,2025-08-15T11:06:44.000000Z,Shaan Jaftha,1 B - Group 4 - Kleinskool Community,Kleinskool Community Primary School,"i,o",2,7,5,71.4,,2025-08-15
+3671500,2025-08-15T10:51:44.000000Z,Sheré Frazenburg,1 A - Group 2 - Strelitzia,Strelitzia Primary School,,0,0,0,0.0,,2025-08-15
 3671501,2025-08-15T10:51:44.000000Z,Sheré Frazenburg,1 A - Group 2 - Strelitzia,Strelitzia Primary School,"t,r",2,7,6,85.7,All learners could identify letters r and t,2025-08-15
 3665413,2025-08-15T10:31:54.000000Z,Zikhona Dingile,PreR - Group 1 - Msobomvu,Msobomvu ECD,"i,o",2,7,4,57.1,"Out of 7 3 were absent...out of 4 none of them can recognise i,o",2025-08-15
 3665409,2025-08-15T10:30:54.000000Z,Chantell Sparks,PreR - Group 1 - Msobomvu ECD,Msobomvu ECD,"i,o",2,6,5,83.3,,2025-08-15
 3671499,2025-08-15T10:26:41.000000Z,Sheré Frazenburg,1 A - Group 1 - Strelitzia,Strelitzia Primary School,"a,u",2,7,7,100.0,2/7 couldn't identify letter sound I,2025-08-15
+3671498,2025-08-15T10:26:41.000000Z,Sheré Frazenburg,1 A - Group 1 - Strelitzia,Strelitzia Primary School,,0,0,0,0.0,,2025-08-15
 3671343,2025-08-15T10:22:28.000000Z,Asive Masimini,1 A - Group 2 - Aaron Gqadu,Aaron Gqadu Primary School,"b,d",2,7,6,85.7,,2025-08-15
 3669891,2025-08-15T10:16:44.000000Z,Qhamaninande Legodi,1 A - Group 5 - Enkululekweni,Enkululekweni Primary School,"b,h,p",3,7,5,71.4,,2025-08-15
 3674441,2025-08-15T10:02:45.000000Z,Shaan Jaftha,1 B - Group 5 - Kleinskool Community,Kleinskool Community Primary School,"o,i",2,7,7,100.0,,2025-08-15
+3671496,2025-08-15T10:01:53.000000Z,Sheré Frazenburg,1 A - Group 4 - Strelitzia,Strelitzia Primary School,,0,0,0,0.0,,2025-08-15
 3671497,2025-08-15T10:01:53.000000Z,Sheré Frazenburg,1 A - Group 4 - Strelitzia,Strelitzia Primary School,"g,q",2,6,6,100.0,6/6 learners knew all letters sounds,2025-08-15
 3671342,2025-08-15T09:59:35.000000Z,Asive Masimini,1 A - Group 1 - Aaron Gqadu,Aaron Gqadu Primary School,"b,d",2,7,5,71.4,,2025-08-15
 3665317,2025-08-15T09:49:55.000000Z,Zikhona Dingile,PreR - Group 3 - Msobomvu,Msobomvu ECD,"o,u",2,7,7,100.0,"Made a mistake book of group 3 is in group 2 n book of group 2 is in group in 3..out of 7 2 can recognise letter o,u..still gonna continue with review",2025-08-15
@@ -2171,6 +2273,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3671250,2025-08-15T07:12:18.000000Z,Chulumanco Nywebeni,PreR - Group 2 - Mzamomhle,Mzamomhle Edu-care,,0,5,4,80.0,"4 out of 5 are present and the learners of this group are still moving so far & the focus letters (O, U) but 3 out of 4 is still struggling and forgetful.",2025-08-15
 3664889,2025-08-15T07:10:49.000000Z,Shaan Jaftha,1 B - Group 3 - Kleinskool Community,Kleinskool Community Primary School,o,1,7,7,100.0,All 7 learners know their letter sound O after I did the session with them .,2025-08-15
 3665464,2025-08-15T07:06:21.000000Z,Esoyolo Siganga,PreR - Group 2 - Mzamomhle ECD,Mzamomhle Edu-care,,0,4,2,50.0,Amyoli was the only present in group 1 so I put her in group 2. In group 2 there was only two learners present. Today we focused on letter b and l. All three of them got the letters right today.,2025-08-15
+3664755,2025-08-15T06:59:18.000000Z,Charlene Fisher,R A - Group 1 - Gelvan,Gelvan Primary School,"a,b",2,7,7,100.0,,2025-08-15
 3671536,2025-08-15T06:57:49.000000Z,Siphelele Qinela,1 B - Group 3 - Nokwezi,Nokwezi Primary School,"a,b",2,7,6,85.7,,2025-08-15
 3665463,2025-08-15T06:45:54.000000Z,Sibongile Busakwe,R A - Group 2 - Aaron Gqadu,Aaron Gqadu Primary School,"a,e",2,7,6,85.7,,2025-08-15
 3671535,2025-08-15T06:33:01.000000Z,Siphelele Qinela,1 B - Group 2 - Nokwezi,Nokwezi Primary School,"a,b",2,6,3,50.0,,2025-08-15
@@ -2194,6 +2297,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3671534,2025-08-14T09:41:57.000000Z,Siphelele Qinela,1 B - Group 1 - Nokwezi,Nokwezi Primary School,"a,b",2,8,7,87.5,,2025-08-14
 3655694,2025-08-14T09:41:48.000000Z,Erna Peacock,R A - Group 2 - Sanctor,Sanctor Primary School,"o,i,a,u",4,7,7,100.0,"Review sound o and i7/7 learners knew the sound o7/7 learners knew the sound iIntroduced sound a and u5/7 learners knew the sound a1/7 learners knew the sound uWith each sound an Introduction was done and allowed learners to write on the floor , in the ai",2025-08-14
 3655601,2025-08-14T09:36:04.000000Z,Esoyolo Siganga,PreR - Group 4 - Mzamomhle ECD,Mzamomhle Edu-care,,0,4,4,100.0,"We focused on new letters today, letter y and f. Two out of the four got the letters right and the other two are still struggling.",2025-08-14
+3655598,2025-08-14T09:36:04.000000Z,Esoyolo Siganga,PreR - Group 4 - Mzamomhle ECD,Mzamomhle Edu-care,,0,0,0,0.0,,2025-08-14
 3671491,2025-08-14T09:35:44.000000Z,Abigail Reid,1 A - Group 2 - Abraham Levy,Abraham Levy Primary School,"o,i,a,u,e",5,8,8,100.0,"Revised previous letter sounds (o,i,a,u). Only introduced one new letter sound (e). All learners are able to identify, sound out and write the letter e.",2025-08-14
 3661552,2025-08-14T09:33:54.000000Z,Abongile Brown,1 A - Group 3 - Mnqophiso,Mnqophiso Primary School,"a,i",2,7,2,28.6,they both know sounds .,2025-08-14
 3671513,2025-08-14T09:28:17.000000Z,Ranee Pillay,1 D - Group 2 - Malabar,Malabar Primary School,"a,u",2,8,7,87.5,,2025-08-14
@@ -2204,6 +2308,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3655447,2025-08-14T09:07:38.000000Z,Zikhona Dingile,PreR - Group 2 - Msobomvu,Msobomvu ECD,,0,6,4,66.7,"Out of the four only one could recognise O,i",2025-08-14
 3655445,2025-08-14T09:07:25.000000Z,Chantell Sparks,PreR - Group 2 - Msobomvu ECD,Msobomvu ECD,,0,5,4,80.0,Introduced letter o and iOut of 4 only 2 recognize focusing letters,2025-08-14
 3655597,2025-08-14T09:06:03.000000Z,Esoyolo Siganga,PreR - Group 3 - Mzamomhle ECD,Mzamomhle Edu-care,,0,4,4,100.0,Group 3 focused on letters m and k. Two learners out of  the four are struggling in pronouncing letter k.,2025-08-14
+3655596,2025-08-14T09:06:03.000000Z,Esoyolo Siganga,PreR - Group 3 - Mzamomhle ECD,Mzamomhle Edu-care,,0,0,0,0.0,,2025-08-14
 3655418,2025-08-14T09:03:52.000000Z,Mischka Lewis,1 C - Group 4 - Astra,Astra Primary School,"a,u",2,7,4,57.1,,2025-08-14
 3655419,2025-08-14T08:56:53.000000Z,Nicolae Prinsloo,1 B - Group 4 - Astra,Astra Primary School,"l,o",2,7,7,100.0,"Riley the letter L, O she knows how to sound it out and identify a small letter and a capital letter and she gave me examples of the word L but need to revisit more words with the letter O",2025-08-14
 3655357,2025-08-14T08:43:20.000000Z,Mischka Lewis,1 C - Group 3 - Astra,Astra Primary School,"a,u",2,8,8,100.0,,2025-08-14
@@ -2212,6 +2317,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3655342,2025-08-14T08:40:13.000000Z,Thandiwe Dyantyi,2 A - Group 2 - Masakhane,Masakhane Public School,"o,i",2,5,4,80.0,,2025-08-14
 3655621,2025-08-14T08:40:11.000000Z,Ayanda Macekela,R A - Group 1 - Fumisukoma,Fumisukoma Primary School,"k,s",2,2,2,100.0,Learner's know both letters very well,2025-08-14
 3655594,2025-08-14T08:38:28.000000Z,Esoyolo Siganga,PreR - Group 2 - Mzamomhle ECD,Mzamomhle Edu-care,,0,4,4,100.0,All four of them are struggling with letter b and l except for Amyoli who's in group 1. I put her in group 2 today because she was the only one in group 1. Amyoli got both letters correct.,2025-08-14
+3655593,2025-08-14T08:38:28.000000Z,Esoyolo Siganga,PreR - Group 2 - Mzamomhle ECD,Mzamomhle Edu-care,,0,0,0,0.0,,2025-08-14
 3664965,2025-08-14T08:31:57.000000Z,Anelisa Kimbili,1 C - Graduate - Dumani,Dumani Primary School,,0,17,0,0.0,Mock Session by Anelisa,2025-08-14
 3655312,2025-08-14T08:10:06.000000Z,Chulumanco Nywebeni,PreR - Group 4 - Mzamomhle,Mzamomhle Edu-care,,0,6,6,100.0,The session was very well the learners we all present but 1 out of 6 is forgetful since he wasn't at school for some time. The focus letters M & K didn't appear for me to mark as we are focusing on them for the day.,2025-08-14
 3655256,2025-08-14T08:04:17.000000Z,Ntombizanele Jim,1 A - Group 4 - KwaNoxolo,KwaNoxolo Primary School,"p,h",2,6,4,66.7,All my learners can identify the letters,2025-08-14
@@ -2242,6 +2348,8 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3647860,2025-08-13T11:10:12.000000Z,Lizalithetha Mhlobo,R A - Group 1 - Amanzi,Amanzi Primary School,"i,u",2,6,6,100.0,I introduced i and u and they know them,2025-08-13
 3647826,2025-08-13T10:57:56.000000Z,Joy Bambie,1 D - Group 3 - Sapphire Road,Sapphire Road Primary School,"l,e",2,7,7,100.0,One student participated very well. The others are lost. Board game was used during session.,2025-08-13
 3699792,2025-08-13T10:54:13.000000Z,Sinoxolo Jonas,1 A - Graduate - Mjuleni Junior,Mjuleni Junior Primary School,,0,2,0,0.0,,2025-08-13
+3699750,2025-08-13T10:54:13.000000Z,Sinoxolo Jonas,1 A - Graduate - Mjuleni Junior,Mjuleni Junior Primary School,,0,0,0,0.0,,2025-08-13
+3697068,2025-08-13T10:54:13.000000Z,Sinoxolo Jonas,1 A - Graduate - Mjuleni Junior,Mjuleni Junior Primary School,,0,0,0,0.0,,2025-08-13
 3647805,2025-08-13T10:50:18.000000Z,Nicolae Prinsloo,1 B - Group 3 - Astra,Astra Primary School,"l,o",2,8,7,87.5,"Linique didn't know how to spell the L, 0 but after giving her ideas she knew how to sound it out and identify a word for me",2025-08-13
 3647790,2025-08-13T10:50:09.000000Z,Salmaa Baatjes,1 A - Group 3 - Malabar,Malabar Primary School,"o,i",2,8,8,100.0,All learners knew letter sounds o and i,2025-08-13
 3647622,2025-08-13T10:36:04.000000Z,Joy Bambie,1 D - Group 1 - Sapphire Road,Sapphire Road Primary School,"l,e",2,8,7,87.5,"Three learners kept on saying the wrong letters, as for the others participated very well. Boardgame was used in the process.",2025-08-13
@@ -2274,10 +2382,20 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3647526,2025-08-13T08:48:04.000000Z,Noxolo Mbotya,1 C - Group 1 - Sapphire Road,Sapphire Road Primary School,"a,l",2,8,7,87.5,"Luniko Vice is struggling with letter sound. I introduced the 2 letters A and L. Everyone present today could sound out the letters, besides Luniko Vice. Oluhle Beyers was absent today.",2025-08-13
 3652170,2025-08-13T08:46:11.000000Z,Anelisa Pekana,1 A - Group 3 - Mjuleni Junior,Mjuleni Junior Primary School,,0,8,7,87.5,All 7 learners knew the letter ASome didnt know letter L After the session all the learners knew the letters,2025-08-13
 3647215,2025-08-13T08:32:13.000000Z,Shadé Mahana,1 C - Graduate - Abraham Levy,Abraham Levy Primary School,,0,6,6,100.0,"Group 4, understood the letter A and U and they know how to make words out of it",2025-08-13
+3696755,2025-08-13T08:11:19.000000Z,Sinoxolo Jonas,1 A - Group 2 - Mjuleni Junior,Mjuleni Junior Primary School,,0,0,0,0.0,,2025-08-13
 3699705,2025-08-13T08:11:19.000000Z,Sinoxolo Jonas,1 A - Group 2 - Mjuleni Junior,Mjuleni Junior Primary School,,0,7,0,0.0,,2025-08-13
+3697043,2025-08-13T08:11:19.000000Z,Sinoxolo Jonas,1 A - Group 2 - Mjuleni Junior,Mjuleni Junior Primary School,,0,0,0,0.0,,2025-08-13
+3696965,2025-08-13T08:11:19.000000Z,Sinoxolo Jonas,1 A - Group 2 - Mjuleni Junior,Mjuleni Junior Primary School,,0,0,0,0.0,,2025-08-13
+3696915,2025-08-13T08:11:19.000000Z,Sinoxolo Jonas,1 A - Group 2 - Mjuleni Junior,Mjuleni Junior Primary School,,0,0,0,0.0,,2025-08-13
 3649795,2025-08-13T07:50:45.000000Z,Lungiswa January,R B - Group 3 - Nokwezi,Nokwezi Primary School,"a,b",2,7,5,71.4,"The session went very well although they kept on forgetting how the ""b"" sounds",2025-08-13
 3647082,2025-08-13T07:45:18.000000Z,Siyasanga Beya,1 C - Group 4 - KwaNoxolo,KwaNoxolo Primary School,"u,b",2,6,5,83.3,5/7 Know the letters very well and they can identify them,2025-08-13
 3696889,2025-08-13T07:39:44.000000Z,Sinoxolo Jonas,1 A - Group 1 - Mjuleni Junior,Mjuleni Junior Primary School,,0,8,0,0.0,,2025-08-13
+3696860,2025-08-13T07:39:44.000000Z,Sinoxolo Jonas,1 A - Group 1 - Mjuleni Junior,Mjuleni Junior Primary School,,0,0,0,0.0,,2025-08-13
+3696888,2025-08-13T07:39:44.000000Z,Sinoxolo Jonas,1 A - Group 1 - Mjuleni Junior,Mjuleni Junior Primary School,,0,0,0,0.0,,2025-08-13
+3696887,2025-08-13T07:39:44.000000Z,Sinoxolo Jonas,1 A - Group 1 - Mjuleni Junior,Mjuleni Junior Primary School,,0,0,0,0.0,,2025-08-13
+3696828,2025-08-13T07:39:44.000000Z,Sinoxolo Jonas,1 A - Group 1 - Mjuleni Junior,Mjuleni Junior Primary School,,0,0,0,0.0,,2025-08-13
+3696720,2025-08-13T07:39:44.000000Z,Sinoxolo Jonas,1 A - Group 1 - Mjuleni Junior,Mjuleni Junior Primary School,,0,0,0,0.0,,2025-08-13
+3696640,2025-08-13T07:39:44.000000Z,Sinoxolo Jonas,1 A - Group 1 - Mjuleni Junior,Mjuleni Junior Primary School,,0,0,0,0.0,,2025-08-13
 3647841,2025-08-13T07:29:44.000000Z,Shenique Langisa,2 B - Group 1 - Helenvale,Helenvale Primary School,,0,7,7,100.0,All the learners were participant and knew the letters and could sound it out aswell as identify it.,2025-08-13
 3647061,2025-08-13T07:25:32.000000Z,Junaida Mcpherson,1 D - Group 2 - Triomf,Triomf Primary School,,0,6,0,0.0,,2025-08-13
 3649794,2025-08-13T07:21:54.000000Z,Lungiswa January,R B - Group 2 - Nokwezi,Nokwezi Primary School,"a,b",2,7,7,100.0,,2025-08-13
@@ -2306,6 +2424,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3640819,2025-08-12T10:41:08.000000Z,Ranee Pillay,1 D - Group 1 - Malabar,Malabar Primary School,,0,8,6,75.0,"3 out of 6 didnt recognize 1 sound. Wither ""i"" or ""o""",2025-08-12
 3643877,2025-08-12T10:37:19.000000Z,Qhamaninande Legodi,1 A - Group 1 - Enkululekweni,Enkululekweni Primary School,,0,7,5,71.4,they are all struggling to remember the alphabets but if i introduce a certain alphabet most of them can identify and draw it.,2025-08-12
 3715327,2025-08-12T10:27:31.000000Z,Kyla Slabbert,R B - Group 1 - Republic,Republic Primary School,,0,2,2,100.0,2 out of 2 knew O and I and A,2025-08-12
+3639650,2025-08-12T10:21:08.000000Z,Kyla Slabbert,R B - Group 1 - Republic,Republic Primary School,,0,2,2,100.0,2 out of 2 knew their o and a,2025-08-12
 3645389,2025-08-12T09:55:32.000000Z,Welma Billet,R B - Group 3 - Astra,Astra Primary School,,0,6,6,100.0,,2025-08-12
 3639612,2025-08-12T09:55:09.000000Z,Claire Hendricks,R C - Group 3 - Astra,Astra Primary School,,0,7,7,100.0,,2025-08-12
 3639556,2025-08-12T09:47:41.000000Z,Mischka Lewis,1 C - Group 3 - Astra,Astra Primary School,,0,8,7,87.5,,2025-08-12
@@ -2336,6 +2455,7 @@ session_id,session_started_at,user_name,class_name,program_name,letters_taught,n
 3636723,2025-08-11T10:46:47.000000Z,Ntombizanele Jim,1 A - Group 3 - KwaNoxolo,KwaNoxolo Primary School,,0,6,3,50.0,,2025-08-11
 3636722,2025-08-11T08:12:11.000000Z,Ntombizanele Jim,1 A - Group 2 - KwaNoxolo,KwaNoxolo Primary School,,0,7,3,42.9,,2025-08-11
 3631463,2025-08-11T07:56:40.000000Z,Iphendule Ndayi,1 A - Group 3 - Pendla,Pendla Primary School,,0,7,7,100.0,"All learners know letters o,i on the next session we will introduce the next letter",2025-08-11
+3631448,2025-08-11T07:42:44.000000Z,Ntombizanele Jim,1 A - Group 1 - KwaNoxolo,KwaNoxolo Primary School,,0,0,0,0.0,,2025-08-11
 3636721,2025-08-11T07:42:44.000000Z,Ntombizanele Jim,1 A - Group 1 - KwaNoxolo,KwaNoxolo Primary School,,0,7,5,71.4,"We did o,i and only my learners knows both letter but i still need recap cause , Bayolise still can write letter i and we did letter writting .",2025-08-11
 3629216,2025-08-11T05:32:10.000000Z,Sibongile Joni,1B,Aaron Gqadu Primary School,,0,1,1,100.0,All learners understood the newly introduced letter sounds including the revised. Tomorrow we will be focusing on new ones.,2025-08-11
 3618177,2025-08-07T12:41:19.000000Z,Sibongile Joni,1B,Aaron Gqadu Primary School,,0,1,1,100.0,Bdjfkulkylhhl,2025-08-07
