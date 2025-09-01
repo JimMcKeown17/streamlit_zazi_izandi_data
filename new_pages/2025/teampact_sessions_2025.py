@@ -13,6 +13,7 @@ print(f"DEBUG: Token length: {len(os.getenv('TEAMPACT_API_TOKEN', ''))}")
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from api.teampact_session_api import fetch_and_save_data
+from data.mentor_schools import mentors_to_schools
 
 # ECD Classification
 ecd_list = [
@@ -46,6 +47,13 @@ def get_school_type(program_name):
         return 'ECD'
     else:
         return 'Primary School'
+
+def get_mentor(program_name):
+    """Assign mentor based on school name"""
+    for mentor, schools in mentors_to_schools.items():
+        if program_name in schools:
+            return mentor
+    return 'Unknown'
 
 def create_session_views(df):
     """Transform participant-level data into session-level views focusing on education assistant activity"""
@@ -424,6 +432,9 @@ try:
     
     # Add school type classification
     df['school_type'] = df['program_name'].apply(get_school_type)
+    
+    # Add mentor assignment
+    df['mentor'] = df['program_name'].apply(get_mentor)
     
     # CREATE TABS FOR DIFFERENT VIEWS
     tab1, tab2 = st.tabs(["EA Sessions Analysis", "Data Quality"])

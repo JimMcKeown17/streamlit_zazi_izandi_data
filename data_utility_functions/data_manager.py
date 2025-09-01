@@ -8,6 +8,37 @@ from zz_data_processing import (
     grade1_df, 
     gradeR_df
 )
+from data.mentor_schools import mentors_to_schools
+
+def get_mentor(school_name):
+    """
+    Assign mentor based on school name.
+    
+    Args:
+        school_name (str): Name of the school/program
+        
+    Returns:
+        str: Name of the assigned mentor or 'Unknown' if not found
+    """
+    for mentor, schools in mentors_to_schools.items():
+        if school_name in schools:
+            return mentor
+    return 'Unknown'
+
+def add_mentor_column(df, school_column='school'):
+    """
+    Add mentor column to any dataframe based on school name.
+    
+    Args:
+        df (pd.DataFrame): The dataframe to add mentor column to
+        school_column (str): Name of the column containing school names
+        
+    Returns:
+        pd.DataFrame: Dataframe with added mentor column
+    """
+    df_copy = df.copy()
+    df_copy['mentor'] = df_copy[school_column].apply(get_mentor)
+    return df_copy
 
 class DataManager:
     """
