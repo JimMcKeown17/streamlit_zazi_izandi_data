@@ -478,31 +478,78 @@ if not os.path.exists('data/latest.csv'):
     st.warning("No data file found. Click 'Refresh Data' to fetch from API.")
     st.stop()
 
-# Load the data
+# Load the data with improved error handling
 try:
-    df = pd.read_csv('data/latest.csv')
+    # Try with different error handling approaches
+    try:
+        df = pd.read_csv('data/latest.csv')
+    except pd.errors.ParserError as parser_error:
+        st.error(f"CSV parsing error: {parser_error}")
+        st.info("Attempting to read with error recovery...")
+        
+        # Try to read with error recovery - skip bad lines
+        try:
+            df = pd.read_csv('data/latest.csv', on_bad_lines='skip')
+            st.warning(f"Loaded data with some corrupted lines skipped.")
+        except:
+            # Try reading with different engine
+            df = pd.read_csv('data/latest.csv', engine='python', on_bad_lines='skip')
+            st.warning(f"Loaded data using Python engine with corrupted lines skipped.")
     
     if len(df) == 0:
         st.warning("Data file is empty.")
         st.stop()
-    
-    # Add school type classification
-    df['school_type'] = df['program_name'].apply(get_school_type)
-    
-    # Add mentor assignment
-    df['mentor'] = df['program_name'].apply(get_mentor)
-    
-    # CREATE TABS FOR DIFFERENT VIEWS
-    tab1, tab2 = st.tabs(["EA Sessions Analysis", "Data Quality"])
-    
-    with tab1:
-        display_session_analysis(df)
-    
-    with tab2:
-        display_data_quality(df)
 
 except Exception as e:
     st.error(f"Error loading data: {e}")
-    with st.expander("Error Details"):
+    
+    # Show recovery options
+    st.subheader("Recovery Options")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("🔄 Try Fresh Data Fetch", type="primary"):
+            with st.spinner("Fetching fresh data from TeamPact API..."):
+                success = fetch_and_save_data()
+                if success:
+                    st.success("Fresh data fetched successfully!")
+                    st.rerun()
+                else:
+                    st.error("Failed to fetch fresh data.")
+    
+    with col2:
+        if os.path.exists('data/latest.json'):
+            if st.button("📄 Regenerate CSV from JSON"):
+                try:
+                    st.info("Regenerating CSV from existing JSON data...")
+                    # The API function will use the existing JSON and regenerate the CSV
+                    success = fetch_and_save_data()
+                    if success:
+                        st.success("CSV regenerated from JSON backup!")
+                        st.rerun()
+                    else:
+                        st.error("Failed to regenerate CSV.")
+                except Exception as recovery_error:
+                    st.error(f"CSV regeneration failed: {recovery_error}")
+    
+    with st.expander("🔍 Error Details"):
         import traceback
         st.code(traceback.format_exc())
+    
+    st.stop()
+
+# Add school type classification
+df['school_type'] = df['program_name'].apply(get_school_type)
+
+# Add mentor assignment  
+df['mentor'] = df['program_name'].apply(get_mentor)
+
+# CREATE TABS FOR DIFFERENT VIEWS
+tab1, tab2 = st.tabs(["EA Sessions Analysis", "Data Quality"])
+
+with tab1:
+    display_session_analysis(df)
+
+with tab2:
+    display_data_quality(df)
