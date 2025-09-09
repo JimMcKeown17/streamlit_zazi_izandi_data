@@ -6,6 +6,69 @@ from process_survey_cto_updated import process_egra_data
 import dotenv
 from data_utility_functions.teampact_apis import fetch_all_survey_responses
 
+def load_zazi_izandi_east_london_2025_tp():
+    ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+    xhosa_filename = "survey644_egra-letters-isixhosa-el_masinyusane_2025-09-09_12-43.csv"
+    english_filename = "survey646_egra-letters-english-el_masinyusane_2025-09-09_12-46.csv"
+    afrikaans_filename = "survey647_egra-letters-afrikaans-el_masinyusane_2025-09-09_12-46.csv"
+    xhosa_path = os.path.join(ROOT_DIR, "data/Teampact", xhosa_filename)
+    english_path = os.path.join(ROOT_DIR, "data/Teampact", english_filename)
+    afrikaans_path = os.path.join(ROOT_DIR, "data/Teampact", afrikaans_filename)
+    xhosa_df = pd.read_csv(xhosa_path)
+    english_df = pd.read_csv(english_path)
+    afrikaans_df = pd.read_csv(afrikaans_path)
+    return xhosa_df, english_df, afrikaans_df
+
+def load_zazi_izandi_east_london_2025_tp_api():
+    """
+    Load TeamPact data via API instead of CSV files
+    Returns the same format as load_zazi_izandi_2025_tp() for compatibility
+    """
+    dotenv.load_dotenv()
+    api_token = os.getenv("TEAMPACT_API_TOKEN")
+    
+    if not api_token:
+        st.error("TEAMPACT_API_TOKEN not found in environment variables")
+        return None, None, None
+    
+    # Survey IDs for each language
+    survey_ids = {
+        'xhosa': 644,
+        'english': 646, 
+        'afrikaans': 647
+    }
+    
+    # Fetch data for each language
+    try:
+        st.info("🔄 Fetching data from TeamPact API...")
+        
+        with st.spinner("Fetching isiXhosa data..."):
+            xhosa_responses = fetch_all_survey_responses(survey_ids['xhosa'], api_token)
+        
+        with st.spinner("Fetching English data..."):
+            english_responses = fetch_all_survey_responses(survey_ids['english'], api_token)
+        
+        with st.spinner("Fetching Afrikaans data..."):
+            afrikaans_responses = fetch_all_survey_responses(survey_ids['afrikaans'], api_token)
+        
+        if not all([xhosa_responses, english_responses, afrikaans_responses]):
+            st.error("Failed to fetch data from one or more surveys")
+            return None, None, None
+        
+        # Convert to DataFrames (API returns list of dicts, just like CSV would)
+        xhosa_df = pd.json_normalize(xhosa_responses)
+        english_df = pd.json_normalize(english_responses) 
+        afrikaans_df = pd.json_normalize(afrikaans_responses)
+        
+        st.success(f"✅ API data loaded successfully!")
+        st.info(f"Records: isiXhosa ({len(xhosa_df)}), English ({len(english_df)}), Afrikaans ({len(afrikaans_df)})")
+        
+        return xhosa_df, english_df, afrikaans_df
+    
+    except Exception as e:
+        st.error(f"Error loading API data: {str(e)}")
+        return None, None, None
+
 def load_zazi_izandi_2025_tp():
     ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
     xhosa_filename = "survey575_egra-letters-isixhosa_masinyusane_2025-08-19_11-02.csv"

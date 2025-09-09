@@ -55,7 +55,8 @@ baseline_page_25 = st.Page("new_pages/2025/baseline_2025.py", icon="📖", title
 midline_page_25 = st.Page("new_pages/2025/midline_2025.py", icon="📊", title="2025 Midline", url_path="midline_25")
 sessions_page_25 = st.Page("new_pages/2025/sessions_2025.py", icon="📈", title="2025 Sessions", url_path="sessions_25")
 midline_ecd_page_25 = st.Page("new_pages/2025/midline_2025_ecd.py", icon="🏫", title="2025 ECD Midline", url_path="midline_ecd_25")
-teampact_page_25 = st.Page("new_pages/2025/teampact.py", icon="🏫", title="2025 TeamPact", url_path="teampact_25")
+nmb_assessments_page_25 = st.Page("new_pages/2025/nmb_assessments.py", icon="🏫", title="2025 NMB Assessments", url_path="nmb_assessments_25")
+el_assessments_page_25 = st.Page("new_pages/2025/el_assessments.py", icon="🏫", title="2025 East London Assessments", url_path="el_assessments_25")
 teampact_sessions_page_25 = st.Page("new_pages/2025/teampact_sessions_2025.py", icon="🏫", title="2025 TeamPact Sessions", url_path="teampact_sessions_25")
 # Research & Other Pages
 ai_assistant_page = st.Page("new_pages/ai_assistant.py", icon="🤖", title="Zazi Bot", url_path="ai_assistant")
@@ -72,7 +73,7 @@ pages_2024_public = [letter_knowledge_page_24, word_reading_page_24, new_schools
 pages_2024_internal = []
 
 pages_2025_public = [ midline_page_25, baseline_page_25,sessions_page_25, midline_ecd_page_25, ]
-pages_2025_internal = [teampact_page_25, teampact_sessions_page_25]
+pages_2025_internal = [nmb_assessments_page_25, teampact_sessions_page_25, el_assessments_page_25]
 
 pages_research_public = [research_page]
 pages_research_internal = [ai_assistant_page, year_comparisons_page]
