@@ -70,10 +70,25 @@ Key dependencies include:
 - Public vs internal content access based on login status
 
 ## Data Sources
-- Excel files from assessment databases
-- CSV exports from SurveyCTO platform
-- Live API integration with TeamPact platform
-- PostgreSQL database for session tracking
+
+The project uses different data sources by year due to evolving data collection methods:
+
+### 2023 Data
+- **Source**: CSV files from manual exports
+- **Processing**: Legacy data processing functions
+
+### 2024 Data  
+- **Sources**: CSV files + SurveyCTO API integration
+- **Processing**: Functions in `process_survey_cto_updated.py`
+
+### 2025 Data (Current)
+- **Sources**: TeamPact API integration + some CSV files during transition
+- **Processing**: Functions in `data_utility_functions/teampact_apis.py`
+- **Storage**: Data is being saved to PostgreSQL database for persistence
+
+### Additional Sources
+- Excel files from assessment databases (historical data)
+- PostgreSQL database for session tracking and current data storage
 
 ## Development Commands
 
@@ -83,7 +98,7 @@ streamlit run main.py
 ```
 
 ### Data Processing
-- Process survey data: Use functions in `process_survey_cto_updated.py`
+- Process survey data: Use functions in `process_survey_cto_updated.py` (deprecated)
 - Load assessment data: Use functions in `data_loader.py`
 
 ### No Testing Framework
