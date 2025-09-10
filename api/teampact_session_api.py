@@ -3,6 +3,13 @@ import json
 import pandas as pd
 from datetime import datetime
 import os
+import sys
+
+# Add the project root to the path so we can import database utilities
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+from database_utils import get_database_engine, check_table_exists
+import psycopg2
+from sqlalchemy import text
 
 def fetch_and_save_data():
     """Fetch data from API and save to file with comprehensive data extraction"""
@@ -32,8 +39,23 @@ def fetch_and_save_data():
             }
             
             print(f"Fetching page {page}...")
-            response = requests.get(api_url, headers=headers, params=params, timeout=30)
-            response.raise_for_status()
+            
+            # Add retry logic for network issues
+            max_retries = 3
+            for attempt in range(max_retries):
+                try:
+                    response = requests.get(api_url, headers=headers, params=params, timeout=30)
+                    response.raise_for_status()
+                    break  # Success, exit retry loop
+                except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                    if attempt < max_retries - 1:
+                        wait_time = (attempt + 1) * 5  # 5, 10, 15 seconds
+                        print(f"Network error on attempt {attempt + 1}, retrying in {wait_time}s: {e}")
+                        import time
+                        time.sleep(wait_time)
+                    else:
+                        print(f"Failed after {max_retries} attempts: {e}")
+                        raise
             
             data = response.json()
             page_records = data.get('data', [])
@@ -245,23 +267,193 @@ def fetch_and_save_data():
         if skipped_records > 0:
             print(f"Skipped {skipped_records} problematic records out of {len(all_data)} total")
         
-        # Create DataFrame and save to CSV
+        # Create DataFrame
         df = pd.DataFrame(records)
-        df.to_csv('data/latest.csv', index=False)
         
-        # Also create a letters summary for quick analysis
-        if not df.empty and 'letters_taught' in df.columns:
-            letters_summary = create_letters_summary(df)
-            letters_summary.to_csv('data/letters_summary.csv', index=False)
-            print(f"Created letters summary with {len(letters_summary)} unique letter combinations")
+        if df.empty:
+            print("No valid records to save")
+            return False
         
-        print(f"Successfully fetched {len(records)} records with {len(df.columns)} columns at {datetime.now()}")
-        print(f"Columns captured: {list(df.columns)}")
+        print(f"Processed {len(records)} records with {len(df.columns)} columns")
         
-        return True
+        # Add data_refresh_timestamp to all records (ensure timezone-aware)
+        refresh_timestamp = datetime.now()
+        df['data_refresh_timestamp'] = pd.to_datetime(refresh_timestamp).tz_localize('UTC')
+        
+        # Clean up datetime columns to ensure proper format
+        datetime_columns = [
+            'session_started_at', 'session_ended_at', 'check_in_time', 
+            'record_created_at', 'record_updated_at', 'last_activity_at', 'fetched_at'
+        ]
+        
+        for col in datetime_columns:
+            if col in df.columns:
+                # Convert to datetime and handle timezone
+                df[col] = pd.to_datetime(df[col], errors='coerce')
+                # If the column has timezone-naive values, make them UTC
+                if df[col].dt.tz is None:
+                    try:
+                        df[col] = df[col].dt.tz_localize('UTC')
+                    except Exception as tz_error:
+                        print(f"Warning: Could not localize timezone for {col}: {tz_error}")
+                        # Keep as naive datetime if timezone localization fails
+                        pass
+        
+        # Save to database
+        success = save_to_database(df, refresh_timestamp)
+        
+        if success:
+            # Also save as CSV backup (optional - can be removed later)
+            try:
+                df.to_csv('data/latest.csv', index=False)
+                print("✅ Also saved CSV backup to data/latest.csv")
+            except Exception as csv_error:
+                print(f"⚠️ CSV backup failed (not critical): {csv_error}")
+            
+            # Create letters summary (optional)
+            if 'letters_taught' in df.columns:
+                try:
+                    letters_summary = create_letters_summary(df)
+                    letters_summary.to_csv('data/letters_summary.csv', index=False)
+                    print(f"✅ Created letters summary with {len(letters_summary)} unique letter combinations")
+                except Exception as summary_error:
+                    print(f"⚠️ Letters summary failed (not critical): {summary_error}")
+            
+            print(f"🎉 Successfully saved {len(records)} records to database at {datetime.now()}")
+            return True
+        else:
+            print("❌ Database save failed")
+            return False
         
     except Exception as e:
         print(f"Sync failed: {e}")
+        return False
+
+def save_to_database(df, refresh_timestamp):
+    """
+    Save DataFrame to database using incremental updates (add new records only)
+    
+    Args:
+        df: DataFrame with session data
+        refresh_timestamp: Timestamp when this data was fetched
+    
+    Returns:
+        bool: True if successful, False otherwise
+    """
+    try:
+        print(f"💾 Starting database save for {len(df)} records...")
+        
+        # Check if table exists
+        if not check_table_exists():
+            print("❌ Database table 'teampact_nmb_sessions' does not exist. Please run migration first.")
+            return False
+        
+        # Get database engine
+        engine = get_database_engine()
+        
+        # Check what attendance IDs we already have in the database
+        print("🔍 Checking for existing records...")
+        existing_ids = set()
+        try:
+            with engine.connect() as conn:
+                result = conn.execute(text("SELECT DISTINCT attendance_id FROM teampact_nmb_sessions"))
+                existing_ids = {row[0] for row in result.fetchall()}
+            print(f"Found {len(existing_ids)} existing records in database")
+        except Exception as e:
+            print(f"Warning: Could not check existing records: {e}")
+            print("Proceeding with full insert...")
+        
+        # Filter out records we already have
+        if existing_ids:
+            original_count = len(df)
+            df = df[~df['attendance_id'].isin(existing_ids)]
+            new_count = len(df)
+            print(f"📊 Filtered: {original_count} total → {new_count} new records to insert")
+            
+            if new_count == 0:
+                print("✅ No new records to insert - database is up to date!")
+                return True
+        
+        print(f"📥 Inserting {len(df)} new records in manageable batches...")
+        
+        # Process in batches to avoid overwhelming the database
+        batch_size = 200  # Process 200 records at a time
+        total_batches = (len(df) - 1) // batch_size + 1
+        successful_inserts = 0
+        
+        for batch_num in range(total_batches):
+            start_idx = batch_num * batch_size
+            end_idx = min((batch_num + 1) * batch_size, len(df))
+            batch_df = df.iloc[start_idx:end_idx].copy()
+            
+            print(f"Processing batch {batch_num + 1}/{total_batches} ({len(batch_df)} records)...")
+            
+            try:
+                batch_df.to_sql(
+                    name='teampact_nmb_sessions',
+                    con=engine,
+                    if_exists='append',
+                    index=False,
+                    chunksize=50     # Small chunks within each batch
+                )
+                successful_inserts += len(batch_df)
+                print(f"✅ Batch {batch_num + 1} completed ({successful_inserts}/{len(df)} total)")
+                
+            except Exception as batch_error:
+                print(f"❌ Batch {batch_num + 1} failed: {batch_error}")
+                
+                # Try with smaller chunks for this batch
+                try:
+                    print(f"Retrying batch {batch_num + 1} with smaller chunks...")
+                    batch_df.to_sql(
+                        name='teampact_nmb_sessions',
+                        con=engine,
+                        if_exists='append',
+                        index=False,
+                        chunksize=10     # Very small chunks
+                    )
+                    successful_inserts += len(batch_df)
+                    print(f"✅ Batch {batch_num + 1} completed on retry ({successful_inserts}/{len(df)} total)")
+                    
+                except Exception as retry_error:
+                    print(f"❌ Batch {batch_num + 1} failed completely: {retry_error}")
+                    print("Continuing with next batch...")
+                    continue
+        
+        print(f"✅ Database insert completed - {successful_inserts}/{len(df)} records inserted")
+        
+        # Verify the insert by counting total records
+        with engine.connect() as conn:
+            result = conn.execute(text("SELECT COUNT(*) FROM teampact_nmb_sessions")).fetchone()
+            total_records = result[0]
+            
+            # Get the latest refresh timestamp from database
+            timestamp_result = conn.execute(text("SELECT MAX(data_refresh_timestamp) FROM teampact_nmb_sessions")).fetchone()
+            latest_timestamp = timestamp_result[0] if timestamp_result else None
+        
+        if successful_inserts == len(df):
+            print(f"✅ All {successful_inserts} new records inserted successfully!")
+            print(f"✅ Total database records: {total_records}")
+            if latest_timestamp:
+                print(f"✅ Latest refresh timestamp: {latest_timestamp}")
+            return True
+        else:
+            print(f"⚠️ Partial success: {successful_inserts}/{len(df)} records inserted")
+            print(f"✅ Total database records: {total_records}")
+            # Still return True if we got most of the data
+            return successful_inserts > 0
+            
+    except Exception as e:
+        print(f"❌ Database save failed: {e}")
+        
+        # Try to provide helpful error information
+        if "does not exist" in str(e).lower():
+            print("💡 Hint: Run the database migration script first")
+        elif "connection" in str(e).lower():
+            print("💡 Hint: Check your RENDER_DATABASE_URL environment variable")
+        elif "column" in str(e).lower():
+            print("💡 Hint: Database schema may be out of sync with CSV columns")
+        
         return False
 
 def create_letters_summary(df):

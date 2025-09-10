@@ -453,8 +453,20 @@ def display_data_quality(df):
         )
     
     with col2:
-        file_info = f"Data last updated: {datetime.fromtimestamp(os.path.getmtime('data/latest.csv')).strftime('%Y-%m-%d %H:%M:%S')}"
-        st.info(file_info)
+        try:
+            last_refresh = get_last_refresh_timestamp()
+            if last_refresh:
+                refresh_info = f"Data last refreshed: {last_refresh.strftime('%Y-%m-%d %H:%M:%S')}"
+                st.info(refresh_info)
+                
+                # Show database summary
+                summary = get_data_summary()
+                if summary:
+                    st.caption(f"Database: {summary['total_records']:,} records, {summary['unique_sessions']:,} sessions")
+            else:
+                st.warning("No refresh timestamp available")
+        except Exception as e:
+            st.error(f"Could not get database info: {e}")
 
 # MAIN APP STARTS HERE
 st.title("TeamPact Education Assistant Analytics")
@@ -464,47 +476,72 @@ st.markdown("Session tracking and curriculum analysis")
 col1, col2 = st.columns([4, 1])
 
 with col2:
-    if st.button("Refresh Data", type="primary"):
+    # Show last updated info
+    try:
+        from database_utils import get_last_refresh_timestamp, get_data_summary
+        last_refresh = get_last_refresh_timestamp()
+        if last_refresh:
+            time_ago = datetime.now() - last_refresh.replace(tzinfo=None)
+            hours_ago = time_ago.total_seconds() / 3600
+            if hours_ago < 1:
+                time_str = f"{int(time_ago.total_seconds() / 60)} min ago"
+            else:
+                time_str = f"{int(hours_ago)} hours ago"
+            st.caption(f"Last updated: {time_str}")
+        else:
+            st.caption("No data found")
+    except:
+        st.caption("Database status unknown")
+    
+    # Check if refresh is in progress
+    refresh_key = "data_refresh_in_progress"
+    if refresh_key not in st.session_state:
+        st.session_state[refresh_key] = False
+    
+    if st.session_state[refresh_key]:
+        st.info("🔄 Data refresh in progress... Please wait.")
+        if st.button("Cancel Refresh", type="secondary"):
+            st.session_state[refresh_key] = False
+            st.rerun()
+    else:
+        if st.button("Refresh Data", type="primary"):
+            st.session_state[refresh_key] = True
+            st.rerun()
+            
+    # Perform refresh if flagged
+    if st.session_state[refresh_key]:
         with st.spinner("Fetching data from TeamPact API..."):
             success = fetch_and_save_data()
+            st.session_state[refresh_key] = False
             if success:
                 st.success("Data refreshed successfully!")
+                # Clear the cache to force reload with new data
+                from database_utils import load_session_data_from_db
+                load_session_data_from_db.clear()
                 st.rerun()
             else:
                 st.error("Failed to fetch data. Check your API credentials.")
+                st.rerun()
 
-# Check if data file exists
-if not os.path.exists('data/latest.csv'):
-    st.warning("No data file found. Click 'Refresh Data' to fetch from API.")
-    st.stop()
-
-# Load the data with improved error handling
+# Load the data from database
 try:
-    # Try with different error handling approaches
-    try:
-        df = pd.read_csv('data/latest.csv')
-    except pd.errors.ParserError as parser_error:
-        st.error(f"CSV parsing error: {parser_error}")
-        st.info("Attempting to read with error recovery...")
-        
-        # Try to read with error recovery - skip bad lines
-        try:
-            df = pd.read_csv('data/latest.csv', on_bad_lines='skip')
-            st.warning(f"Loaded data with some corrupted lines skipped.")
-        except:
-            # Try reading with different engine
-            df = pd.read_csv('data/latest.csv', engine='python', on_bad_lines='skip')
-            st.warning(f"Loaded data using Python engine with corrupted lines skipped.")
+    # Import database utilities
+    sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+    from database_utils import load_session_data_from_db, get_last_refresh_timestamp, get_data_summary
     
-    if len(df) == 0:
-        st.warning("Data file is empty.")
+    # Load data from database
+    df = load_session_data_from_db()
+    
+    if df.empty:
+        st.warning("No data found in database. Please refresh data from API.")
+        st.info("Click the 'Refresh Data' button above to fetch the latest session data from TeamPact.")
         st.stop()
 
 except Exception as e:
-    st.error(f"Error loading data: {e}")
+    st.error(f"Error loading data from database: {e}")
     
     # Show recovery options
-    st.subheader("Recovery Options")
+    st.subheader("Database Connection Issues")
     
     col1, col2 = st.columns(2)
     
@@ -519,31 +556,30 @@ except Exception as e:
                     st.error("Failed to fetch fresh data.")
     
     with col2:
-        if os.path.exists('data/latest.json'):
-            if st.button("📄 Regenerate CSV from JSON"):
-                try:
-                    st.info("Regenerating CSV from existing JSON data...")
-                    # The API function will use the existing JSON and regenerate the CSV
-                    success = fetch_and_save_data()
-                    if success:
-                        st.success("CSV regenerated from JSON backup!")
-                        st.rerun()
-                    else:
-                        st.error("Failed to regenerate CSV.")
-                except Exception as recovery_error:
-                    st.error(f"CSV regeneration failed: {recovery_error}")
+        if st.button("🔍 Test Database Connection"):
+            from database_utils import test_database_connection
+            success, message = test_database_connection()
+            if success:
+                st.success(message)
+            else:
+                st.error(message)
     
     with st.expander("🔍 Error Details"):
         import traceback
         st.code(traceback.format_exc())
+        
+    with st.expander("💡 Troubleshooting"):
+        st.markdown("""
+        **Common Solutions:**
+        1. **Database Migration**: Run `python database_migrations/run_migration.py` to create the database table
+        2. **Environment Variables**: Check that `RENDER_DATABASE_URL` is set correctly  
+        3. **Network**: Verify connection to your Render PostgreSQL database
+        4. **Fresh Data**: Try refreshing data from the API using the button above
+        """)
     
     st.stop()
 
-# Add school type classification
-df['school_type'] = df['program_name'].apply(get_school_type)
-
-# Add mentor assignment  
-df['mentor'] = df['program_name'].apply(get_mentor)
+# School type and mentor classification are now handled in the database loading function
 
 # CREATE TABS FOR DIFFERENT VIEWS
 tab1, tab2 = st.tabs(["EA Sessions Analysis", "Data Quality"])
