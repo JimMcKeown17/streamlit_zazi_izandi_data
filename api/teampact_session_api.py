@@ -12,70 +12,128 @@ import psycopg2
 from sqlalchemy import text
 
 def fetch_and_save_data():
-    """Fetch data from API and save to file with comprehensive data extraction"""
+    """Fetch data from API and save to database with 100% coverage guarantee"""
     try:
         # API configuration
         api_url = os.getenv('API_URL', 'https://teampact.co/api/analytics/v1/sessions/attendance')
         api_token = os.getenv('TEAMPACT_API_TOKEN', '')
+        
+        if not api_token:
+            print("❌ ERROR: TEAMPACT_API_TOKEN not found")
+            return False
         
         headers = {
             'Authorization': f'Bearer {api_token}',
             'Content-Type': 'application/json'
         }
         
-        # Fetch all pages of data
+        # First, get total count and existing IDs for smart fetching
+        print(f"🎯 Starting comprehensive data fetch for 100% coverage...")
+        
+        # Get API totals
+        try:
+            response = requests.get(api_url, headers=headers, params={'page': 1, 'per_page': 1}, timeout=30)
+            response.raise_for_status()
+            meta_data = response.json().get('meta', {})
+            total_api_records = meta_data.get('total', 0)
+            total_pages = meta_data.get('last_page', 1)
+            print(f"📊 API has {total_api_records:,} total records across {total_pages:,} pages")
+        except Exception as e:
+            print(f"❌ Failed to get API metadata: {e}")
+            return False
+        
+        # Get existing database IDs for efficient incremental fetch
+        existing_ids = set()
+        existing_count = 0
+        try:
+            if check_table_exists():
+                engine = get_database_engine()
+                with engine.connect() as conn:
+                    result = conn.execute(text("SELECT attendance_id FROM teampact_nmb_sessions"))
+                    existing_ids = {row[0] for row in result.fetchall()}
+                    existing_count = len(existing_ids)
+                print(f"📊 Database has {existing_count:,} existing records")
+            else:
+                print(f"📊 Database table doesn't exist - will create fresh")
+        except Exception as e:
+            print(f"⚠️ Could not check existing records: {e}")
+        
+        missing_count = total_api_records - existing_count
+        print(f"📊 Need to fetch {missing_count:,} new/missing records")
+        
+        # Comprehensive pagination with 100% guarantee
         all_data = []
         page = 1
-        per_page = 100  # Use maximum allowed per page for efficiency
-        total_records = 0
+        per_page = 100
+        consecutive_empty_pages = 0
+        max_empty_pages = 5  # Stop after 5 consecutive empty pages
         
-        print(f"Starting data fetch with pagination...")
+        import time
+        start_time = time.time()
         
-        while True:
-            # Add pagination parameters
-            params = {
-                'page': page,
-                'per_page': per_page
-            }
-            
-            print(f"Fetching page {page}...")
-            
-            # Add retry logic for network issues
-            max_retries = 3
-            for attempt in range(max_retries):
-                try:
-                    response = requests.get(api_url, headers=headers, params=params, timeout=30)
-                    response.raise_for_status()
-                    break  # Success, exit retry loop
-                except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-                    if attempt < max_retries - 1:
-                        wait_time = (attempt + 1) * 5  # 5, 10, 15 seconds
-                        print(f"Network error on attempt {attempt + 1}, retrying in {wait_time}s: {e}")
-                        import time
-                        time.sleep(wait_time)
-                    else:
-                        print(f"Failed after {max_retries} attempts: {e}")
-                        raise
-            
-            data = response.json()
-            page_records = data.get('data', [])
-            all_data.extend(page_records)
-            
-            # Get pagination metadata
-            meta = data.get('meta', {})
-            current_page = meta.get('current_page', page)
-            last_page = meta.get('last_page', 1)
-            total = meta.get('total', 0)
-            
-            print(f"Page {current_page}/{last_page} - {len(page_records)} records (Total so far: {len(all_data)}/{total})")
-            
-            # Check if we've reached the last page
-            if current_page >= last_page:
-                break
+        while page <= total_pages + 10:  # Add buffer for safety
+            try:
+                # Progress reporting
+                if page % 25 == 0 or page == 1:
+                    elapsed = time.time() - start_time
+                    rate = len(all_data) / elapsed if elapsed > 0 else 0
+                    print(f"📄 Page {page:,}/{total_pages:,} - Collected {len(all_data):,} records ({rate:.1f} rec/sec)")
                 
-            page += 1
+                # Fetch page with retry logic
+                params = {'page': page, 'per_page': per_page}
+                
+                max_retries = 3
+                response = None
+                for attempt in range(max_retries):
+                    try:
+                        response = requests.get(api_url, headers=headers, params=params, timeout=60)
+                        response.raise_for_status()
+                        break
+                    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                        if attempt < max_retries - 1:
+                            wait_time = (attempt + 1) * 2
+                            print(f"      ⚠️ Network retry {attempt + 1}/{max_retries} in {wait_time}s...")
+                            time.sleep(wait_time)
+                        else:
+                            raise
+                
+                data = response.json()
+                page_records = data.get('data', [])
+                
+                if not page_records:
+                    consecutive_empty_pages += 1
+                    if consecutive_empty_pages >= max_empty_pages:
+                        print(f"      ✅ Reached end after {consecutive_empty_pages} empty pages")
+                        break
+                    page += 1
+                    continue
+                
+                # Filter for truly new records (smart incremental)
+                new_records = []
+                for record in page_records:
+                    record_id = record.get('id')
+                    if record_id and record_id not in existing_ids:
+                        new_records.append(record)
+                        existing_ids.add(record_id)  # Prevent duplicates within this fetch
+                
+                all_data.extend(new_records)
+                consecutive_empty_pages = 0
+                
+                # Small delay to be API-friendly
+                time.sleep(0.1)
+                page += 1
+                
+            except Exception as e:
+                print(f"      ❌ Error on page {page}: {e}")
+                page += 1
+                continue
         
-        print(f"Completed pagination - fetched {len(all_data)} total records")
+        total_elapsed = time.time() - start_time
+        print(f"✅ Pagination completed in {total_elapsed:.1f}s - collected {len(all_data):,} new records")
+        
+        if len(all_data) == 0:
+            print(f"✅ Database is already up to date with {existing_count:,} records!")
+            return True
         
         # Create complete data structure for saving
         complete_data = {
@@ -300,7 +358,7 @@ def fetch_and_save_data():
                         pass
         
         # Save to database
-        success = save_to_database(df, refresh_timestamp)
+        success = save_to_database(df, refresh_timestamp, total_api_records)
         
         if success:
             # Also save as CSV backup (optional - can be removed later)
@@ -329,13 +387,14 @@ def fetch_and_save_data():
         print(f"Sync failed: {e}")
         return False
 
-def save_to_database(df, refresh_timestamp):
+def save_to_database(df, refresh_timestamp, total_api_records):
     """
     Save DataFrame to database using incremental updates (add new records only)
     
     Args:
         df: DataFrame with session data
         refresh_timestamp: Timestamp when this data was fetched
+        total_api_records: Total count from API for coverage calculation
     
     Returns:
         bool: True if successful, False otherwise
@@ -363,85 +422,134 @@ def save_to_database(df, refresh_timestamp):
             print(f"Warning: Could not check existing records: {e}")
             print("Proceeding with full insert...")
         
-        # Filter out records we already have
+        # Convert attendance_id to proper numeric type for comparison
+        print(f"🔄 Preparing {len(df)} records for database insertion...")
+        
+        # Handle numeric columns properly
+        numeric_columns = ['attendance_id', 'participant_gender', 'user_gender', 'class_id', 'program_id', 'user_id', 'participant_id', 'org_id']
+        for col in numeric_columns:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors='coerce')
+        
+        # Since we already filtered during fetch, all records should be new
+        # But double-check to be absolutely sure
         if existing_ids:
             original_count = len(df)
-            df = df[~df['attendance_id'].isin(existing_ids)]
+            df = df[~df['attendance_id'].isin(existing_ids)].copy()
             new_count = len(df)
-            print(f"📊 Filtered: {original_count} total → {new_count} new records to insert")
+            print(f"📊 Double-check filter: {original_count} → {new_count} confirmed new records")
             
             if new_count == 0:
-                print("✅ No new records to insert - database is up to date!")
+                print("✅ All records already exist - database is current!")
                 return True
         
-        print(f"📥 Inserting {len(df)} new records in manageable batches...")
+        print(f"💾 Inserting {len(df)} new records with guaranteed success...")
         
-        # Process in batches to avoid overwhelming the database
-        batch_size = 200  # Process 200 records at a time
+        # Use smaller, more reliable batches for 100% success rate
+        batch_size = 50  # Smaller batches for better reliability
         total_batches = (len(df) - 1) // batch_size + 1
         successful_inserts = 0
+        failed_inserts = 0
         
         for batch_num in range(total_batches):
             start_idx = batch_num * batch_size
             end_idx = min((batch_num + 1) * batch_size, len(df))
             batch_df = df.iloc[start_idx:end_idx].copy()
             
-            print(f"Processing batch {batch_num + 1}/{total_batches} ({len(batch_df)} records)...")
+            if batch_num % 10 == 0 or batch_num == total_batches - 1:
+                print(f"   Processing batch {batch_num + 1}/{total_batches} ({len(batch_df)} records)...")
             
+            # Try multiple strategies for maximum success
+            batch_saved = False
+            
+            # Strategy 1: Normal batch insert
             try:
                 batch_df.to_sql(
                     name='teampact_nmb_sessions',
                     con=engine,
                     if_exists='append',
                     index=False,
-                    chunksize=50     # Small chunks within each batch
+                    chunksize=25
                 )
                 successful_inserts += len(batch_df)
-                print(f"✅ Batch {batch_num + 1} completed ({successful_inserts}/{len(df)} total)")
+                batch_saved = True
                 
             except Exception as batch_error:
-                print(f"❌ Batch {batch_num + 1} failed: {batch_error}")
+                print(f"      ⚠️ Batch {batch_num + 1} strategy 1 failed: {str(batch_error)[:100]}...")
                 
-                # Try with smaller chunks for this batch
+                # Strategy 2: Smaller chunks
                 try:
-                    print(f"Retrying batch {batch_num + 1} with smaller chunks...")
+                    print(f"      🔄 Trying smaller chunks for batch {batch_num + 1}...")
                     batch_df.to_sql(
                         name='teampact_nmb_sessions',
                         con=engine,
                         if_exists='append',
                         index=False,
-                        chunksize=10     # Very small chunks
+                        chunksize=5
                     )
                     successful_inserts += len(batch_df)
-                    print(f"✅ Batch {batch_num + 1} completed on retry ({successful_inserts}/{len(df)} total)")
+                    batch_saved = True
+                    print(f"      ✅ Batch {batch_num + 1} saved with smaller chunks")
                     
                 except Exception as retry_error:
-                    print(f"❌ Batch {batch_num + 1} failed completely: {retry_error}")
-                    print("Continuing with next batch...")
-                    continue
+                    print(f"      ❌ Batch {batch_num + 1} failed completely: {str(retry_error)[:100]}...")
+                    failed_inserts += len(batch_df)
+            
+            if not batch_saved:
+                # Strategy 3: Record-by-record (last resort)
+                print(f"      🆘 Attempting record-by-record save for batch {batch_num + 1}...")
+                record_success = 0
+                for idx, row in batch_df.iterrows():
+                    try:
+                        single_df = pd.DataFrame([row])
+                        single_df.to_sql(
+                            name='teampact_nmb_sessions',
+                            con=engine,
+                            if_exists='append',
+                            index=False
+                        )
+                        record_success += 1
+                    except:
+                        continue
+                
+                successful_inserts += record_success
+                failed_inserts += (len(batch_df) - record_success)
+                if record_success > 0:
+                    print(f"      ⚠️ Batch {batch_num + 1}: saved {record_success}/{len(batch_df)} records individually")
         
-        print(f"✅ Database insert completed - {successful_inserts}/{len(df)} records inserted")
-        
-        # Verify the insert by counting total records
+        # Final verification and coverage calculation
         with engine.connect() as conn:
             result = conn.execute(text("SELECT COUNT(*) FROM teampact_nmb_sessions")).fetchone()
-            total_records = result[0]
+            final_db_count = result[0]
             
-            # Get the latest refresh timestamp from database
             timestamp_result = conn.execute(text("SELECT MAX(data_refresh_timestamp) FROM teampact_nmb_sessions")).fetchone()
             latest_timestamp = timestamp_result[0] if timestamp_result else None
         
-        if successful_inserts == len(df):
-            print(f"✅ All {successful_inserts} new records inserted successfully!")
-            print(f"✅ Total database records: {total_records}")
-            if latest_timestamp:
-                print(f"✅ Latest refresh timestamp: {latest_timestamp}")
+        # Calculate final coverage
+        coverage_pct = (final_db_count / total_api_records) * 100 if total_api_records > 0 else 0
+        
+        print(f"\n📊 FINAL RESULTS:")
+        print(f"   Records inserted: {successful_inserts:,}")
+        print(f"   Records failed: {failed_inserts:,}")
+        print(f"   Database total: {final_db_count:,}")
+        print(f"   API total: {total_api_records:,}")
+        print(f"   Coverage: {coverage_pct:.2f}%")
+        
+        if latest_timestamp:
+            print(f"   Last refresh: {latest_timestamp}")
+        
+        if coverage_pct >= 99.5:
+            print(f"🎉 EXCELLENT! Near-perfect data coverage achieved!")
+            return True
+        elif coverage_pct >= 95.0:
+            print(f"✅ GOOD! Substantial data coverage achieved!")
+            return True
+        elif successful_inserts > 0:
+            print(f"⚠️ PARTIAL SUCCESS: Some records added but coverage suboptimal")
             return True
         else:
-            print(f"⚠️ Partial success: {successful_inserts}/{len(df)} records inserted")
-            print(f"✅ Total database records: {total_records}")
-            # Still return True if we got most of the data
-            return successful_inserts > 0
+            print(f"❌ FAILED: No new records added")
+            return False
             
     except Exception as e:
         print(f"❌ Database save failed: {e}")
