@@ -128,6 +128,41 @@ def display_mentor_visits_dashboard():
         fig6 = px.bar(quality_counts, x="Quality", y="Count", text="Count", title="Overall Session Quality Ratings")
         st.plotly_chart(fig6, use_container_width=True)
 
+        # === Data Table ===
+        st.subheader("All Visits Data")
+        
+        # Create a copy of filtered data with abbreviated column names
+        table_df = filtered_df.copy()
+        
+        # Select and rename columns for the table
+        columns_mapping = {
+            "Visit Date": "Visit Date",
+            "Mentor Name": "Mentor Name", 
+            "School Name": "School Name",
+            "Grade": "Grade",
+            "The EA is teaching the correct letters per the group's letter knowledge (and letter trackers)": "Teaching Letters",
+            "Are the EA's children grouped correctly?": "Grouping",
+            "Are the EA using their letter tracker correctly?": "Tracker",
+            "Any additional commentary": "Comments"
+        }
+        
+        # Select only the columns we want and rename them
+        display_columns = list(columns_mapping.keys())
+        table_display = table_df[display_columns].rename(columns=columns_mapping)
+        
+        # Sort by Visit Date (most recent first) if the column exists
+        if "Visit Date" in table_display.columns:
+            table_display = table_display.sort_values("Visit Date", ascending=False)
+        
+        # Display the table with scrolling
+        st.dataframe(
+            table_display,
+            use_container_width=True,
+            height=400  # Fixed height to make it scrollable
+        )
+        
+        st.write(f"Showing **{len(table_display)}** visits")
+
     except Exception as e:
         st.error("An error occurred while loading or displaying the dashboard.")
         st.code(traceback.format_exc())
