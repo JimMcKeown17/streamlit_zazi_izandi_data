@@ -565,7 +565,7 @@ def main():
         return
 
     # School selector
-    schools = list(all_data.keys())
+    schools = sorted(list(all_data.keys()))
     if not schools:
         st.info("No school data available")
         return
