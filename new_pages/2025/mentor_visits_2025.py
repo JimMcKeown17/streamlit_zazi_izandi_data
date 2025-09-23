@@ -66,9 +66,17 @@ def display_mentor_visits_dashboard():
         elif school_type == "ECDCs":
             df = df[df["Grade"] == "PreR"]
         else:  # DataQuest Schools
-            # Filter to only include DataQuest schools using case-insensitive matching
-            selected_schools_lower = [school.lower() for school in selected_schools_list]
-            df = df[df["School Name"].str.lower().isin(selected_schools_lower)]
+            # Filter to only include DataQuest schools using first-word matching (same logic as table flag)
+            dataquest_first_words = [school.split()[0].lower() for school in selected_schools_list]
+
+            def is_dataquest_school_filter(school_name):
+                if pd.isna(school_name) or school_name == "":
+                    return False
+                # Get first word of the school name
+                first_word = str(school_name).split()[0].lower()
+                return first_word in dataquest_first_words
+
+            df = df[df["School Name"].apply(is_dataquest_school_filter)]
             # Further filter to exclude PreR (ECDCs) since DataQuest are Primary Schools
             df = df[df["Grade"] != "PreR"]
 
@@ -166,6 +174,77 @@ def display_mentor_visits_dashboard():
         fig6 = px.bar(quality_counts, x="Quality", y="Count", text="Count", title="Overall Session Quality Ratings")
         st.plotly_chart(fig6, use_container_width=True)
 
+        # === DataQuest Schools Summary Table ===
+        st.subheader("DataQuest School Visits")
+
+        # Create DataQuest schools summary using the same first-word matching logic
+        dataquest_first_words = [school.split()[0].lower() for school in selected_schools_list]
+
+        def matches_dataquest_school(school_name, target_first_word):
+            if pd.isna(school_name) or school_name == "":
+                return False
+            first_word = str(school_name).split()[0].lower()
+            return first_word == target_first_word
+
+        dataquest_summary = []
+
+        for dataquest_school in selected_schools_list:
+            target_first_word = dataquest_school.split()[0].lower()
+
+            # Filter visits for this DataQuest school using first-word matching
+            school_visits = filtered_df[filtered_df["School Name"].apply(
+                lambda x: matches_dataquest_school(x, target_first_word)
+            )]
+
+            if not school_visits.empty:
+                # Get most recent visit
+                if "Response Date" in school_visits.columns:
+                    school_visits_sorted = school_visits.copy()
+                    school_visits_sorted["Response Date"] = pd.to_datetime(school_visits_sorted["Response Date"], errors='coerce')
+                    most_recent_visit = school_visits_sorted.loc[school_visits_sorted["Response Date"].idxmax()]
+                    last_visit_date = most_recent_visit["Response Date"].strftime('%Y-%m-%d') if pd.notna(most_recent_visit["Response Date"]) else "No date"
+
+                    # Get the most recent Teaching Letters Correct value
+                    teaching_letters_col = "The EA is teaching the correct letters per the group's letter knowledge (and letter trackers)"
+                    last_teaching_correct = most_recent_visit.get(teaching_letters_col, "No data")
+                else:
+                    last_visit_date = "No date"
+                    last_teaching_correct = "No data"
+
+                # Count total visits
+                total_visits = len(school_visits)
+
+                dataquest_summary.append({
+                    "DataQuest School": dataquest_school,
+                    "Total Visits": total_visits,
+                    "Last Visit Date": last_visit_date,
+                    "Last Teaching Correct": last_teaching_correct
+                })
+            else:
+                # No visits found for this school
+                dataquest_summary.append({
+                    "DataQuest School": dataquest_school,
+                    "Total Visits": 0,
+                    "Last Visit Date": "No visits",
+                    "Last Teaching Correct": "No visits"
+                })
+
+        # Create DataFrame and display
+        if dataquest_summary:
+            dataquest_df = pd.DataFrame(dataquest_summary)
+
+            # Sort by Total Visits descending, then by Last Visit Date descending
+            dataquest_df = dataquest_df.sort_values(["Total Visits", "Last Visit Date"], ascending=[False, False])
+
+            st.dataframe(dataquest_df, use_container_width=True, hide_index=True)
+
+            # Summary statistics
+            total_dataquest_visits = dataquest_df["Total Visits"].sum()
+            schools_with_visits = (dataquest_df["Total Visits"] > 0).sum()
+            st.info(f"📊 **Summary**: {schools_with_visits} of {len(selected_schools_list)} DataQuest schools have received mentor visits. Total visits: {total_dataquest_visits}")
+
+        st.divider()
+
         # === Data Table ===
         st.subheader("All Visits Data")
 
@@ -216,9 +295,18 @@ def display_mentor_visits_dashboard():
 
             # Add DataQuest School flag and reorder columns to put it second
             if "School Name" in table_display.columns:
-                # Create case-insensitive comparison
-                selected_schools_lower = [school.lower() for school in selected_schools_list]
-                table_display["DataQuest School"] = table_display["School Name"].str.lower().isin(selected_schools_lower).map({True: "Yes", False: "No"})
+                # Extract first word from each DataQuest school name (case-insensitive)
+                dataquest_first_words = [school.split()[0].lower() for school in selected_schools_list]
+
+                # Extract first word from school names in the data and check if it matches any DataQuest first word
+                def is_dataquest_school(school_name):
+                    if pd.isna(school_name) or school_name == "":
+                        return "No"
+                    # Get first word of the school name
+                    first_word = str(school_name).split()[0].lower()
+                    return "Yes" if first_word in dataquest_first_words else "No"
+
+                table_display["DataQuest School"] = table_display["School Name"].apply(is_dataquest_school)
 
                 # Reorder columns to put DataQuest School as second column (after Visit Date)
                 cols = list(table_display.columns)
