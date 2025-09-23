@@ -63,18 +63,22 @@ mentor_visits_page_25 = st.Page("new_pages/2025/mentor_visits_2025.py", icon="�
 ai_assistant_page = st.Page("new_pages/ai_assistant.py", icon="🤖", title="Zazi Bot", url_path="ai_assistant")
 research_page = st.Page("new_pages/Research & Benchmarks.py", icon="🔍", title="Research & Benchmarks", url_path="research")
 year_comparisons_page = st.Page("new_pages/Year_Comparisons.py", icon="🔍", title="Year Comparisons", url_path="year_comparisons")
+ea_sessions_test_page = st.Page("new_pages/ea_sessions_test.py", icon="🧪", title="EA Sessions Test", url_path="ea_sessions_test")
 
 # Project Management Pages
-letter_progress_25 = st.Page("new_pages/project_management/letter_progress.py", icon="🔍", title="Letter Progress", url_path="letter_progress_25")
-letter_progress_detailed_25 = st.Page("new_pages/project_management/letter_progress_detailed.py", icon="🔍", title="Letter Progress Detailed", url_path="letter_progress_detailed_25")
+letter_progress_25 = st.Page("new_pages/project_management/letter_progress.py", icon="🔍", title="Letter Progress (Jan-Jun)", url_path="letter_progress_25")
+letter_progress_detailed_25 = st.Page("new_pages/project_management/letter_progress_detailed.py", icon="🔍", title="Letter Progress Detailed (Jan-Jun)", url_path="letter_progress_detailed_25")
+letter_progress_july_cohort = st.Page("new_pages/project_management/letter_progress_july_cohort.py", icon="📚", title="Letter Progress July Cohort", url_path="letter_progress_july_cohort")
+letter_progress_detailed_july_cohort = st.Page("new_pages/project_management/letter_progress_detailed_july_cohort.py", icon="📚", title="Letter Progress Detailed July Cohort", url_path="letter_progress_detailed_july_cohort")
 school_reports_page = st.Page("new_pages/project_management/school_reports.py", icon="📊", title="School Reports", url_path="school_reports")
+session_quality_review_page = st.Page("new_pages/project_management/session_quality_review.py", icon="📚", title="Session Quality Review", url_path="session_quality_review")
 
 # --- Navigation ---
 pages_2024_public = [letter_knowledge_page_24, word_reading_page_24, new_schools_page_24, session_analysis_page_24]
 pages_2024_internal = []
 
 pages_2025_public = [ midline_page_25, baseline_page_25,sessions_page_25, midline_ecd_page_25, ]
-pages_2025_internal = [nmb_assessments_page_25, teampact_sessions_page_25, el_assessments_page_25, mentor_visits_page_25]
+pages_2025_internal = [nmb_assessments_page_25, teampact_sessions_page_25, el_assessments_page_25]
 
 pages_research_public = [research_page]
 pages_research_internal = [ai_assistant_page, year_comparisons_page]
@@ -82,7 +86,7 @@ pages_research_internal = [ai_assistant_page, year_comparisons_page]
 pages_2023 = [results_page_23]
 
 pages_project_management = []
-pages_project_management_internal = [letter_progress_25, letter_progress_detailed_25, school_reports_page]
+pages_project_management_internal = [letter_progress_july_cohort, letter_progress_detailed_july_cohort, mentor_visits_page_25]
 
 pages_2024 = pages_2024_public
 if st.session_state.user:

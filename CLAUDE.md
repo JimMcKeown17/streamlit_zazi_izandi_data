@@ -122,9 +122,98 @@ streamlit run main.py
 - Uses Streamlit's native page navigation system
 - Consistent layout with sidebar filters and main content area
 
+## Letter Session Data Access (EA Sessions)
+
+### Overview
+EA (Educational Assistant) letter session data is captured from August 2025+ through the TeamPact API integration. This data tracks which letters EAs have been teaching during their sessions with learners.
+
+### Data Storage
+
+#### Primary Tables
+1. **`api_tasession`** - Legacy TA sessions table with basic letter tracking
+   - **Column**: `letters_worked_on` (varchar(255))
+   - **Format**: Simple comma-separated letters (e.g., "a and e", "Ee& Ii", "U and B")
+   - **Access**: Use `db_api_get_sessions.py` functions
+
+2. **`teampact_nmb_sessions`** - Current TeamPact session data (August 2025+)
+   - **Column**: `letters_taught` (text)
+   - **Format**: Comma-separated letter combinations (e.g., "a,e,i", "g,t,q")
+   - **Additional fields**:
+     - `num_letters_taught`: Count of letters in session
+     - `session_text`: Comments and notes from EA
+     - `user_name`: EA name
+     - `program_name`: School name
+     - `class_name`: Group/class identifier
+     - `session_started_at`: Session timestamp
+   - **Access**: Use `database_utils.py` functions
+
+### Data Access Methods
+
+#### For Current TeamPact Data (August 2025+)
+```python
+from database_utils import get_database_engine
+import pandas as pd
+
+# Get all letter sessions
+engine = get_database_engine()
+query = """
+SELECT
+    session_id,
+    user_name as ea_name,
+    program_name as school_name,
+    class_name as group_name,
+    session_started_at,
+    letters_taught,
+    num_letters_taught,
+    session_text as comments
+FROM teampact_nmb_sessions
+WHERE letters_taught IS NOT NULL
+AND letters_taught != ''
+ORDER BY session_started_at DESC
+"""
+df = pd.read_sql(query, engine)
+```
+
+#### For Legacy TA Sessions
+```python
+from db_api_get_sessions import get_ta_sessions
+
+# Get TA sessions with letter data
+sessions_df = get_ta_sessions(date_filter='2024-01-01')
+letter_sessions = sessions_df[sessions_df['letters_worked_on'].notna()]
+```
+
+### Letter Progress Analysis
+
+#### Standard Letter Sequence
+The EA program follows this letter sequence:
+```python
+LETTER_SEQUENCE = [
+    'a', 'e', 'i', 'o', 'u', 'b', 'l', 'm', 'k', 'p',
+    's', 'h', 'z', 'n', 'd', 'y', 'f', 'w', 'v', 'x',
+    'g', 't', 'q', 'r', 'c', 'j'
+]
+```
+
+#### Progress Calculation
+Use functions in `new_pages/project_management/letter_progress_july_cohort.py`:
+- `calculate_letter_progress()`: Determines progress based on rightmost letter taught
+- `process_session_data()`: Groups sessions by school/EA/group structure
+
+### Existing Analysis Pages
+- `new_pages/project_management/letter_progress_july_cohort.py`: Main letter progress dashboard
+- `new_pages/project_management/letter_progress_detailed_july_cohort.py`: Detailed analysis
+- Both use TeamPact data for August 2025+ sessions
+
+### Data Fetching and Updates
+- **API Integration**: `api/teampact_session_api.py` fetches fresh data from TeamPact
+- **Database Updates**: Run data sync to update `teampact_nmb_sessions` table
+- **Caching**: Database functions use Streamlit caching for performance
+
 ## Important Notes
 - Uses environment variables for sensitive data (API keys, credentials)
 - Data files are gitignored to protect student privacy
 - Application supports both public and authenticated user views
 - Real-time data fetching from TeamPact API for current data
 - 2025 data now comes via Teampact APIs. 2023-2024 data was pulled via a no-longer used SurveyCTO API or xlsx and csv files.
+- Letter session data only available from August 2025+ through TeamPact integration
