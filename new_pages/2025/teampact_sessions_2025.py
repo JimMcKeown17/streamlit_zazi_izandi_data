@@ -205,6 +205,49 @@ def create_ea_activity_table(df):
     
     return pivot_table
 
+def create_school_workload_summary(df):
+    """Create school-level workload summary with school categorization"""
+    
+    if df.empty:
+        return pd.DataFrame()
+    
+    # Convert school names to lowercase for comparison
+    selected_schools_lower = [school.lower() for school in selected_schools_list]
+    el_schools_lower = [school.lower() for school in el_schools]
+    
+    # Create school categorization function
+    def categorize_school(program_name):
+        if program_name.lower() in selected_schools_lower:
+            return 'NMB DataQuest Schools'
+        elif program_name.lower() in el_schools_lower:
+            return 'East London Schools'
+        else:
+            return 'NMB Schools'
+    
+    # Add school category to dataframe
+    df_with_category = df.copy()
+    df_with_category['school_category'] = df_with_category['program_name'].apply(categorize_school)
+    
+    # Group by school and calculate metrics
+    school_summary = df_with_category.groupby(['program_name', 'school_category']).agg({
+        'session_id': 'nunique',  # Total unique sessions
+        'user_name': 'nunique',  # Number of EAs
+        'session_started_at': ['min', 'max']  # Date range
+    }).round(1)
+    
+    # Flatten column names
+    school_summary.columns = ['Total_Sessions', 'Num_EAs', 'First_Session', 'Last_Session']
+    school_summary = school_summary.reset_index()
+    
+    # Calculate average sessions per day
+    school_summary['Date_Range_Days'] = (pd.to_datetime(school_summary['Last_Session']) - pd.to_datetime(school_summary['First_Session'])).dt.days + 1
+    school_summary['Avg_Sessions_Per_Day'] = (school_summary['Total_Sessions'] / school_summary['Date_Range_Days']).round(2)
+    
+    # Sort by total sessions descending
+    school_summary = school_summary.sort_values('Total_Sessions', ascending=False)
+    
+    return school_summary
+
 def display_session_analysis(df):
     """Display comprehensive session analysis dashboard"""
     
@@ -419,6 +462,57 @@ def display_session_analysis(df):
         title=f"Average Sessions per Day ({school_type_filter})"
     )
     st.plotly_chart(fig_avg, use_container_width=True)
+    
+    # SCHOOL WORKLOAD COMPARISON
+    st.subheader("School Workload Comparison")
+    
+    # Create school-level summary data
+    school_summary = create_school_workload_summary(filtered_df)
+    
+    if not school_summary.empty:
+        # Total sessions by school chart - mixed order
+        fig_school_total = px.bar(
+            school_summary.sort_values('Total_Sessions', ascending=True),
+            x='program_name',
+            y='Total_Sessions',
+            color='school_category',
+            title=f"Total Sessions by School ({school_type_filter})",
+            color_discrete_map={
+                'NMB DataQuest Schools': '#FF6B6B',  # Red
+                'East London Schools': '#FFD93D',  # Yellow
+                'NMB Schools': '#45B7D1'  # Blue
+            },
+            category_orders={'program_name': school_summary.sort_values('Total_Sessions', ascending=True)['program_name'].tolist()}
+        )
+        fig_school_total.update_layout(
+            xaxis_tickangle=-45,
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            xaxis={'categoryorder': 'array', 'categoryarray': school_summary.sort_values('Total_Sessions', ascending=True)['program_name'].tolist()}
+        )
+        st.plotly_chart(fig_school_total, use_container_width=True)
+        
+        # Average sessions per day by school chart - mixed order
+        fig_school_avg = px.bar(
+            school_summary.sort_values('Avg_Sessions_Per_Day', ascending=True),
+            x='program_name',
+            y='Avg_Sessions_Per_Day',
+            color='school_category',
+            title=f"Average Sessions per Day by School ({school_type_filter})",
+            color_discrete_map={
+                'NMB DataQuest Schools': '#FF6B6B',  # Red
+                'East London Schools': '#FFD93D',  # Yellow
+                'NMB Schools': '#45B7D1'  # Blue
+            },
+            category_orders={'program_name': school_summary.sort_values('Avg_Sessions_Per_Day', ascending=True)['program_name'].tolist()}
+        )
+        fig_school_avg.update_layout(
+            xaxis_tickangle=-45,
+            showlegend=True,
+            legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            xaxis={'categoryorder': 'array', 'categoryarray': school_summary.sort_values('Avg_Sessions_Per_Day', ascending=True)['program_name'].tolist()}
+        )
+        st.plotly_chart(fig_school_avg, use_container_width=True)
     
     # EA ACTIVITY TABLE - PAST 10 WEEKDAYS
     st.subheader("EA Session Activity - Past 10 Weekdays")
