@@ -74,6 +74,8 @@ selected_schools_list = [
 ]
 
 el_schools = [
+    "Brownlee Primary School",
+    "Bumbanani Primary School",
     "Chuma Junior Primary School",
     "Duncan Village Public School",
     "Ebhotwe Junior Full Service School",
@@ -94,15 +96,18 @@ el_schools = [
     "Misukukhanya Senior Primary School",
     "Mzoxolo Senior Primary School",
     "Nkangeleko Intermediate School",
+    "Nkosinathi Primary School",
     "Nobhotwe Junior Primary School",
     "Nontombi Matta Junior Primary School",
     "Nontsikelelo Junior Primary School",
     "Nontuthuzelo Primary School",
     "Nqonqweni Primary School",
     "Nzuzo Junior Primary School",
+    "Qaqamba Junior Primary School",
     "R H Godlo Junior Primary School",
     "Sakhile Senior Primary School",
     "Shad Mashologu Junior Primary School",
+    "St John'S Road Junior Secondary School",
     "Thembeka Junior Primary School",
     "Vuthondaba Full Service School",
     "W.N. Madikizela-Mandela Primary School",
