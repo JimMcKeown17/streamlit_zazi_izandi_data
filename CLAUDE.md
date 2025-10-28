@@ -207,7 +207,7 @@ Use functions in `new_pages/project_management/letter_progress_july_cohort.py`:
 
 ### Data Fetching and Updates
 - **API Integration**: `api/teampact_session_api.py` fetches fresh data from TeamPact
-- **Database Updates**: Run data sync to update `teampact_nmb_sessions` table
+- **Database Updates**: The data table has been updated to be the teampact_sessions_complete table. This is updated via a nightly cron job on Render.
 - **Caching**: Database functions use Streamlit caching for performance
 
 ## Important Notes

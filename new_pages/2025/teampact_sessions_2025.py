@@ -141,14 +141,30 @@ def create_session_views(df):
     df['session_hour'] = df['session_started_at'].dt.hour
     df['session_weekday'] = df['session_started_at'].dt.day_name()
     
+    # Convert session_duration from seconds to minutes if it exists
+    if 'session_duration' in df.columns and 'total_duration_minutes' not in df.columns:
+        df['total_duration_minutes'] = df['session_duration'] / 60.0
+    
     # 1. SESSIONS PER ASSISTANT PER DAY
     daily_sessions = df.groupby(['user_name', 'session_date', 'session_id']).first().reset_index()
-    daily_summary = daily_sessions.groupby(['user_name', 'session_date']).agg({
-        'session_id': 'count',
-        'total_duration_minutes': 'sum',
-        'attended_percentage': 'mean'
-    }).round(1)
-    daily_summary.columns = ['Sessions_Count', 'Total_Minutes', 'Avg_Attendance_Pct']
+    
+    # Handle both old and new column names
+    agg_dict = {'session_id': 'count'}
+    if 'total_duration_minutes' in daily_sessions.columns:
+        agg_dict['total_duration_minutes'] = 'sum'
+    if 'attended_percentage' in daily_sessions.columns:
+        agg_dict['attended_percentage'] = 'mean'
+    
+    daily_summary = daily_sessions.groupby(['user_name', 'session_date']).agg(agg_dict).round(1)
+    
+    # Rename columns based on what we have
+    col_names = ['Sessions_Count']
+    if 'total_duration_minutes' in agg_dict:
+        col_names.append('Total_Minutes')
+    if 'attended_percentage' in agg_dict:
+        col_names.append('Avg_Attendance_Pct')
+    
+    daily_summary.columns = col_names
     daily_summary = daily_summary.reset_index()
     
     # 2. WEEKLY PATTERNS
@@ -157,17 +173,23 @@ def create_session_views(df):
     weekly_summary.columns = ['user_name', 'session_weekday', 'session_count']
     
     # 3. ASSISTANT WORKLOAD SUMMARY
-    assistant_summary = daily_summary.groupby('user_name').agg({
-        'Sessions_Count': ['sum', 'mean', 'max'],
-        'Total_Minutes': ['sum', 'mean'],
-        'Avg_Attendance_Pct': 'mean'
-    }).round(1)
+    # Build aggregation dynamically based on available columns
+    agg_dict_assistant = {'Sessions_Count': ['sum', 'mean', 'max']}
+    if 'Total_Minutes' in daily_summary.columns:
+        agg_dict_assistant['Total_Minutes'] = ['sum', 'mean']
+    if 'Avg_Attendance_Pct' in daily_summary.columns:
+        agg_dict_assistant['Avg_Attendance_Pct'] = 'mean'
     
-    # Flatten column names
-    assistant_summary.columns = [
-        'Total_Sessions', 'Avg_Sessions_Per_Day', 'Max_Sessions_Per_Day',
-        'Total_Minutes_Taught', 'Avg_Minutes_Per_Day', 'Overall_Avg_Attendance'
-    ]
+    assistant_summary = daily_summary.groupby('user_name').agg(agg_dict_assistant).round(1)
+    
+    # Flatten column names based on what we have
+    col_names_assistant = ['Total_Sessions', 'Avg_Sessions_Per_Day', 'Max_Sessions_Per_Day']
+    if 'Total_Minutes' in agg_dict_assistant:
+        col_names_assistant.extend(['Total_Minutes_Taught', 'Avg_Minutes_Per_Day'])
+    if 'Avg_Attendance_Pct' in agg_dict_assistant:
+        col_names_assistant.append('Overall_Avg_Attendance')
+    
+    assistant_summary.columns = col_names_assistant
     assistant_summary = assistant_summary.reset_index()
     
     return daily_summary, weekly_summary, assistant_summary
