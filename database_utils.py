@@ -94,8 +94,8 @@ def get_database_connection():
         st.error(f"Database connection failed: {e}")
         raise
 
-def check_table_exists(table_name="teampact_nmb_sessions"):
-    """Check if the teampact_nmb_sessions table exists"""
+def check_table_exists(table_name="teampact_sessions_complete"):
+    """Check if the teampact_sessions_complete table exists"""
     try:
         conn = get_database_connection()
         with conn.cursor() as cursor:
@@ -121,7 +121,7 @@ def get_last_refresh_timestamp():
         engine = get_database_engine()
         query = """
             SELECT MAX(data_refresh_timestamp) as last_refresh
-            FROM teampact_nmb_sessions
+            FROM teampact_sessions_complete
         """
         
         df = pd.read_sql(query, engine)
@@ -149,7 +149,7 @@ def get_data_summary():
                 MIN(session_started_at) as earliest_session,
                 MAX(session_started_at) as latest_session,
                 MAX(data_refresh_timestamp) as last_refresh
-            FROM teampact_nmb_sessions
+            FROM teampact_sessions_complete
         """
         
         df = pd.read_sql(query, engine)
@@ -169,7 +169,7 @@ def load_session_data_from_db():
     """
     try:
         if not check_table_exists():
-            st.error("Database table 'teampact_nmb_sessions' does not exist. Please run the migration first.")
+            st.error("Database table 'teampact_sessions_complete' does not exist. Please run the migration first.")
             return pd.DataFrame()
             
         engine = get_database_engine()
@@ -202,7 +202,7 @@ def _load_session_data_internal(_refresh_timestamp_str):
         engine = get_database_engine()
         
         # Load all data from the table
-        query = "SELECT * FROM teampact_nmb_sessions ORDER BY session_started_at DESC"
+        query = "SELECT * FROM teampact_sessions_complete ORDER BY session_started_at DESC"
         df = pd.read_sql(query, engine)
         
         if df.empty:
