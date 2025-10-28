@@ -19,6 +19,51 @@ LETTER_SEQUENCE = [
     'g', 't', 'q', 'r', 'c', 'j'
 ]
 
+# East London Schools List
+el_schools = [
+    "Brownlee Primary School",
+    "Bumbanani Primary School",
+    "Chuma Junior Primary School",
+    "Duncan Village Public School",
+    "Ebhotwe Junior Full Service School",
+    "Emncotsho Primary School",
+    "Encotsheni Senior Primary School",
+    "Equleni Junior Primary School",
+    "Fanti Gaqa Senior Primary School",
+    "Inkqubela Junior Primary School",
+    "Isibane Junior Primary School",
+    "Isithsaba Junior Primary School",
+    "Jityaza Combined Primary School",
+    "Khanyisa Junior Primary School",
+    "Lunga Junior Primary School",
+    "Lwandisa Junior Primary School",
+    "Manyano Junior Primary School",
+    "Masakhe Primary School",
+    "Mdantsane Junior Primary School",
+    "Misukukhanya Senior Primary School",
+    "Mzoxolo Senior Primary School",
+    "Nkangeleko Intermediate School",
+    "Nkosinathi Primary School",
+    "Nobhotwe Junior Primary School",
+    "Nontombi Matta Junior Primary School",
+    "Nontsikelelo Junior Primary School",
+    "Nontuthuzelo Primary School",
+    "Nqonqweni Primary School",
+    "Nzuzo Junior Primary School",
+    "Qaqamba Junior Primary School",
+    "R H Godlo Junior Primary School",
+    "Sakhile Senior Primary School",
+    "Shad Mashologu Junior Primary School",
+    "St John'S Road Junior Secondary School",
+    "Thembeka Junior Primary School",
+    "Vuthondaba Full Service School",
+    "W.N. Madikizela-Mandela Primary School",
+    "Zamani Junior Primary School",
+    "Zanempucuko Senior Secondary School",
+    "Zanokukhanya Junior Primary School",
+    "Zuzile Junior Primary School"
+]
+
 def detect_grade_from_groups(group_names):
     """Detect grade from group names - returns 'Grade R', 'Grade 1', 'Grade 2', or 'Unknown'"""
     if not group_names:
@@ -550,12 +595,42 @@ def main():
     # Add info about data source
     st.info("This dashboard shows detailed letter progress data from TeamPact sessions for the most recent 2 weeks.")
 
+    # Region filter at the top
+    st.subheader("Select Region")
+    region_filter = st.radio(
+        "Choose schools to display:",
+        options=["All Schools", "East London Schools", "NMB Schools"],
+        horizontal=True,
+        help="Filter schools by region: East London or NMB (Nelson Mandela Bay)"
+    )
+
     # Fetch data from database
     session_df = fetch_teampact_session_data()
 
     if session_df is None or session_df.empty:
         st.warning("No data available. Please check your database connection and ensure session data has been synced.")
         return
+
+    # Apply region filter to the dataframe
+    if region_filter == "East London Schools":
+        # Convert to lowercase for case-insensitive comparison
+        el_schools_lower = [school.lower() for school in el_schools]
+        session_df = session_df[session_df['school_name'].str.lower().isin(el_schools_lower)]
+        if session_df.empty:
+            st.warning("No data found for East London schools in the recent 2 weeks.")
+            return
+        st.info(f"Showing {len(session_df)} sessions from {len(session_df['school_name'].unique())} East London schools")
+    elif region_filter == "NMB Schools":
+        # Filter out East London schools
+        el_schools_lower = [school.lower() for school in el_schools]
+        session_df = session_df[~session_df['school_name'].str.lower().isin(el_schools_lower)]
+        if session_df.empty:
+            st.warning("No data found for NMB schools in the recent 2 weeks.")
+            return
+        st.info(f"Showing {len(session_df)} sessions from {len(session_df['school_name'].unique())} NMB schools")
+    else:
+        # All schools
+        st.info(f"Showing {len(session_df)} sessions from {len(session_df['school_name'].unique())} schools (all regions)")
 
     # Process data into the format expected by the visualization functions
     all_data = process_session_data(session_df)
