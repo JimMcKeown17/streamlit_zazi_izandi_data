@@ -9,8 +9,14 @@ Oct 28, 2025 onwards
 - Because I was struggling a bit w/ the API from Django, I created a new table called teampact_sessions_complete.
 - We then created a cron job on Render to update this each evening.
 - I then updated the database_utils.py file to pull the data from this table instead.
+- Removed the manual "Refresh Data" button from teampact_sessions_2025.py since data is now auto-updated via cron job.
 
 Column differences between tables:
 - Old table (teampact_nmb_sessions): had 'total_duration_minutes' column
 - New table (teampact_sessions_complete): has 'session_duration' column (in seconds, not minutes)
 - The teampact_sessions_2025.py file now converts session_duration to total_duration_minutes automatically
+
+User Experience Changes:
+- No more manual refresh button - data auto-updates nightly
+- Page shows "Data last updated: X min/hours ago | Auto-refreshes nightly via cron job"
+- Error messages direct users to contact system admin for manual refresh if needed
