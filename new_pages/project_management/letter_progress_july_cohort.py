@@ -80,7 +80,7 @@ def fetch_teampact_session_data():
             participant_total,
             attended_total,
             session_text
-        FROM teampact_nmb_sessions
+        FROM teampact_sessions_complete
         WHERE letters_taught IS NOT NULL
         AND letters_taught <> ''
         AND session_started_at >= NOW() - INTERVAL '14 days'
