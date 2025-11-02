@@ -72,8 +72,8 @@ letter_progress_july_cohort = st.Page("new_pages/project_management/letter_progr
 letter_progress_detailed_july_cohort = st.Page("new_pages/project_management/letter_progress_detailed_july_cohort.py", icon="📚", title="Letter Progress Detailed July Cohort", url_path="letter_progress_detailed_july_cohort")
 school_reports_page = st.Page("new_pages/project_management/school_reports.py", icon="📊", title="School Reports", url_path="school_reports")
 session_quality_review_page = st.Page("new_pages/project_management/session_quality_review.py", icon="📚", title="Session Quality Review", url_path="session_quality_review")
-flag_same_letter_groups_page = st.Page("new_pages/project_management/flag_same_letter_groups.py", icon="📚", title="Flag Same Letter Groups", url_path="flag_same_letter_groups")
-flag_moving_too_fast_page = st.Page("new_pages/project_management/flag_moving_too_fast.py", icon="📚", title="Flag Moving Too Fast", url_path="flag_moving_too_fast")
+flag_same_letter_groups_page = st.Page("new_pages/project_management/flag_same_letter_groups.py", icon="🚩", title="Check: Same Letter Groups", url_path="flag_same_letter_groups")
+flag_moving_too_fast_page = st.Page("new_pages/project_management/flag_moving_too_fast.py", icon="⚡", title="Check: Moving Too Fast", url_path="flag_moving_too_fast")
 # --- Navigation ---
 pages_2024_public = [letter_knowledge_page_24, word_reading_page_24, new_schools_page_24, session_analysis_page_24]
 pages_2024_internal = []
