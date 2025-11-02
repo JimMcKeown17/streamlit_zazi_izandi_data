@@ -110,7 +110,7 @@ def fetch_teampact_session_data():
         
         engine = get_database_engine()
         
-        # Query to get session data with letters taught (recent 2 weeks)
+        # Query to get session data with letters taught (recent 30 days)
         query = """
         SELECT
             session_id,
@@ -128,14 +128,14 @@ def fetch_teampact_session_data():
         FROM teampact_sessions_complete
         WHERE letters_taught IS NOT NULL
         AND letters_taught <> ''
-        AND session_started_at >= NOW() - INTERVAL '14 days'
+        AND session_started_at >= NOW() - INTERVAL '30 days'
         ORDER BY session_started_at DESC
         """
         
         df = pd.read_sql(query, engine)
         
         if df.empty:
-            st.warning("No session data found with letter information for recent 2 weeks.")
+            st.warning("No session data found with letter information for recent 30 days.")
             return None
             
         return df
@@ -228,11 +228,15 @@ def process_session_data(df):
             for group in ta_data['group_name'].unique():
                 group_data = ta_data[ta_data['group_name'] == group].copy()
                 
-                # Get the most recent session for this group
-                latest_session = group_data.loc[group_data['session_started_at'].idxmax()]
+                # CRITICAL: Deduplicate by session_id to get unique sessions
+                # (Each session has multiple rows - one per participant)
+                group_data_unique = group_data.drop_duplicates(subset=['session_id']).copy()
                 
-                # Calculate group statistics
-                session_count = len(group_data)
+                # Get the most recent session for this group
+                latest_session = group_data_unique.loc[group_data_unique['session_started_at'].idxmax()]
+                
+                # Calculate group statistics (count unique sessions, not participant records)
+                session_count = len(group_data_unique)
                 last_session_date = latest_session['session_started_at']
                 
                 # Use the progress from the most recent session
@@ -301,6 +305,118 @@ def check_ta_flag(ta_data):
     return False
 
 
+def check_grade_r_rapid_advancement(session_df, ta_name, school_name, min_sessions=3, return_diagnostics=False):
+    """
+    Check if a Grade R TA is advancing too rapidly without reviewing letters.
+    Returns (is_flagged, details_dict)
+    
+    Note: Deduplicates by session_id since each session has multiple participant records.
+    """
+    # Filter sessions for this TA at this school
+    ta_sessions = session_df[
+        (session_df['user_name'] == ta_name) & 
+        (session_df['school_name'] == school_name)
+    ].copy()
+    
+    # CRITICAL: Deduplicate by session_id to get unique sessions
+    # (Each session has multiple rows - one per participant)
+    ta_sessions_unique = ta_sessions.drop_duplicates(subset=['session_id']).copy()
+    
+    diagnostics = {
+        'total_ta_records': len(ta_sessions),
+        'total_ta_sessions': len(ta_sessions_unique),
+        'groups_analyzed': [],
+        'groups_skipped': []
+    }
+    
+    if ta_sessions_unique.empty or len(ta_sessions_unique) < min_sessions:
+        diagnostics['skip_reason'] = f'Only {len(ta_sessions_unique)} unique sessions (need {min_sessions})'
+        if return_diagnostics:
+            return False, {'diagnostics': diagnostics}
+        return False, {}
+    
+    # Group by class/group name
+    flagged_groups = []
+    
+    for group_name in ta_sessions_unique['group_name'].unique():
+        group_sessions = ta_sessions_unique[ta_sessions_unique['group_name'] == group_name].copy()
+        
+        group_diag = {
+            'group_name': group_name,
+            'total_sessions': len(group_sessions)
+        }
+        
+        # Need at least min_sessions to analyze
+        if len(group_sessions) < min_sessions:
+            group_diag['skip_reason'] = f'Only {len(group_sessions)} sessions (need {min_sessions})'
+            diagnostics['groups_skipped'].append(group_diag)
+            continue
+        
+        # Sort by date
+        group_sessions = group_sessions.sort_values('session_started_at')
+        
+        # Get list of letters taught in each unique session
+        letters_per_session = []
+        for _, session in group_sessions.iterrows():
+            if pd.notna(session['letters_taught']) and session['letters_taught'].strip():
+                letters = set([l.strip().lower() for l in session['letters_taught'].split(',') if l.strip()])
+                letters_per_session.append(letters)
+        
+        group_diag['sessions_with_letters'] = len(letters_per_session)
+        
+        if len(letters_per_session) < min_sessions:
+            group_diag['skip_reason'] = f'Only {len(letters_per_session)} sessions with letter data (need {min_sessions})'
+            diagnostics['groups_skipped'].append(group_diag)
+            continue
+        
+        # Check for rapid advancement pattern:
+        # If letters are always different (no review), that's a flag
+        review_count = 0
+        new_letter_count = 0
+        
+        for i in range(1, len(letters_per_session)):
+            previous_letters = letters_per_session[i-1]
+            current_letters = letters_per_session[i]
+            
+            # Check if any letters overlap (review)
+            overlap = previous_letters & current_letters
+            
+            if overlap:
+                review_count += 1
+            else:
+                # No overlap - all new letters
+                new_letter_count += 1
+        
+        # Flag if there's almost never any review (e.g., >70% of sessions introduce only new letters)
+        total_transitions = review_count + new_letter_count
+        if total_transitions > 0:
+            no_review_percentage = (new_letter_count / total_transitions) * 100
+            
+            group_diag['review_count'] = review_count
+            group_diag['new_letter_count'] = new_letter_count
+            group_diag['no_review_percentage'] = no_review_percentage
+            group_diag['threshold'] = 70
+            
+            diagnostics['groups_analyzed'].append(group_diag)
+            
+            # Flag if >70% of sessions have no review of previous letters
+            if no_review_percentage > 70 and total_transitions >= (min_sessions - 1):
+                flagged_groups.append({
+                    'group_name': group_name,
+                    'total_sessions': len(group_sessions),
+                    'sessions_analyzed': total_transitions,
+                    'no_review_sessions': new_letter_count,
+                    'no_review_percentage': no_review_percentage
+                })
+    
+    if return_diagnostics:
+        return (len(flagged_groups) > 0), {'flagged_groups': flagged_groups, 'diagnostics': diagnostics}
+    
+    if flagged_groups:
+        return True, {'flagged_groups': flagged_groups}
+    return False, {}
+
+
 def analyze_flagged_tas(all_data):
     """Analyze all TAs and return flagged ones with statistics"""
     flagged_tas = []
@@ -333,6 +449,36 @@ def analyze_flagged_tas(all_data):
     return {
         'flagged_tas': flagged_tas,
         'total_tas': total_tas,
+        'flagged_count': len(flagged_tas),
+        'flagged_percentage': flagged_percentage
+    }
+
+
+def analyze_rapid_advancement_tas(all_data, session_df):
+    """Analyze Grade R TAs for rapid advancement without review (EXPERIMENTAL)"""
+    flagged_tas = []
+    total_grade_r_tas = 0
+    
+    for school_name, school_data in all_data.items():
+        for ta_name, ta_data in school_data['ta_progress'].items():
+            # Only check Grade R TAs
+            if ta_data.get('grade') == 'Grade R':
+                total_grade_r_tas += 1
+                is_flagged, details = check_grade_r_rapid_advancement(session_df, ta_name, school_name)
+                
+                if is_flagged:
+                    flagged_tas.append({
+                        'name': ta_name,
+                        'school': school_name,
+                        'mentor': ta_data.get('mentor', 'N/A'),
+                        'flagged_groups': details.get('flagged_groups', [])
+                    })
+    
+    flagged_percentage = (len(flagged_tas) / total_grade_r_tas * 100) if total_grade_r_tas > 0 else 0
+    
+    return {
+        'flagged_tas': flagged_tas,
+        'total_grade_r_tas': total_grade_r_tas,
         'flagged_count': len(flagged_tas),
         'flagged_percentage': flagged_percentage
     }
@@ -405,7 +551,7 @@ def create_recent_sessions_table(session_df, selected_school):
     return display_sessions
 
 
-def display_school_data(school_data, letter_sequence):
+def display_school_data(school_data, letter_sequence, session_df=None, school_name=None):
     """Display data for a single school"""
     # School summary
     summary = school_data['summary']
@@ -421,9 +567,23 @@ def display_school_data(school_data, letter_sequence):
 
     # Display TA progress
     for ta_name, ta_data in school_data['ta_progress'].items():
-        # Check if this TA should be flagged
+        # Check if this TA should be flagged for same progress
         is_flagged = check_ta_flag(ta_data)
-        flag_emoji = "🚩 " if is_flagged else ""
+        
+        # Check if this Grade R TA should be flagged for rapid advancement (experimental)
+        is_rapid_advancement_flagged = False
+        rapid_advancement_details = {}
+        if ta_data.get('grade') == 'Grade R' and session_df is not None and school_name:
+            is_rapid_advancement_flagged, rapid_advancement_details = check_grade_r_rapid_advancement(
+                session_df, ta_name, school_name
+            )
+        
+        # Combine flags
+        flag_emoji = ""
+        if is_flagged:
+            flag_emoji = "🚩 "
+        if is_rapid_advancement_flagged:
+            flag_emoji += "⚡ "
         
         # TA Section
         with st.expander(f"{flag_emoji}**{ta_name}**", expanded=True):
@@ -454,6 +614,12 @@ def display_school_data(school_data, letter_sequence):
                     flagged_letters.append(f"'{letter}' ({count} groups)")
                 warning_text += ", ".join(flagged_letters)
                 st.warning(warning_text)
+            
+            # Show experimental warning for rapid advancement (Grade R only)
+            if is_rapid_advancement_flagged and rapid_advancement_details:
+                st.error("⚡ **EXPERIMENTAL FLAG - Rapid Advancement:** This Grade R TA appears to be introducing new letters too quickly without adequate review.")
+                for group_info in rapid_advancement_details.get('flagged_groups', []):
+                    st.markdown(f"- **{group_info['group_name']}**: {group_info['no_review_percentage']:.0f}% of sessions introduced only new letters (no review of previous letters)")
 
             # Groups
             for group_name, group_data in ta_data['groups'].items():
@@ -609,10 +775,10 @@ def create_grade_charts(grade_summary):
 
 
 def main():
-    st.title("📚 Letter Progress by Teacher Assistant - Recent 2 Weeks")
+    st.title("📚 Letter Progress by Teacher Assistant - Recent 30 Days")
 
     # Add info about data source
-    st.info("This dashboard shows detailed letter progress data from TeamPact sessions for the most recent 2 weeks.")
+    st.info("This dashboard shows detailed letter progress data from TeamPact sessions for the most recent 30 days.")
 
     # Region filter at the top
     st.subheader("Select Region")
@@ -636,7 +802,7 @@ def main():
         el_schools_lower = [school.lower() for school in el_schools]
         session_df = session_df[session_df['school_name'].str.lower().isin(el_schools_lower)]
         if session_df.empty:
-            st.warning("No data found for East London schools in the recent 2 weeks.")
+            st.warning("No data found for East London schools in the recent 30 days.")
             return
         st.info(f"Showing {len(session_df)} sessions from {len(session_df['school_name'].unique())} East London schools")
     elif region_filter == "NMB Schools":
@@ -644,7 +810,7 @@ def main():
         el_schools_lower = [school.lower() for school in el_schools]
         session_df = session_df[~session_df['school_name'].str.lower().isin(el_schools_lower)]
         if session_df.empty:
-            st.warning("No data found for NMB schools in the recent 2 weeks.")
+            st.warning("No data found for NMB schools in the recent 30 days.")
             return
         st.info(f"Showing {len(session_df)} sessions from {len(session_df['school_name'].unique())} NMB schools")
     else:
@@ -657,49 +823,6 @@ def main():
     if not all_data:
         st.warning("No processed data available.")
         return
-    
-    # Show overall flagged TAs summary at the top
-    st.header("🚩 TA Progress Monitoring Summary")
-    st.markdown("Overview of Teacher Assistants who have 3 or more groups working on the same letter")
-    
-    # Analyze all flagged TAs across all schools
-    all_flagged_analysis = analyze_flagged_tas(all_data)
-    
-    # Display summary statistics
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("Total TAs", all_flagged_analysis['total_tas'])
-    with col2:
-        st.metric("🚩 Flagged TAs", all_flagged_analysis['flagged_count'])
-    with col3:
-        st.metric("Flagged %", f"{all_flagged_analysis['flagged_percentage']:.1f}%")
-    
-    # Show list of all flagged TAs
-    if all_flagged_analysis['flagged_tas']:
-        with st.expander(f"View All {all_flagged_analysis['flagged_count']} Flagged TAs", expanded=False):
-            flagged_data = []
-            for ta in all_flagged_analysis['flagged_tas']:
-                # Format the flagged indices information
-                flagged_info = []
-                for index in ta['flagged_indices']:
-                    letter = LETTER_SEQUENCE[index] if 0 <= index < len(LETTER_SEQUENCE) else f"idx {index}"
-                    count = ta['progress_counts'][index]
-                    flagged_info.append(f"'{letter}' ({count} groups)")
-                
-                flagged_data.append({
-                    'TA Name': ta['name'],
-                    'School': ta['school'],
-                    'Mentor': ta['mentor'],
-                    'Total Groups': ta['total_groups'],
-                    'Flagged Letters': ', '.join(flagged_info)
-                })
-            
-            df_flagged = pd.DataFrame(flagged_data)
-            st.dataframe(df_flagged, width='stretch', hide_index=True)
-    else:
-        st.success("✅ No TAs are currently flagged - all TAs have varied group progress levels!")
-    
-    st.divider()
 
     # School selector
     schools = sorted(list(all_data.keys()))
@@ -717,7 +840,7 @@ def main():
         st.header(f"📊 {selected_school} - Detailed Progress")
 
         # Display school data
-        display_school_data(all_data[selected_school], LETTER_SEQUENCE)
+        display_school_data(all_data[selected_school], LETTER_SEQUENCE, session_df, selected_school)
 
         # Add recent sessions table
         st.header(f"📝 Recent Sessions at {selected_school}")
@@ -728,7 +851,7 @@ def main():
             st.dataframe(recent_sessions, width='stretch', hide_index=True)
 
             # Show session count
-            st.caption(f"Showing {len(recent_sessions)} sessions from the past 2 weeks")
+            st.caption(f"Showing {len(recent_sessions)} sessions from the past 30 days")
         else:
             st.info(f"No recent sessions found for {selected_school}")
 
