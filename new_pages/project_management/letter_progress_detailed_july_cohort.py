@@ -421,8 +421,12 @@ def display_school_data(school_data, letter_sequence):
 
     # Display TA progress
     for ta_name, ta_data in school_data['ta_progress'].items():
+        # Check if this TA should be flagged
+        is_flagged = check_ta_flag(ta_data)
+        flag_emoji = "🚩 " if is_flagged else ""
+        
         # TA Section
-        with st.expander(f"**{ta_name}**", expanded=True):
+        with st.expander(f"{flag_emoji}**{ta_name}**", expanded=True):
             # TA info
             col1, col2, col3, col4 = st.columns([2, 2, 2, 2])
             with col1:
@@ -435,6 +439,21 @@ def display_school_data(school_data, letter_sequence):
                 st.caption(f"Sessions: {ta_data['summary']['total_sessions']}")
             with col4:
                 st.caption(f"Avg Progress: {ta_data['summary']['average_progress']:.1f}%")
+            
+            # Show warning if TA is flagged
+            if is_flagged:
+                progress_indices = [group_data['progress_index'] for group_data in ta_data['groups'].values()]
+                progress_counts = Counter(progress_indices)
+                flagged_indices = [index for index, count in progress_counts.items() if count >= 3]
+                
+                warning_text = "⚠️ **Alert:** This TA has 3 or more groups working on the same letter: "
+                flagged_letters = []
+                for idx in flagged_indices:
+                    letter = LETTER_SEQUENCE[idx] if 0 <= idx < len(LETTER_SEQUENCE) else f"index {idx}"
+                    count = progress_counts[idx]
+                    flagged_letters.append(f"'{letter}' ({count} groups)")
+                warning_text += ", ".join(flagged_letters)
+                st.warning(warning_text)
 
             # Groups
             for group_name, group_data in ta_data['groups'].items():
@@ -638,6 +657,49 @@ def main():
     if not all_data:
         st.warning("No processed data available.")
         return
+    
+    # Show overall flagged TAs summary at the top
+    st.header("🚩 TA Progress Monitoring Summary")
+    st.markdown("Overview of Teacher Assistants who have 3 or more groups working on the same letter")
+    
+    # Analyze all flagged TAs across all schools
+    all_flagged_analysis = analyze_flagged_tas(all_data)
+    
+    # Display summary statistics
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total TAs", all_flagged_analysis['total_tas'])
+    with col2:
+        st.metric("🚩 Flagged TAs", all_flagged_analysis['flagged_count'])
+    with col3:
+        st.metric("Flagged %", f"{all_flagged_analysis['flagged_percentage']:.1f}%")
+    
+    # Show list of all flagged TAs
+    if all_flagged_analysis['flagged_tas']:
+        with st.expander(f"View All {all_flagged_analysis['flagged_count']} Flagged TAs", expanded=False):
+            flagged_data = []
+            for ta in all_flagged_analysis['flagged_tas']:
+                # Format the flagged indices information
+                flagged_info = []
+                for index in ta['flagged_indices']:
+                    letter = LETTER_SEQUENCE[index] if 0 <= index < len(LETTER_SEQUENCE) else f"idx {index}"
+                    count = ta['progress_counts'][index]
+                    flagged_info.append(f"'{letter}' ({count} groups)")
+                
+                flagged_data.append({
+                    'TA Name': ta['name'],
+                    'School': ta['school'],
+                    'Mentor': ta['mentor'],
+                    'Total Groups': ta['total_groups'],
+                    'Flagged Letters': ', '.join(flagged_info)
+                })
+            
+            df_flagged = pd.DataFrame(flagged_data)
+            st.dataframe(df_flagged, width='stretch', hide_index=True)
+    else:
+        st.success("✅ No TAs are currently flagged - all TAs have varied group progress levels!")
+    
+    st.divider()
 
     # School selector
     schools = sorted(list(all_data.keys()))
@@ -670,88 +732,59 @@ def main():
         else:
             st.info(f"No recent sessions found for {selected_school}")
 
-    # Add flagged TAs analysis section for selected school
-    with st.expander("🚩 TA Progress Monitoring", expanded=False):
-        st.markdown("Teacher Assistants flagged for having 3 or more groups with identical progress levels")
+    # Add school-specific flagged TAs summary
+    st.divider()
+    st.subheader(f"🚩 Flagged TAs at {selected_school}")
+    
+    # Analyze flagged TAs for the selected school only
+    school_flagged_analysis = analyze_flagged_tas({selected_school: all_data[selected_school]})
 
-        # Analyze flagged TAs for the selected school only
-        school_flagged_analysis = analyze_flagged_tas({selected_school: all_data[selected_school]})
+    if school_flagged_analysis['flagged_tas']:
+        st.warning(f"⚠️ {school_flagged_analysis['flagged_count']} out of {school_flagged_analysis['total_tas']} TAs at this school are flagged ({school_flagged_analysis['flagged_percentage']:.1f}%)")
+        
+        # Show detailed breakdown for each flagged TA
+        st.markdown("**Detailed Group Breakdown by Progress Level:**")
+        for ta in school_flagged_analysis['flagged_tas']:
+            st.markdown(f"**{ta['name']}** (Mentor: {ta['mentor']})")
 
-        # Display summary statistics for this school
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("TAs at this school", school_flagged_analysis['total_tas'])
-        with col2:
-            st.metric("Flagged TAs", school_flagged_analysis['flagged_count'])
-        with col3:
-            flagged_pct = school_flagged_analysis['flagged_percentage']
-            st.metric("Flagged Percentage", f"{flagged_pct:.1f}%")
+            # Get full TA data to show group details
+            ta_full_data = all_data[selected_school]['ta_progress'][ta['name']]
 
-        # Display flagged TAs list for this school
-        if school_flagged_analysis['flagged_tas']:
-            st.subheader(f"Flagged TAs at {selected_school}")
-
-            # Create a dataframe for better display
-            flagged_data = []
-            for ta in school_flagged_analysis['flagged_tas']:
-                # Format the flagged indices information
-                flagged_info = []
-                for index in ta['flagged_indices']:
-                    count = ta['progress_counts'][index]
-                    flagged_info.append(f"Index {index} ({count} groups)")
-
-                flagged_data.append({
-                    'TA Name': ta['name'],
-                    'Mentor': ta['mentor'],
-                    'Total Groups': ta['total_groups'],
-                    'Flagged Progress Levels': ', '.join(flagged_info)
+            # Group by progress_index
+            groups_by_progress = {}
+            for group_name, group_data in ta_full_data['groups'].items():
+                progress_idx = group_data['progress_index']
+                if progress_idx not in groups_by_progress:
+                    groups_by_progress[progress_idx] = []
+                groups_by_progress[progress_idx].append({
+                    'name': group_name,
+                    'last_session': group_data.get('last_session_date', 'N/A'),
+                    'session_count': group_data.get('session_count', 0),
+                    'rightmost_letter': group_data.get('rightmost_letter', 'N/A')
                 })
 
-            df_flagged = pd.DataFrame(flagged_data)
-            st.dataframe(df_flagged, width='stretch', hide_index=True)
+            # Display groups organized by progress_index
+            for progress_idx, groups in sorted(groups_by_progress.items()):
+                count = len(groups)
+                flag_indicator = "🚩 FLAGGED" if count >= 3 else ""
+                letter = LETTER_SEQUENCE[progress_idx] if 0 <= progress_idx < len(LETTER_SEQUENCE) else f"index {progress_idx}"
+                st.write(f"**Letter '{letter}' (Index {progress_idx}):** {count} groups {flag_indicator}")
 
-            # Show detailed breakdown for each flagged TA
-            if st.button("View Detailed Group Breakdown"):
-                st.write("**Detailed Group Breakdown:**")
-                for ta in school_flagged_analysis['flagged_tas']:
-                    st.markdown(f"**{ta['name']}** (Mentor: {ta['mentor']})")
+                if count >= 3:  # Show details for flagged progress levels
+                    group_details = []
+                    for group in groups:
+                        last_session = group['last_session']
+                        if last_session and last_session != 'N/A':
+                            try:
+                                last_session = datetime.fromisoformat(last_session).strftime('%Y-%m-%d')
+                            except:
+                                pass
+                        group_details.append(f"  • {group['name']} (Sessions: {group['session_count']}, Last: {last_session})")
+                    st.text('\n'.join(group_details))
 
-                    # Get full TA data to show group details
-                    ta_full_data = all_data[selected_school]['ta_progress'][ta['name']]
-
-                    # Group by progress_index
-                    groups_by_progress = {}
-                    for group_name, group_data in ta_full_data['groups'].items():
-                        progress_idx = group_data['progress_index']
-                        if progress_idx not in groups_by_progress:
-                            groups_by_progress[progress_idx] = []
-                        groups_by_progress[progress_idx].append({
-                            'name': group_name,
-                            'last_session': group_data.get('last_session_date', 'N/A'),
-                            'session_count': group_data.get('session_count', 0)
-                        })
-
-                    # Display groups organized by progress_index
-                    for progress_idx, groups in sorted(groups_by_progress.items()):
-                        count = len(groups)
-                        flag_indicator = "🚩" if count >= 3 else ""
-                        st.write(f"Progress Index {progress_idx}: {count} groups {flag_indicator}")
-
-                        if count >= 3:  # Show details for flagged progress levels
-                            group_details = []
-                            for group in groups:
-                                last_session = group['last_session']
-                                if last_session and last_session != 'N/A':
-                                    try:
-                                        last_session = datetime.fromisoformat(last_session).strftime('%Y-%m-%d')
-                                    except:
-                                        pass
-                                group_details.append(f"  • {group['name']} (Sessions: {group['session_count']}, Last: {last_session})")
-                            st.text('\n'.join(group_details))
-
-                    st.markdown("---")
-        else:
-            st.info(f"No TAs at {selected_school} are currently flagged for having 3 or more groups with identical progress levels.")
+            st.markdown("---")
+    else:
+        st.success(f"✅ No TAs at {selected_school} are currently flagged - all TAs have varied group progress levels!")
     
     # Show data source information
     with st.expander("Data Source Information"):
