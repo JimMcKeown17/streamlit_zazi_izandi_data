@@ -198,10 +198,10 @@ def check_grade_r_rapid_advancement(session_df, ta_name, school_name, min_sessio
     return False, {}
 
 
-def analyze_rapid_advancement_tas(session_df):
-    """Analyze Grade R TAs for rapid advancement without review"""
+def analyze_rapid_advancement_tas(session_df, target_grade='Grade R'):
+    """Analyze TAs for rapid advancement without review for a specific grade"""
     flagged_tas = []
-    total_grade_r_tas = 0
+    total_tas = 0
     
     # Get unique TAs
     df_unique = session_df.drop_duplicates(subset=['session_id']).copy()
@@ -216,9 +216,9 @@ def analyze_rapid_advancement_tas(session_df):
             # Detect grade
             grade = detect_grade_from_groups(ta_data['group_name'].tolist())
             
-            # Only check Grade R TAs
-            if grade == 'Grade R':
-                total_grade_r_tas += 1
+            # Only check TAs of the target grade
+            if grade == target_grade:
+                total_tas += 1
                 is_flagged, details = check_grade_r_rapid_advancement(session_df, ta_name, school)
                 
                 if is_flagged:
@@ -228,26 +228,26 @@ def analyze_rapid_advancement_tas(session_df):
                         'flagged_groups': details.get('flagged_groups', [])
                     })
     
-    flagged_percentage = (len(flagged_tas) / total_grade_r_tas * 100) if total_grade_r_tas > 0 else 0
+    flagged_percentage = (len(flagged_tas) / total_tas * 100) if total_tas > 0 else 0
     
     return {
         'flagged_tas': flagged_tas,
-        'total_grade_r_tas': total_grade_r_tas,
+        'total_tas': total_tas,
         'flagged_count': len(flagged_tas),
         'flagged_percentage': flagged_percentage
     }
 
 
 def main():
-    st.title("⚡ Moving Too Fast Flag (Grade R)")
-    st.markdown("### Grade R TAs advancing through letters too quickly without adequate review")
+    st.title("⚡ Moving Too Fast Flag")
+    st.markdown("### TAs advancing through letters too quickly without adequate review")
     
-    st.info("**What this flag means:** When a Grade R TA has >70% of their sessions introduce only new letters "
-            "with no review of previously taught letters, it indicates insufficient consolidation. "
-            "Grade R learners (ages 4-5) need extensive repetition - each letter should be reviewed across multiple sessions "
-            "for proper retention and mastery.\n\n"
+    st.info("**What this flag means:** When a TA has >70% of their sessions introduce only new letters "
+            "with no review of previously taught letters, it indicates the TA may be moving through the letters too quickly. "
             "**Methodology:** Analyzes session-to-session transitions. If letters taught in one session have NO overlap "
-            "with the previous session's letters, that's counted as 'no review'. Flags TAs when this happens >70% of the time.")
+            "with the previous session's letters, that's counted as 'no review'. Flags TAs when this happens >70% of the time.\n\n"
+            "**Recommendation:** Emphasize the importance of reviewing previous letters in each session. "
+            "Learners may need to see letters 5-10 times before mastery, especially early in the program. There should almost always be multiple sessions early on where the TA is running sessions while practicing the same letters multiple times in a row.")
     
     # Fetch data
     session_df = fetch_teampact_session_data()
@@ -256,26 +256,31 @@ def main():
         st.warning("No data available. Please check your database connection.")
         return
     
-    # Analyze rapid advancement
-    rapid_advancement_analysis = analyze_rapid_advancement_tas(session_df)
+    # ============================================
+    # GRADE R SECTION
+    # ============================================
+    st.header("📚 Grade R Analysis")
+    
+    # Analyze rapid advancement for Grade R
+    rapid_advancement_r = analyze_rapid_advancement_tas(session_df, target_grade='Grade R')
     
     # Display summary statistics
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric("Total Grade R TAs", rapid_advancement_analysis['total_grade_r_tas'])
+        st.metric("Total Grade R TAs", rapid_advancement_r['total_tas'])
     with col2:
-        st.metric("⚡ Flagged TAs", rapid_advancement_analysis['flagged_count'])
+        st.metric("⚡ Flagged TAs", rapid_advancement_r['flagged_count'])
     with col3:
-        st.metric("Flagged %", f"{rapid_advancement_analysis['flagged_percentage']:.1f}%")
+        st.metric("Flagged %", f"{rapid_advancement_r['flagged_percentage']:.1f}%")
     
     st.divider()
     
     # Display flagged TAs
-    if rapid_advancement_analysis['flagged_tas']:
-        st.subheader(f"📋 {rapid_advancement_analysis['flagged_count']} Flagged Grade R TAs")
+    if rapid_advancement_r['flagged_tas']:
+        st.subheader(f"📋 {rapid_advancement_r['flagged_count']} Flagged Grade R TAs")
         
         # Sort by school name for better organization
-        flagged_tas_sorted = sorted(rapid_advancement_analysis['flagged_tas'], key=lambda x: (x['school'], x['name']))
+        flagged_tas_sorted = sorted(rapid_advancement_r['flagged_tas'], key=lambda x: (x['school'], x['name']))
         
         for ta in flagged_tas_sorted:
             with st.expander(f"**{ta['school']} - {ta['name']}**", expanded=False):
@@ -311,15 +316,82 @@ def main():
                     st.markdown("---")
                 
                 st.caption("💡 **Recommendation:** Emphasize the importance of reviewing previous letters in each session. "
-                          "Grade R learners need to see letters 10-20+ times before mastery. Consider implementing a 'review then introduce new' structure.")
+                          "Grade R learners may need to see letters 5-10 times before mastery, especially early in the program.")
     else:
         st.success("✅ No Grade R TAs are flagged for rapid advancement - all are providing adequate review!")
     
+    # ============================================
+    # GRADE 1 SECTION
+    # ============================================
+    st.markdown("---")
+    st.header("📚 Grade 1 Analysis")
+    
+    # Analyze rapid advancement for Grade 1
+    rapid_advancement_1 = analyze_rapid_advancement_tas(session_df, target_grade='Grade 1')
+    
+    # Display summary statistics
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total Grade 1 TAs", rapid_advancement_1['total_tas'])
+    with col2:
+        st.metric("⚡ Flagged TAs", rapid_advancement_1['flagged_count'])
+    with col3:
+        st.metric("Flagged %", f"{rapid_advancement_1['flagged_percentage']:.1f}%")
+    
+    st.divider()
+    
+    # Display flagged TAs
+    if rapid_advancement_1['flagged_tas']:
+        st.subheader(f"📋 {rapid_advancement_1['flagged_count']} Flagged Grade 1 TAs")
+        
+        # Sort by school name for better organization
+        flagged_tas_sorted = sorted(rapid_advancement_1['flagged_tas'], key=lambda x: (x['school'], x['name']))
+        
+        for ta in flagged_tas_sorted:
+            with st.expander(f"**{ta['school']} - {ta['name']}**", expanded=False):
+                for group_info in ta['flagged_groups']:
+                    st.markdown(f"### Group: {group_info['group_name']}")
+                    
+                    # Summary metrics
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Total Sessions", group_info['total_sessions'])
+                    with col2:
+                        st.metric("No Review Sessions", group_info['no_review_sessions'])
+                    with col3:
+                        st.metric("No Review %", f"{group_info['no_review_percentage']:.0f}%")
+                    
+                    st.warning(f"⚠️ {group_info['no_review_percentage']:.0f}% of sessions introduced only new letters with no review")
+                    
+                    # Show session-to-session transitions
+                    st.markdown("**Session-to-Session Analysis:**")
+                    
+                    for i, transition in enumerate(group_info['transitions'], 1):
+                        date_str = transition['date'].strftime('%Y-%m-%d') if isinstance(transition['date'], pd.Timestamp) else str(transition['date'])
+                        
+                        if transition['has_review']:
+                            st.success(f"**Session {i+1}** ({date_str}): ✅ Has Review")
+                        else:
+                            st.error(f"**Session {i+1}** ({date_str}): ❌ No Review")
+                        
+                        st.write(f"  • Previous session: {transition['previous']}")
+                        st.write(f"  • This session: {transition['current']}")
+                        st.write(f"  • Letters reviewed: {transition['overlap']}")
+                    
+                    st.markdown("---")
+                
+                st.caption("💡 **Recommendation:** Emphasize the importance of reviewing previous letters in each session. "
+                          "Grade 1 learners may need to see letters 5-10 times before mastery, especially early in the program.")
+    else:
+        st.success("✅ No Grade 1 TAs are flagged for rapid advancement - all are providing adequate review!")
+    
     # Show data source info
+    st.markdown("---")
     with st.expander("ℹ️ Data Source Information"):
         st.write(f"**Data from:** TeamPact Sessions Database (last 30 days)")
         st.write(f"**Total sessions analyzed:** {len(session_df)}")
-        st.write(f"**Grade R TAs analyzed:** {rapid_advancement_analysis['total_grade_r_tas']}")
+        st.write(f"**Grade R TAs analyzed:** {rapid_advancement_r['total_tas']}")
+        st.write(f"**Grade 1 TAs analyzed:** {rapid_advancement_1['total_tas']}")
         st.write(f"**Minimum sessions required:** 3 sessions per group")
         st.write(f"**Flag threshold:** >70% of sessions with no review")
 

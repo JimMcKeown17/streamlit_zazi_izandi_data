@@ -189,8 +189,9 @@ def main():
     st.markdown("### TAs with 3 or more groups working on the same letter")
     
     st.info("**What this flag means:** When a TA has 3 or more groups at the exact same letter level, "
-            "it may indicate they aren't properly differentiating instruction based on group ability levels. "
+            "it MAY indicate they aren't properly differentiating instruction based on group ability levels. "
             "Groups should be progressing at different rates based on their baseline assessments.")
+    st.warning("This flag is not always a sign of a problem, so it should be used as a guide, not a definitive indicator. For example, in the beginning of the program, many Grade R children groups may be at the beginning levels and thus are doing the same letters.")
     
     # Fetch data
     session_df = fetch_teampact_session_data()
