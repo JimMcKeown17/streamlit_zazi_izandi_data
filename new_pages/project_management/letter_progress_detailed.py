@@ -404,7 +404,7 @@ def main():
             })
         
         df_flagged = pd.DataFrame(flagged_data)
-        st.dataframe(df_flagged, use_container_width=True, hide_index=True)
+        st.dataframe(df_flagged, width='stretch', hide_index=True)
         
         # Show detailed breakdown for each flagged TA
         with st.expander("View Detailed Group Breakdown", expanded=False):

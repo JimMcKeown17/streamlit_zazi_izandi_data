@@ -202,7 +202,7 @@ def display_ea_overview(sequence_df):
         subset=['Sequence_Adherence_Percentage']
     )
     
-    st.dataframe(styled_table, use_container_width=True)
+    st.dataframe(styled_table, width='stretch')
     
     # Sequence adherence distribution chart
     st.subheader("Letter Sequence Adherence Distribution")
@@ -213,7 +213,7 @@ def display_ea_overview(sequence_df):
         title="Distribution of EA Letter Sequence Adherence",
         labels={'Sequence_Adherence_Percentage': 'Sequence Adherence (%)', 'count': 'Number of EAs'}
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
 def display_individual_ea_analysis(sequence_df, session_data):
     """Display detailed analysis for individual EAs"""
@@ -277,7 +277,7 @@ def display_individual_ea_analysis(sequence_df, session_data):
         )
         fig.add_hline(y=80, line_dash="dash", line_color="green", annotation_text="Target: 80%")
         fig.update_layout(yaxis=dict(range=[0, 100]))
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     # Group-level analysis for selected EA
     st.subheader(f"Group-Level Performance - {selected_ea}")
@@ -294,7 +294,7 @@ def display_individual_ea_analysis(sequence_df, session_data):
     group_stats = group_stats.reset_index()
     group_stats = group_stats.sort_values('Avg_Adherence', ascending=False)
     
-    st.dataframe(group_stats, use_container_width=True)
+    st.dataframe(group_stats, width='stretch')
     
     # Recent sessions detail
     st.subheader(f"Recent Letter Teaching - {selected_ea}")
@@ -316,7 +316,7 @@ def display_individual_ea_analysis(sequence_df, session_data):
         'Adherence %', 'Prerequisites Met', 'Prerequisites Total'
     ]
     
-    st.dataframe(recent_display, use_container_width=True)
+    st.dataframe(recent_display, width='stretch')
 
 def display_summary_statistics(sequence_df):
     """Display summary statistics about letter sequence adherence"""
@@ -379,10 +379,10 @@ def display_summary_statistics(sequence_df):
     )
     fig.add_hline(y=80, line_dash="dash", line_color="green", annotation_text="Target: 80%")
     fig.update_layout(xaxis_tickangle=-45)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
     
     # Display school table
-    st.dataframe(school_stats, use_container_width=True)
+    st.dataframe(school_stats, width='stretch')
 
 def display_session_quality_review():
     """Main function to display the session quality review page"""

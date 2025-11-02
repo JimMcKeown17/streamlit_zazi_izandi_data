@@ -73,7 +73,7 @@ def display_east_london_egra():
                 st.write(f"Total records: {len(xhosa_df)}")
                 if not xhosa_df.empty:
                     display_xhosa = prepare_df_for_display(xhosa_df, "isiXhosa")
-                    st.dataframe(display_xhosa, use_container_width=True)
+                    st.dataframe(display_xhosa, width='stretch')
                 else:
                     st.warning("No isiXhosa data available")
                 
@@ -84,7 +84,7 @@ def display_east_london_egra():
                 st.write(f"Total records: {len(english_df)}")
                 if not english_df.empty:
                     display_english = prepare_df_for_display(english_df, "English")
-                    st.dataframe(display_english, use_container_width=True)
+                    st.dataframe(display_english, width='stretch')
                 else:
                     st.warning("No English data available")
                 
@@ -95,7 +95,7 @@ def display_east_london_egra():
                 st.write(f"Total records: {len(afrikaans_df)}")
                 if not afrikaans_df.empty:
                     display_afrikaans = prepare_df_for_display(afrikaans_df, "Afrikaans")
-                    st.dataframe(display_afrikaans, use_container_width=True)
+                    st.dataframe(display_afrikaans, width='stretch')
                 else:
                     st.warning("No Afrikaans data available")
                 

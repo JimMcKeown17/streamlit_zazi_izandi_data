@@ -64,7 +64,7 @@ def display_new_schools():
             color_discrete_map={'EGRA Baseline': GREY, 'EGRA Endline': YELLOW}
         )
 
-        st.plotly_chart(egra_fig, use_container_width=True)
+        st.plotly_chart(egra_fig, width='stretch')
 
     with st.expander('Click to view data:'):
         egra_summary = df.groupby('Grade').agg({
@@ -119,7 +119,7 @@ def display_new_schools():
         grade_level_fig.add_hline(y=27, line_dash='dash', line_color='red', annotation_text='South Africa Average',
                         annotation_position='top left')
 
-        st.plotly_chart(grade_level_fig, use_container_width=True)
+        st.plotly_chart(grade_level_fig, width='stretch')
 
         with st.expander('Click to view data:'):
             st.dataframe(df)
@@ -154,7 +154,7 @@ def display_new_schools():
             y=metric,
             color_discrete_sequence=[YELLOW]
         )
-        st.plotly_chart(school_fig, use_container_width=True)
+        st.plotly_chart(school_fig, width='stretch')
 
         with st.expander('Click to view data:'):
             gender_egra_improvement = filtered_endline.groupby(['Gender']).agg({
@@ -190,7 +190,7 @@ def display_new_schools():
             y='Egra Improvement Agg',
             color_discrete_sequence=[YELLOW]
         )
-        st.plotly_chart(school_fig, use_container_width=True)
+        st.plotly_chart(school_fig, width='stretch')
 
         with st.expander('Click to view data:'):
             school_egra_improvement = filtered_endline.groupby(['School']).agg({
@@ -216,7 +216,7 @@ def display_new_schools():
 
 
         fig = px.histogram(data_frame=df, x=metric_selection, nbins=20, color_discrete_sequence=[BLUE])
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     st.markdown('---')
 
@@ -239,7 +239,7 @@ def display_new_schools():
 
     with st.container():
         st.subheader("Percentage of Grade 1's Above Grade Level by School")
-        st.plotly_chart(school_fig, use_container_width=True)
+        st.plotly_chart(school_fig, width='stretch')
 
         with st.expander('Click to view data:'):
             st.dataframe(school_data_sorted)
@@ -273,7 +273,7 @@ def display_new_schools():
             y='Egra Improvement Agg',
             color_discrete_sequence=[YELLOW]
         )
-        st.plotly_chart(ta_fig, use_container_width=True)
+        st.plotly_chart(ta_fig, width='stretch')
 
 
         with st.expander('Click to view data:'):
@@ -311,7 +311,7 @@ def display_new_schools():
             y='Number of Under-performing Children',
             color_discrete_sequence=['#de6f7c']
         )
-        st.plotly_chart(digressed_fig, use_container_width=True)
+        st.plotly_chart(digressed_fig, width='stretch')
 
         with st.expander('Click to view data:'):
             result = digressed.groupby('EA Name').agg({
@@ -366,7 +366,7 @@ def display_new_schools():
             # color="EA Name"
             color_discrete_sequence=[YELLOW]
         )
-        st.plotly_chart(school_fig, use_container_width=True)
+        st.plotly_chart(school_fig, width='stretch')
 
         with st.expander('Click to view data:'):
             group_egra_improvement = filtered_endline.groupby(['Group']).agg({

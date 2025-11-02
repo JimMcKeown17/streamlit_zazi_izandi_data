@@ -115,7 +115,7 @@ with midline_tab:
                     color_discrete_map={'Initial Score': '#b3b3b3', 'Midline Score': '#ffd641'}
                 )
 
-                st.plotly_chart(egra_fig, use_container_width=True)
+                st.plotly_chart(egra_fig, width='stretch')
 
                 with st.expander('Click to view data:'):
                     st.dataframe(egra_summary)
@@ -181,7 +181,7 @@ with midline_tab:
                     annotation_position='top left'
                 )
 
-                st.plotly_chart(grade_level_fig, use_container_width=True)
+                st.plotly_chart(grade_level_fig, width='stretch')
 
                 with st.expander('Click to view data:'):
                     st.dataframe(df_grade_level)
@@ -221,9 +221,9 @@ with midline_tab:
                     legend_title="Grade",
                 )
 
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
 
-                st.dataframe(school_summary, use_container_width=True)
+                st.dataframe(school_summary, width='stretch')
 
             st.divider()
             # Add this section after your existing Grade 1 analyses (around line 285-300)
@@ -271,10 +271,10 @@ with midline_tab:
                 )
 
                 # Display chart
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
 
                 # Show detailed table
-                st.dataframe(school_letter_score_summary, use_container_width=True)
+                st.dataframe(school_letter_score_summary, width='stretch')
 
             def generate_letter_tracker_pdfs(df):
                 """Generate letter tracker PDFs through the full pipeline"""
@@ -432,7 +432,7 @@ with midline_tab:
                     st.write(f"**Schools:** {midline_df['school_rep'].nunique()}")
                     st.write(f"**Teaching Assistants:** {midline_df['name_ta_rep'].nunique()}")
                     st.write("**Sample Data:**")
-                    st.dataframe(midline_df[['school_rep', 'grade_label', 'letters_correct', 'name_ta_rep']].head(), use_container_width=True)
+                    st.dataframe(midline_df[['school_rep', 'grade_label', 'letters_correct', 'name_ta_rep']].head(), width='stretch')
             
             st.divider()
             with st.container():
@@ -530,7 +530,7 @@ with midline_tab:
                     )
 
 
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
 
                 with st.container():
                     st.subheader("Assessments Per School & Grade")
@@ -572,7 +572,7 @@ with midline_tab:
                     )
 
                     # Display in Streamlit
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
 
                 with st.container():
                     st.subheader("Assessments Per School & Grade")
@@ -614,14 +614,14 @@ with midline_tab:
                     )
 
                     # Display in Streamlit
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
 
                 # TA Assessments Summary
                 with st.container():
                     st.header("Assessments Completed Per School & TA")
                     ta_assessments = midline_df.groupby(['school_rep', 'name_ta_rep', 'grade_label'])['name_first_learner'].count().reset_index()
                     ta_assessments.columns = ['School', 'TA', 'Grade', 'Count']
-                    st.dataframe(ta_assessments, use_container_width=True)
+                    st.dataframe(ta_assessments, width='stretch')
 
             st.divider()
             
@@ -664,7 +664,7 @@ with midline_tab:
                 
                 if len(missing_midline) > 0:
                     st.warning(f"Found {len(missing_midline)} school-grade combinations with initial results but no midline results:")
-                    st.dataframe(missing_midline, use_container_width=True)
+                    st.dataframe(missing_midline, width='stretch')
                 else:
                     st.success("All schools and grades with initial assessments also have midline assessments!")
 
@@ -741,10 +741,10 @@ with baseline_tab:
                 showlegend=False
             )
 
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
             with st.expander("Show results"):
-                st.dataframe(grade_summary, use_container_width=True)
+                st.dataframe(grade_summary, width='stretch')
 
         st.divider()
 
@@ -782,9 +782,9 @@ with baseline_tab:
                 legend_title="Grade",
             )
 
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
-            st.dataframe(school_summary, use_container_width=True)
+            st.dataframe(school_summary, width='stretch')
 
 
 
@@ -823,7 +823,7 @@ with baseline_tab:
             )
 
             # Display chart
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
             # Show summary stats
             col1, col2, col3 = st.columns(3)
@@ -880,10 +880,10 @@ with baseline_tab:
             )
 
             # Display chart
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
             # Show detailed table
-            st.dataframe(school_letter_score_summary, use_container_width=True)
+            st.dataframe(school_letter_score_summary, width='stretch')
 
         with st.container():
             st.subheader("Data Export Tools")
@@ -1041,7 +1041,7 @@ with baseline_tab:
                 )
 
 
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
 
             with st.container():
                 st.subheader("Assessments Per School & Grade")
@@ -1083,7 +1083,7 @@ with baseline_tab:
                 )
 
                 # Display in Streamlit
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
 
             with st.container():
                 st.subheader("Assessments Per School & Grade")
@@ -1125,14 +1125,14 @@ with baseline_tab:
                 )
 
                 # Display in Streamlit
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
 
             # TA Assessments Summary
             with st.container():
                 st.header("Assessments Completed Per School & TA")
                 ta_assessments = initial_df.groupby(['school_rep', 'name_ta_rep', 'grade_label'])['name_first_learner'].count().reset_index()
                 ta_assessments.columns = ['School', 'TA', 'Grade', 'Count']
-                st.dataframe(ta_assessments, use_container_width=True)
+                st.dataframe(ta_assessments, width='stretch')
 
 
     except Exception as e:

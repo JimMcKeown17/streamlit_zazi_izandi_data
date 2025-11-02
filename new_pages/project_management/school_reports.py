@@ -196,12 +196,12 @@ def render_school_report(stats):
         if stats['grade_r']['baseline_score'] > 0 or stats['grade_r']['midline_score'] > 0:
             st.markdown("### Grade R Progress Chart")
             fig_r = create_comparison_chart(stats, 'Grade R')
-            st.plotly_chart(fig_r, use_container_width=True)
+            st.plotly_chart(fig_r, width='stretch')
         
         if stats['grade_1']['baseline_score'] > 0 or stats['grade_1']['midline_score'] > 0:
             st.markdown("### Grade 1 Progress Chart") 
             fig_1 = create_comparison_chart(stats, 'Grade 1')
-            st.plotly_chart(fig_1, use_container_width=True)
+            st.plotly_chart(fig_1, width='stretch')
     
     # Contact information
     st.markdown("---")

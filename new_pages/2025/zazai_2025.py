@@ -127,7 +127,7 @@ def show():
             st.session_state.current_model = model_choice
         
         with col2:
-            if st.button("Clear Chat", use_container_width=True):
+            if st.button("Clear Chat", width='stretch'):
                 st.session_state.conversation_history = []
                 st.rerun()
 

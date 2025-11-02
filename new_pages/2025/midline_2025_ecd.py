@@ -81,7 +81,7 @@ def display_2025_zz_midline_ecd():
                     color_discrete_map={'Initial': '#b3b3b3', 'Midline': '#ffd641'}
                 )
                 
-                st.plotly_chart(fig_comparison, use_container_width=True)
+                st.plotly_chart(fig_comparison, width='stretch')
                 
                 if improvement > 0:
                     st.success(f"🎉 ECD centers showed improvement of {improvement:.1f} letters on average!")
@@ -122,9 +122,9 @@ def display_2025_zz_midline_ecd():
                 xaxis_tickangle=-45
             )
 
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
-            st.dataframe(center_summary, use_container_width=True)
+            st.dataframe(center_summary, width='stretch')
 
         st.divider()
 
@@ -161,7 +161,7 @@ def display_2025_zz_midline_ecd():
             fig_hist.add_vline(x=15, line_dash="dash", line_color="red", 
                               annotation_text="EOY Target (15)", annotation_position="top")
             
-            st.plotly_chart(fig_hist, use_container_width=True)
+            st.plotly_chart(fig_hist, width='stretch')
 
         st.divider()
 

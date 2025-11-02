@@ -48,7 +48,7 @@ def main():
 
         if not df.empty:
             st.write("**Recent EA Sessions:**")
-            st.dataframe(df, use_container_width=True, hide_index=True)
+            st.dataframe(df, width='stretch', hide_index=True)
         else:
             st.warning("No data found")
 

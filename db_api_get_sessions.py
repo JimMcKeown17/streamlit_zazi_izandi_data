@@ -174,14 +174,14 @@ def main():
             fig = px.line(daily_activity, x='session_date', y='daily_sessions', 
                          title="Sessions per Day")
             fig.update_layout(xaxis_title="Date", yaxis_title="Number of Sessions")
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
         
         with col2:
             st.subheader("Daily Average Duration")
             fig = px.line(daily_activity, x='session_date', y='avg_daily_duration',
                          title="Average Session Duration per Day")
             fig.update_layout(xaxis_title="Date", yaxis_title="Duration (minutes)")
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
     
     # TA Performance
     st.subheader("🎯 TA Performance")
@@ -194,14 +194,14 @@ def main():
             fig = px.bar(top_tas, x='session_count', y='ta_name', 
                         orientation='h', title="Sessions by TA")
             fig.update_layout(yaxis={'categoryorder':'total ascending'})
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
         
         with col2:
             # Average duration by TA
             fig = px.scatter(ta_performance, x='session_count', y='avg_duration',
                            hover_data=['ta_name'], title="Duration vs Volume by TA")
             fig.update_layout(xaxis_title="Session Count", yaxis_title="Avg Duration (min)")
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
     
     # Activity analysis
     if not sessions_df.empty:
@@ -218,7 +218,7 @@ def main():
         
         fig = px.pie(activity_summary, values='count', names='activity_type',
                     title="Distribution of Session Activities")
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     # Recent sessions table
     st.header("📋 Recent Sessions")
@@ -236,7 +236,7 @@ def main():
     
     if show_columns:
         display_df = sessions_df[show_columns].head(show_rows)
-        st.dataframe(display_df, use_container_width=True)
+        st.dataframe(display_df, width='stretch')
     
     # Export data
     st.header("📥 Export Data")
@@ -293,7 +293,7 @@ def main():
         
         st.write(f"Filtered results: {len(filtered_df)} sessions")
         if not filtered_df.empty:
-            st.dataframe(filtered_df, use_container_width=True)
+            st.dataframe(filtered_df, width='stretch')
 
 if __name__ == "__main__":
     main()

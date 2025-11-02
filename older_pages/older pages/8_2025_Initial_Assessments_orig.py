@@ -74,10 +74,10 @@ try:
             showlegend=False
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         with st.expander("Show results"):
-            st.dataframe(grade_summary, use_container_width=True)
+            st.dataframe(grade_summary, width='stretch')
 
     st.divider()
 
@@ -105,7 +105,7 @@ try:
         )
 
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     with st.container():
         st.subheader("Assessments Per School & Grade")
@@ -147,7 +147,7 @@ try:
         )
 
         # Display in Streamlit
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     with st.container():
         st.subheader("Assessments Per School & Grade")
@@ -189,14 +189,14 @@ try:
         )
 
         # Display in Streamlit
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
     # TA Assessments Summary
     with st.container():
         st.header("Assessments Completed Per School & TA")
         ta_assessments = df.groupby(['school_rep', 'name_ta_rep', 'grade_label'])['name_first_learner'].count().reset_index()
         ta_assessments.columns = ['School', 'TA', 'Grade', 'Count']
-        st.dataframe(ta_assessments, use_container_width=True)
+        st.dataframe(ta_assessments, width='stretch')
 
     # School Summary
     with st.container():
@@ -231,9 +231,9 @@ try:
             legend_title="Grade",
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
-        st.dataframe(school_summary, use_container_width=True)
+        st.dataframe(school_summary, width='stretch')
 
     # Grade 1 Non-Words Summary
     with st.container():
@@ -272,9 +272,9 @@ try:
         )
 
         # Display the chart in Streamlit
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
-        st.dataframe(school_non_words_summary, use_container_width=True)
+        st.dataframe(school_non_words_summary, width='stretch')
 
     # Grade 1 Words Summary
     with st.container():
@@ -313,9 +313,9 @@ try:
         )
 
         # Display the chart in Streamlit
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
-        st.dataframe(school_words_summary, use_container_width=True)
+        st.dataframe(school_words_summary, width='stretch')
 
     st.divider()
     with st.container():

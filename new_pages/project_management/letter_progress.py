@@ -227,10 +227,10 @@ def main():
         st.subheader("Progress by School and Grade")
         
         if 'R' in charts:
-            st.plotly_chart(charts['R'], use_container_width=True)
+            st.plotly_chart(charts['R'], width='stretch')
         
         if '1' in charts:
-            st.plotly_chart(charts['1'], use_container_width=True)
+            st.plotly_chart(charts['1'], width='stretch')
     
     st.divider()
     

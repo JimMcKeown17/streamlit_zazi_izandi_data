@@ -345,7 +345,7 @@ def display_session_analysis(df):
             title="Daily Active EAs by Schools & ECDs (Past 7 Days)",
             labels={'Active_EAs': 'Number of Active EAs', 'Date': 'Date'}
         )
-        st.plotly_chart(fig_school_type_eas, use_container_width=True)
+        st.plotly_chart(fig_school_type_eas, width='stretch')
     
     # SESSIONS BY SCHOOLS & ECDs - PAST 30 DAYS (Moved below)
     st.subheader("Total Sessions by Schools & ECDs - Past 30 Days")
@@ -369,7 +369,7 @@ def display_session_analysis(df):
             labels={'Sessions': 'Number of Sessions', 'Date': 'Date'},
             markers=True
         )
-        st.plotly_chart(fig_school_type_sessions, use_container_width=True)
+        st.plotly_chart(fig_school_type_sessions, width='stretch')
     
     # ACTIVE EAs (3+ DAYS) TREND - PAST 30 DAYS
     st.subheader("Active EAs (3+ Days) Trend - Past 30 Days")
@@ -421,7 +421,7 @@ def display_session_analysis(df):
             labels={'Active_EAs_3Plus': 'Number of Active EAs (3+ Days)', 'Date': 'Date'},
             markers=True
         )
-        st.plotly_chart(fig_active_ea_trend, use_container_width=True)
+        st.plotly_chart(fig_active_ea_trend, width='stretch')
         
         st.info("📊 **Note**: For each day, we count EAs who were active 3+ days within the 7-day period ending on that day.")
     
@@ -457,7 +457,7 @@ def display_session_analysis(df):
         y='Total_Sessions',
         title=f"Total Sessions by EA ({school_type_filter})"
     )
-    st.plotly_chart(fig_total, use_container_width=True)
+    st.plotly_chart(fig_total, width='stretch')
     
         # Average daily sessions
     fig_avg = px.bar(
@@ -466,7 +466,7 @@ def display_session_analysis(df):
         y='Avg_Sessions_Per_Day',
         title=f"Average Sessions per Day ({school_type_filter})"
     )
-    st.plotly_chart(fig_avg, use_container_width=True)
+    st.plotly_chart(fig_avg, width='stretch')
     
     # SCHOOL WORKLOAD COMPARISON
     st.subheader("School Workload Comparison")
@@ -495,7 +495,7 @@ def display_session_analysis(df):
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
             xaxis={'categoryorder': 'array', 'categoryarray': school_summary.sort_values('Total_Sessions', ascending=True)['program_name'].tolist()}
         )
-        st.plotly_chart(fig_school_total, use_container_width=True)
+        st.plotly_chart(fig_school_total, width='stretch')
         
         # Average sessions per day by school chart - mixed order
         fig_school_avg = px.bar(
@@ -517,7 +517,7 @@ def display_session_analysis(df):
             legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
             xaxis={'categoryorder': 'array', 'categoryarray': school_summary.sort_values('Avg_Sessions_Per_Day', ascending=True)['program_name'].tolist()}
         )
-        st.plotly_chart(fig_school_avg, use_container_width=True)
+        st.plotly_chart(fig_school_avg, width='stretch')
     
     # EA ACTIVITY TABLE - PAST 10 WEEKDAYS
     st.subheader("EA Session Activity - Past 10 Weekdays")
@@ -582,7 +582,7 @@ def display_session_analysis(df):
                 'Percentage of EAs': (active_days_counts.values / total_eas * 100).round(1)
             })
             
-            st.dataframe(breakdown_df, use_container_width=True, hide_index=True)
+            st.dataframe(breakdown_df, width='stretch', hide_index=True)
         
         with col2:   
             
@@ -622,12 +622,12 @@ def display_session_analysis(df):
                 title=chart_title,
                 color_discrete_sequence=colors
             )
-            st.plotly_chart(fig_pie, use_container_width=True)
+            st.plotly_chart(fig_pie, width='stretch')
         
         st.divider()
         
         st.markdown("**Number of sessions run by each EA on each weekday (Monday-Friday)**")
-        st.dataframe(activity_table.drop('Work_Category', axis=1), use_container_width=True)
+        st.dataframe(activity_table.drop('Work_Category', axis=1), width='stretch')
         
         # Add summary info
         active_weekdays = len([col for col in activity_table.columns if col not in ['Total Active Days', 'Work_Category']])
@@ -821,7 +821,7 @@ def display_ea_implementation_analysis(df_sessions):
         subset=['Sessions Last 10 Days', 'Total Sessions Ever']
     )
     
-    st.dataframe(styled_table, use_container_width=True, height=600)
+    st.dataframe(styled_table, width='stretch', height=600)
     
     # Export option
     st.markdown("### Export Data")
@@ -944,7 +944,7 @@ def display_el_schools_analysis(df):
     school_activity_df = school_activity_df.sort_values(['EAs Active 3+ Days', 'EAs Active 1+ Days'], ascending=[False, False])
     
     # Display the table
-    st.dataframe(school_activity_df, use_container_width=True, hide_index=True)
+    st.dataframe(school_activity_df, width='stretch', hide_index=True)
     
     # Add summary info
     total_schools_with_data = (school_activity_df['EAs Active 1+ Days'] > 0).sum()
@@ -969,7 +969,7 @@ def display_el_schools_analysis(df):
             title="Daily Active EAs by Schools & ECDs - East London Schools (Past 7 Days)",
             labels={'Active_EAs': 'Number of Active EAs', 'Date': 'Date'}
         )
-        st.plotly_chart(fig_school_type_eas, use_container_width=True)
+        st.plotly_chart(fig_school_type_eas, width='stretch')
     
     # SESSIONS BY SCHOOLS & ECDs - PAST 30 DAYS
     st.subheader("Total Sessions by Schools & ECDs - Past 30 Days (East London Schools)")
@@ -993,7 +993,7 @@ def display_el_schools_analysis(df):
             labels={'Sessions': 'Number of Sessions', 'Date': 'Date'},
             markers=True
         )
-        st.plotly_chart(fig_school_type_sessions, use_container_width=True)
+        st.plotly_chart(fig_school_type_sessions, width='stretch')
     
     # ACTIVE EAs (3+ DAYS) TREND - PAST 30 DAYS
     st.subheader("Active EAs (3+ Days) Trend - Past 30 Days (East London Schools)")
@@ -1045,7 +1045,7 @@ def display_el_schools_analysis(df):
             labels={'Active_EAs_3Plus': 'Number of Active EAs (3+ Days)', 'Date': 'Date'},
             markers=True
         )
-        st.plotly_chart(fig_active_ea_trend, use_container_width=True)
+        st.plotly_chart(fig_active_ea_trend, width='stretch')
         
         st.info("📊 **Note**: For each day, we count EAs who were active 3+ days within the 7-day period ending on that day.")
     
@@ -1082,7 +1082,7 @@ def display_el_schools_analysis(df):
         y='Total_Sessions',
         title=f"Total Sessions by EA - East London Schools ({school_type_filter})"
     )
-    st.plotly_chart(fig_total, use_container_width=True)
+    st.plotly_chart(fig_total, width='stretch')
     
     # Average daily sessions
     fig_avg = px.bar(
@@ -1091,7 +1091,7 @@ def display_el_schools_analysis(df):
         y='Avg_Sessions_Per_Day',
         title=f"Average Sessions per Day - East London Schools ({school_type_filter})"
     )
-    st.plotly_chart(fig_avg, use_container_width=True)
+    st.plotly_chart(fig_avg, width='stretch')
     
     # EA ACTIVITY TABLE - PAST 10 WEEKDAYS
     st.subheader("EA Session Activity - Past 10 Weekdays (East London Schools)")
@@ -1156,7 +1156,7 @@ def display_el_schools_analysis(df):
                 'Percentage of EAs': (active_days_counts.values / total_eas * 100).round(1)
             })
             
-            st.dataframe(breakdown_df, use_container_width=True, hide_index=True)
+            st.dataframe(breakdown_df, width='stretch', hide_index=True)
         
         with col2:   
             
@@ -1196,12 +1196,12 @@ def display_el_schools_analysis(df):
                 title=chart_title,
                 color_discrete_sequence=colors
             )
-            st.plotly_chart(fig_pie, use_container_width=True)
+            st.plotly_chart(fig_pie, width='stretch')
         
         st.divider()
         
         st.markdown("**Number of sessions run by each EA on each weekday (Monday-Friday) - East London Schools**")
-        st.dataframe(activity_table.drop('Work_Category', axis=1), use_container_width=True)
+        st.dataframe(activity_table.drop('Work_Category', axis=1), width='stretch')
         
         # Add summary info
         active_weekdays = len([col for col in activity_table.columns if col not in ['Total Active Days', 'Work_Category']])
@@ -1229,10 +1229,10 @@ def display_data_quality(df):
             names=school_type_counts.index,
             title="Sessions by School Type"
         )
-        st.plotly_chart(fig_school_pie, use_container_width=True)
+        st.plotly_chart(fig_school_pie, width='stretch')
     
     with col2:
-        st.dataframe(school_type_counts.to_frame('Count'), use_container_width=True)
+        st.dataframe(school_type_counts.to_frame('Count'), width='stretch')
     
     # Data Quality Check
     st.markdown("### Data Quality")
@@ -1257,7 +1257,7 @@ def display_data_quality(df):
     # Raw Data Preview
     with st.expander("View Raw Data", expanded=False):
         st.markdown(f"**Showing first 100 records out of {len(df):,} total**")
-        st.dataframe(df.head(100), use_container_width=True)
+        st.dataframe(df.head(100), width='stretch')
     
     # Data Export
     st.markdown("### Data Export")

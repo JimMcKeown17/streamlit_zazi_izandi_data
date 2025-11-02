@@ -64,7 +64,7 @@ def display_home():
     )
     grade_level_fig.add_hline(y=27, line_dash="dash", line_color="red", annotation_text="South Africa Average")
 
-    st.plotly_chart(grade_level_fig, use_container_width=True)
+    st.plotly_chart(grade_level_fig, width='stretch')
     st.divider()
 
     # Show data table

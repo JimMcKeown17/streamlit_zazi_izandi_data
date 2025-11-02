@@ -663,7 +663,7 @@ def main():
         recent_sessions = create_recent_sessions_table(session_df, selected_school)
 
         if recent_sessions is not None and not recent_sessions.empty:
-            st.dataframe(recent_sessions, use_container_width=True, hide_index=True)
+            st.dataframe(recent_sessions, width='stretch', hide_index=True)
 
             # Show session count
             st.caption(f"Showing {len(recent_sessions)} sessions from the past 2 weeks")
@@ -708,7 +708,7 @@ def main():
                 })
 
             df_flagged = pd.DataFrame(flagged_data)
-            st.dataframe(df_flagged, use_container_width=True, hide_index=True)
+            st.dataframe(df_flagged, width='stretch', hide_index=True)
 
             # Show detailed breakdown for each flagged TA
             if st.button("View Detailed Group Breakdown"):
@@ -764,7 +764,7 @@ def main():
         if not session_df.empty:
             st.write("**Sample session data:**")
             sample_df = session_df[['user_name', 'school_name', 'group_name', 'letters_taught', 'session_started_at']].head(5)
-            st.dataframe(sample_df, use_container_width=True, hide_index=True)
+            st.dataframe(sample_df, width='stretch', hide_index=True)
 
 
 main()

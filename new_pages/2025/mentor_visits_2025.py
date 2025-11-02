@@ -228,7 +228,7 @@ def display_mentor_visits_dashboard():
         mentor_counts = filtered_df["Mentor Name"].value_counts().reset_index()
         mentor_counts.columns = ["Mentor", "Visits"]
         fig1 = px.bar(mentor_counts, x="Mentor", y="Visits", text="Visits", title="Number of Visits per Mentor")
-        st.plotly_chart(fig1, use_container_width=True)
+        st.plotly_chart(fig1, width='stretch')
 
         ## 2. EA Children Grouping
         st.subheader("EA Children Grouping Correctly")
@@ -278,7 +278,7 @@ def display_mentor_visits_dashboard():
                     fig2_first = px.pie(first_counts, values="Count", names="Response", 
                                         title="First Visit: EA Children Grouping",
                                         color="Response", color_discrete_map=get_yes_no_colors())
-                    st.plotly_chart(fig2_first, use_container_width=True)
+                    st.plotly_chart(fig2_first, width='stretch')
                     st.caption(f"Based on {len(comparison_df)} schools")
                 
                 with col2:
@@ -288,7 +288,7 @@ def display_mentor_visits_dashboard():
                     fig2_recent = px.pie(recent_counts, values="Count", names="Response", 
                                          title="Most Recent Visit: EA Children Grouping",
                                          color="Response", color_discrete_map=get_yes_no_colors())
-                    st.plotly_chart(fig2_recent, use_container_width=True)
+                    st.plotly_chart(fig2_recent, width='stretch')
                     st.caption(f"Based on {len(comparison_df)} schools")
                 
                 # Show detailed table in expander
@@ -306,7 +306,7 @@ def display_mentor_visits_dashboard():
                                   'First Visit Date', 'First Visit Response', 
                                   'Most Recent Visit Date', 'Most Recent Visit Response', 
                                   'Most Recent Visit Mentor', 'Most Recent Visit EA', 'Status']
-                    st.dataframe(display_comparison[table_cols], use_container_width=True, hide_index=True)
+                    st.dataframe(display_comparison[table_cols], width='stretch', hide_index=True)
                     
                     # Summary stats
                     improved = len(display_comparison[display_comparison['Status'] == '✅ Improved'])
@@ -324,7 +324,7 @@ def display_mentor_visits_dashboard():
                                 barmode="group", title="Grouping Correctness by Mentor (All Visits)",
                                 color_discrete_map=get_yes_no_colors())
             fig2_mentor.update_layout(legend=dict(title="", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-            st.plotly_chart(fig2_mentor, use_container_width=True)
+            st.plotly_chart(fig2_mentor, width='stretch')
 
         ## 3. EA Letter Tracker Use
         st.subheader("EA Letter Tracker Usage")
@@ -374,7 +374,7 @@ def display_mentor_visits_dashboard():
                     fig3_first = px.pie(first_counts, values="Count", names="Response", 
                                         title="First Visit: Letter Tracker Usage",
                                         color="Response", color_discrete_map=get_yes_no_colors())
-                    st.plotly_chart(fig3_first, use_container_width=True)
+                    st.plotly_chart(fig3_first, width='stretch')
                     st.caption(f"Based on {len(comparison_df)} schools")
                 
                 with col2:
@@ -384,7 +384,7 @@ def display_mentor_visits_dashboard():
                     fig3_recent = px.pie(recent_counts, values="Count", names="Response", 
                                          title="Most Recent Visit: Letter Tracker Usage",
                                          color="Response", color_discrete_map=get_yes_no_colors())
-                    st.plotly_chart(fig3_recent, use_container_width=True)
+                    st.plotly_chart(fig3_recent, width='stretch')
                     st.caption(f"Based on {len(comparison_df)} schools")
                 
                 # Show detailed table in expander
@@ -402,7 +402,7 @@ def display_mentor_visits_dashboard():
                                   'First Visit Date', 'First Visit Response', 
                                   'Most Recent Visit Date', 'Most Recent Visit Response',
                                   'Most Recent Visit Mentor', 'Most Recent Visit EA', 'Status']
-                    st.dataframe(display_comparison[table_cols], use_container_width=True, hide_index=True)
+                    st.dataframe(display_comparison[table_cols], width='stretch', hide_index=True)
                     
                     # Summary stats
                     improved = len(display_comparison[display_comparison['Status'] == '✅ Improved'])
@@ -420,7 +420,7 @@ def display_mentor_visits_dashboard():
                                 barmode="group", title="Letter Tracker Usage by Mentor (All Visits)",
                                 color_discrete_map=get_yes_no_colors())
             fig3_mentor.update_layout(legend=dict(title="", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-            st.plotly_chart(fig3_mentor, use_container_width=True)
+            st.plotly_chart(fig3_mentor, width='stretch')
 
         ## 4. Teaching at Right Level - Split by Survey Type
         st.subheader("Teaching at the Right Level")
@@ -445,7 +445,7 @@ def display_mentor_visits_dashboard():
                     fig4_old = px.pie(old_counts, values="Count", names="Response", 
                                       title="Teaching Correct Letters (Old Survey)",
                                       color="Response", color_discrete_map=get_yes_no_colors())
-                    st.plotly_chart(fig4_old, use_container_width=True)
+                    st.plotly_chart(fig4_old, width='stretch')
                     
                     # Show counts
                     st.caption(f"Total responses: {len(old_data)}")
@@ -484,7 +484,7 @@ def display_mentor_visits_dashboard():
                                           text="Count")
                         fig4_new.update_layout(xaxis_title="", yaxis_title="Count")
                         fig4_new.update_traces(textposition='outside')
-                        st.plotly_chart(fig4_new, use_container_width=True)
+                        st.plotly_chart(fig4_new, width='stretch')
                         
                         # Show counts
                         st.caption(f"Total individual responses: {len(expanded_records)} (from {len(new_data)} visits)")
@@ -508,7 +508,7 @@ def display_mentor_visits_dashboard():
                                                 title="Old Survey: Teaching Correct Letters by Mentor",
                                                 color_discrete_map=get_yes_no_colors())
                 fig4_old_mentor.update_layout(legend=dict(title="", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-                st.plotly_chart(fig4_old_mentor, use_container_width=True)
+                st.plotly_chart(fig4_old_mentor, width='stretch')
         
         # For new survey data - expand comma-separated values
         if new_survey_col in filtered_df.columns:
@@ -535,21 +535,21 @@ def display_mentor_visits_dashboard():
                                                     barmode="group", 
                                                     title="New Survey: Teaching at Right Level by Mentor")
                     fig4_new_mentor.update_layout(legend=dict(title="", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-                    st.plotly_chart(fig4_new_mentor, use_container_width=True)
+                    st.plotly_chart(fig4_new_mentor, width='stretch')
 
         ## 5. Overall Quality Ratings
         st.subheader("Session Quality Ratings")
         fig5 = px.histogram(filtered_df, x="Mentor Name", color="Please rate the overall quality of the sessions you observe",
                             barmode="group", title="Session Quality Ratings by Mentor")
         fig5.update_layout(legend=dict(title="", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-        st.plotly_chart(fig5, use_container_width=True)
+        st.plotly_chart(fig5, width='stretch')
 
         ## 6. EA-Teacher Relationship
         st.subheader("EA-Teacher Relationships")
         fig6 = px.histogram(filtered_df, x="Mentor Name", color="How is the EA's relationship with their teacher?",
                             barmode="group", title="EA-Teacher Relationship by Mentor")
         fig6.update_layout(legend=dict(title="", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-        st.plotly_chart(fig6, use_container_width=True)
+        st.plotly_chart(fig6, width='stretch')
 
         st.divider()
 
@@ -615,7 +615,7 @@ def display_mentor_visits_dashboard():
             # Sort by Total Visits descending, then by Last Visit Date descending
             dataquest_df = dataquest_df.sort_values(["Total Visits", "Last Visit Date"], ascending=[False, False])
 
-            st.dataframe(dataquest_df, use_container_width=True, hide_index=True)
+            st.dataframe(dataquest_df, width='stretch', hide_index=True)
 
             # Summary statistics
             total_dataquest_visits = dataquest_df["Total Visits"].sum()
@@ -705,7 +705,7 @@ def display_mentor_visits_dashboard():
             # Display the table with scrolling
             st.dataframe(
                 table_display,
-                use_container_width=True,
+                width='stretch',
                 height=400  # Fixed height to make it scrollable
             )
 
@@ -713,7 +713,7 @@ def display_mentor_visits_dashboard():
         else:
             st.warning("No expected columns found in the data.")
             # Show all available data as fallback
-            st.dataframe(table_df, use_container_width=True, height=400)
+            st.dataframe(table_df, width='stretch', height=400)
 
     except Exception as e:
         st.error("An error occurred while loading or displaying the dashboard.")

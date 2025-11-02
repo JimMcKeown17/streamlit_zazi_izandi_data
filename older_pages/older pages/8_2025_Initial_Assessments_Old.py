@@ -102,10 +102,10 @@ try:
             showlegend=False
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         with st.expander("Show results"):
-            st.dataframe(grade_summary, use_container_width=True)
+            st.dataframe(grade_summary, width='stretch')
 
     st.divider()
 
@@ -143,9 +143,9 @@ try:
             legend_title="Grade",
         )
 
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
-        st.dataframe(school_summary, use_container_width=True)
+        st.dataframe(school_summary, width='stretch')
 
 
 
@@ -184,7 +184,7 @@ try:
         )
 
         # Display chart
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Show summary stats
         col1, col2, col3 = st.columns(3)
@@ -241,10 +241,10 @@ try:
         )
 
         # Display chart
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         # Show detailed table
-        st.dataframe(school_letter_score_summary, use_container_width=True)
+        st.dataframe(school_letter_score_summary, width='stretch')
 
     with st.container():
         st.subheader("Data Export Tools")
@@ -402,7 +402,7 @@ try:
             )
 
 
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
         with st.container():
             st.subheader("Assessments Per School & Grade")
@@ -444,7 +444,7 @@ try:
             )
 
             # Display in Streamlit
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
         with st.container():
             st.subheader("Assessments Per School & Grade")
@@ -486,14 +486,14 @@ try:
             )
 
             # Display in Streamlit
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
         # TA Assessments Summary
         with st.container():
             st.header("Assessments Completed Per School & TA")
             ta_assessments = initial_df.groupby(['school_rep', 'name_ta_rep', 'grade_label'])['name_first_learner'].count().reset_index()
             ta_assessments.columns = ['School', 'TA', 'Grade', 'Count']
-            st.dataframe(ta_assessments, use_container_width=True)
+            st.dataframe(ta_assessments, width='stretch')
 
 
 except Exception as e:

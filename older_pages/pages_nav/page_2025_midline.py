@@ -104,7 +104,7 @@ def show():
                     color_discrete_map={'Initial Score': '#b3b3b3', 'Midline Score': '#ffd641'}
                 )
 
-                st.plotly_chart(egra_fig, use_container_width=True)
+                st.plotly_chart(egra_fig, width='stretch')
 
                 with st.expander('Click to view data:'):
                     st.dataframe(egra_summary)
@@ -170,7 +170,7 @@ def show():
                     annotation_position='top left'
                 )
 
-                st.plotly_chart(grade_level_fig, use_container_width=True)
+                st.plotly_chart(grade_level_fig, width='stretch')
 
                 with st.expander('Click to view data:'):
                     st.dataframe(df_grade_level)
@@ -210,9 +210,9 @@ def show():
                     legend_title="Grade",
                 )
 
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
 
-                st.dataframe(school_summary, use_container_width=True)
+                st.dataframe(school_summary, width='stretch')
 
             st.divider()
             
@@ -250,7 +250,7 @@ def show():
                 )
 
                 # Display chart
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
 
                 # Show summary stats
                 col1, col2, col3 = st.columns(3)
@@ -308,10 +308,10 @@ def show():
                 )
 
                 # Display chart
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
 
                 # Show detailed table
-                st.dataframe(school_letter_score_summary, use_container_width=True)
+                st.dataframe(school_letter_score_summary, width='stretch')
 
             st.divider()
 
@@ -377,10 +377,10 @@ def show():
                     legend_title="Assessment Period"
                 )
                 
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
                 
                 with st.expander(f'View {grade_selection} Average Data'):
-                    st.dataframe(school_comparison, use_container_width=True)
+                    st.dataframe(school_comparison, width='stretch')
 
                 st.subheader(f"2. Percentage at Benchmark (≥40) - {grade_selection}")
                 
@@ -451,10 +451,10 @@ def show():
                     annotation_position='top left'
                 )
                 
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
                 
                 with st.expander(f'View {grade_selection} Benchmark Data'):
-                    st.dataframe(benchmark_comparison, use_container_width=True)
+                    st.dataframe(benchmark_comparison, width='stretch')
             
             # AI Analysis has been moved to the dedicated 'ZazAI' page
             st.divider()
@@ -552,12 +552,12 @@ def show():
                     # Add text on bars
                     fig.update_traces(texttemplate='%{text:.1f}', textposition='outside')
                     
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
                     
                     
                     # Show detailed table
                     with st.expander(f'View Detailed TA {performance_type} Data - {ta_grade_selection}'):
-                        st.dataframe(ta_improvement_filtered, use_container_width=True)
+                        st.dataframe(ta_improvement_filtered, width='stretch')
                 else:
                     st.warning(f"No TAs found with sufficient data (5+ matched children between baseline and midline) for {ta_grade_selection}.")
             
@@ -632,11 +632,11 @@ def show():
                     # Add text on bars
                     fig.update_traces(texttemplate='%{text:.1f}', textposition='outside')
                     
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
                     
                     # Show detailed table
                     with st.expander(f'View Detailed TA Midline {midline_performance_type} Data - {ta_midline_grade_selection}'):
-                        st.dataframe(ta_midline_filtered, use_container_width=True)
+                        st.dataframe(ta_midline_filtered, width='stretch')
                 else:
                     st.warning(f"No TAs found with sufficient data (5+ children assessed) for {ta_midline_grade_selection}.")
             

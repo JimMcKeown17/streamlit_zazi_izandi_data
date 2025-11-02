@@ -163,6 +163,7 @@ def get_data_summary():
 def load_session_data_from_db():
     """
     Load session data from database with intelligent caching
+    Cache automatically resets once per day (at midnight) using date-based cache key
     
     Returns:
         pandas.DataFrame: Session data with school_type and mentor columns added
@@ -180,20 +181,25 @@ def load_session_data_from_db():
             st.warning("No data found in database. Please refresh data from API.")
             return pd.DataFrame()
         
-        # Use the refresh timestamp as cache key by calling the cached internal function
-        return _load_session_data_internal(str(refresh_timestamp))
+        # Use both the current date AND refresh timestamp as cache key
+        # This ensures cache resets daily at midnight regardless of database updates
+        current_date = datetime.now().date().isoformat()
+        cache_key = f"{current_date}_{refresh_timestamp}"
+        
+        # Use the combined cache key by calling the cached internal function
+        return _load_session_data_internal(cache_key)
         
     except Exception as e:
         st.error(f"Error loading data from database: {e}")
         return pd.DataFrame()
 
 @st.cache_data
-def _load_session_data_internal(_refresh_timestamp_str):
+def _load_session_data_internal(_cache_key):
     """
-    Internal function to load data with caching based on refresh timestamp
+    Internal function to load data with caching based on date + refresh timestamp
     
     Args:
-        _refresh_timestamp_str: String representation of refresh timestamp for cache key
+        _cache_key: Combined cache key (date + refresh timestamp) that ensures daily cache reset
     
     Returns:
         pandas.DataFrame: Raw session data with derived columns

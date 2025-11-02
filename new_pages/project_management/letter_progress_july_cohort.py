@@ -452,13 +452,13 @@ def main():
             st.subheader("Progress by School and Grade - Recent 2 Weeks")
 
             if 'R' in charts:
-                st.plotly_chart(charts['R'], use_container_width=True)
+                st.plotly_chart(charts['R'], width='stretch')
 
             if '1' in charts:
-                st.plotly_chart(charts['1'], use_container_width=True)
+                st.plotly_chart(charts['1'], width='stretch')
 
             if '2' in charts:
-                st.plotly_chart(charts['2'], use_container_width=True)
+                st.plotly_chart(charts['2'], width='stretch')
 
         st.divider()
 
@@ -473,7 +473,7 @@ def main():
             if not session_df.empty:
                 st.write("**Sample session data:**")
                 sample_df = session_df[['user_name', 'school_name', 'group_name', 'letters_taught', 'session_started_at']].head(5)
-                st.dataframe(sample_df, use_container_width=True, hide_index=True)
+                st.dataframe(sample_df, width='stretch', hide_index=True)
 
     except Exception as e:
         st.error(f"Error during page execution: {e}")

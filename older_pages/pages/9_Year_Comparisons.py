@@ -217,7 +217,7 @@ if egra_comparison_data:
         color_discrete_map={'2023': GREY, '2024': BLUE, '2025': YELLOW}
     )
     
-    st.plotly_chart(egra_fig, use_container_width=True)
+    st.plotly_chart(egra_fig, width='stretch')
     
     with st.expander('View EGRA Score Data'):
         st.dataframe(egra_df)
@@ -271,7 +271,7 @@ benchmark_fig.add_hline(
     annotation_position='top left'
 )
 
-st.plotly_chart(benchmark_fig, use_container_width=True)
+st.plotly_chart(benchmark_fig, width='stretch')
 
 with st.expander('View Benchmark Data'):
     st.dataframe(benchmark_df)

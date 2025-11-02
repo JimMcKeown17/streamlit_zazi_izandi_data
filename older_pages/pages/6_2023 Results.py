@@ -73,7 +73,7 @@ with st.container():
         color_discrete_map={'Masi Egra Full Baseline': GREY, 'Masi Egra Full Endline': YELLOW}
     )
 
-    st.plotly_chart(egra_fig, use_container_width=True)
+    st.plotly_chart(egra_fig, width='stretch')
 
 with st.expander('Click to view data:'):
     egra_summary = endline.groupby('Grade').agg({
@@ -109,7 +109,7 @@ with st.container():
         color_discrete_map={'Masi Letters Known Baseline': GREY, 'Masi Letters Known Endline': BLUE}
 
     )
-    st.plotly_chart(letter_fig, use_container_width=True)
+    st.plotly_chart(letter_fig, width='stretch')
 
     with st.expander('Click to view data:'):
         letter_summary = endline.groupby('Grade').agg({
@@ -172,7 +172,7 @@ with st.container():
 
     )
 
-    st.plotly_chart(grade_level_fig, use_container_width=True)
+    st.plotly_chart(grade_level_fig, width='stretch')
 
     with st.expander('Click to view data:'):
         st.dataframe(df)
@@ -203,7 +203,7 @@ with st.container():
             y='Egra Improvement Endline',
             color_discrete_sequence=[YELLOW]
         )
-        st.plotly_chart(school_fig, use_container_width=True)
+        st.plotly_chart(school_fig, width='stretch')
 
         with st.expander('Click to view data:'):
             school_egra_improvement = filtered_midline.groupby(['School']).agg({

@@ -191,7 +191,7 @@ def display_2025_teampact():
         # Rotate x-axis labels and sort by descending values
         fig.update_xaxes(tickangle=45, categoryorder='total descending')
         
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
     
     st.divider()
     with st.container():
@@ -238,7 +238,7 @@ def display_2025_teampact():
         # Rotate x-axis labels and sort by descending values
         fig_count.update_xaxes(tickangle=45, categoryorder='total descending')
         
-        st.plotly_chart(fig_count, use_container_width=True)
+        st.plotly_chart(fig_count, width='stretch')
 
     st.divider()
     with st.container():
@@ -288,10 +288,10 @@ def display_2025_teampact():
                 # Display in appropriate column
                 if i == 0:
                     with col1:
-                        st.plotly_chart(fig_pie, use_container_width=True)
+                        st.plotly_chart(fig_pie, width='stretch')
                 else:
                     with col2:
-                        st.plotly_chart(fig_pie, use_container_width=True)
+                        st.plotly_chart(fig_pie, width='stretch')
             else:
                 # Handle case where no data exists for this grade
                 if i == 0:
@@ -342,7 +342,7 @@ def display_2025_teampact():
                     # Remove the numeric column before displaying
                     summary_df = summary_df.drop('% Above Threshold Numeric', axis=1)
                     
-                    st.dataframe(summary_df, use_container_width=True, hide_index=True)
+                    st.dataframe(summary_df, width='stretch', hide_index=True)
                     
                     # Add summary statistics
                     st.write("**Summary:**")
@@ -397,7 +397,7 @@ def display_2025_teampact():
                     # Format the percentage column for display
                     grade_1_df_summary['% Above Threshold'] = grade_1_df_summary['% Above Threshold'].apply(lambda x: f"{x:.1f}%")
                     
-                    st.dataframe(grade_1_df_summary, use_container_width=True, hide_index=True)
+                    st.dataframe(grade_1_df_summary, width='stretch', hide_index=True)
                     
                     # Add summary statistics for Grade 1
                     st.write("**Grade 1 Summary:**")
@@ -461,7 +461,7 @@ def display_2025_teampact():
             # Add count labels on top of bars
             fig_hist.update_traces(texttemplate='%{y}', textposition='outside')
             
-            st.plotly_chart(fig_hist, use_container_width=True)
+            st.plotly_chart(fig_hist, width='stretch')
             
             # Show summary statistics
             col1, col2, col3, col4 = st.columns(4)
@@ -488,7 +488,7 @@ def display_2025_teampact():
         
         if len(low_count_TAs) > 0:
             st.write(f"**{len(low_count_TAs)} Teacher Assistants** have completed fewer than 15 assessments:")
-            st.dataframe(low_count_TAs.rename(columns={'First Name': 'Assessment Count'}), use_container_width=True)
+            st.dataframe(low_count_TAs.rename(columns={'First Name': 'Assessment Count'}), width='stretch')
         else:
             st.success("All Teacher Assistants have completed 15 or more assessments!")
 
