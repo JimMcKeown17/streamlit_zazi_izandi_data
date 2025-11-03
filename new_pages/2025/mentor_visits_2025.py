@@ -7,6 +7,12 @@ import traceback
 import subprocess
 import sys
 from pathlib import Path
+from wordcloud import WordCloud, STOPWORDS
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+import matplotlib.pyplot as plt
+import openai
+import json
+from collections import Counter
 
 # Load environment variables
 load_dotenv()
@@ -121,6 +127,345 @@ selected_schools_list = [
 def get_yes_no_colors():
     return {"Yes": "#2E86AB", "No": "#F24236"}  # Blue for Yes, Light Red for No
 
+# ============== QUALITATIVE ANALYSIS HELPER FUNCTIONS ==============
+
+def setup_openai_for_qualitative():
+    """Initialize OpenAI client with API key from environment variables."""
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key:
+        return None, "OPENAI_API_KEY not found in environment variables"
+    
+    try:
+        client = openai.OpenAI(api_key=api_key)
+        return client, None
+    except Exception as e:
+        return None, f"Error initializing OpenAI client: {str(e)}"
+
+@st.cache_data(ttl=3600)
+def generate_word_cloud_image(text_data_list, width=800, height=400):
+    """Generate word cloud from list of text strings."""
+    if not text_data_list or len(text_data_list) == 0:
+        return None
+    
+    # Combine all text
+    combined_text = ' '.join([str(text) for text in text_data_list if pd.notna(text) and str(text).strip() != ''])
+    
+    if not combined_text.strip():
+        return None
+    
+    # Combine built-in English stopwords with custom education-specific stopwords
+    all_stopwords = set(STOPWORDS)
+    custom_stopwords = {'session', 'ea', 'school', 'learner', 'teacher', 
+                        'sessions', 'eas', 'schools', 'learners', 'teachers'}
+    all_stopwords.update(custom_stopwords)
+    
+    # Create word cloud
+    wordcloud = WordCloud(
+        width=width,
+        height=height,
+        background_color='white',
+        colormap='viridis',
+        max_words=100,
+        relative_scaling=0.5,
+        min_font_size=10,
+        stopwords=all_stopwords
+    ).generate(combined_text)
+    
+    # Create matplotlib figure
+    fig, ax = plt.subplots(figsize=(12, 6))
+    ax.imshow(wordcloud, interpolation='bilinear')
+    ax.axis('off')
+    plt.tight_layout(pad=0)
+    
+    return fig
+
+def normalize_response(response, question_type):
+    """Normalize similar response variations into standard categories."""
+    if pd.isna(response):
+        return None
+    
+    response_lower = str(response).lower().strip()
+    
+    # Common patterns across all questions - including "could not observe"
+    if any(phrase in response_lower for phrase in ["didn't observe", "did not observe", "could not observe", "couldn't observe", "hasn't started", "has not started", "n/a", "na"]):
+        return "NOT_OBSERVED"
+    
+    # Session quality normalizations
+    if question_type == "quality":
+        if "excellent" in response_lower:
+            return "Excellent"
+        elif "good" in response_lower:
+            return "Good"
+        elif "average" in response_lower or "fair" in response_lower or "moderate" in response_lower:
+            return "Average"
+        elif "poor" in response_lower:
+            return "Poor"
+        else:
+            return response
+    
+    # Relationship normalizations
+    elif question_type == "relationship":
+        if "excellent" in response_lower:
+            return "Excellent"
+        elif "good" in response_lower:
+            return "Good"
+        elif "average" in response_lower or "neutral" in response_lower or "moderate" in response_lower:
+            return "Average"
+        elif "difficult" in response_lower or "poor" in response_lower:
+            return "Difficult"
+        else:
+            return response
+    
+    return response
+
+def simplify_sentiment_response(response, question_type):
+    """Simplify responses into 3-5 broad categories for easier interpretation."""
+    if pd.isna(response):
+        return None
+    
+    response_lower = str(response).lower().strip()
+    
+    # Check for "did not observe" patterns
+    if any(phrase in response_lower for phrase in ["didn't observe", "did not observe", "hasn't started", "has not started", "n/a", "na"]):
+        return "NOT_OBSERVED"
+    
+    # Engagement-specific simplification (3 categories: High, Moderate, Low)
+    if question_type == "engagement":
+        # High engagement indicators
+        if any(phrase in response_lower for phrase in ["very engaged", "actively", "excellent", "high", "very much"]):
+            return "High"
+        # Low engagement indicators
+        elif any(phrase in response_lower for phrase in ["low", "poor", "disengaged", "not engaged", "barely"]):
+            return "Low"
+        # Default to Moderate for anything in between
+        else:
+            return "Moderate"
+    
+    # Energy/Preparation-specific simplification (3 categories: High, Moderate, Low)
+    elif question_type == "energy":
+        # High energy indicators
+        if any(phrase in response_lower for phrase in ["very", "excellent", "well prepared", "energetic", "high", "best"]):
+            return "High"
+        # Low energy indicators  
+        elif any(phrase in response_lower for phrase in ["low", "poor", "unprepared", "tired", "lacking"]):
+            return "Low"
+        # Default to Moderate
+        else:
+            return "Moderate"
+    
+    return response
+
+def get_categorical_sentiment_colors():
+    """Define color mapping for categorical sentiment responses."""
+    return {
+        # Simplified engagement levels
+        "High": "#2E7D32",
+        "Moderate": "#FFA726",
+        "Low": "#EF5350",
+        
+        # Session quality (ordered: Poor -> Average -> Good -> Excellent)
+        "Poor": "#EF5350",
+        "Average": "#FFA726",
+        "Good": "#66BB6A",
+        "Excellent": "#2E7D32",
+        
+        # Teacher relationship (ordered: Difficult -> Average -> Good -> Excellent)
+        "Difficult": "#EF5350",
+        "Average": "#FFA726",
+        "Good": "#66BB6A",
+        "Excellent": "#2E7D32"
+    }
+
+def analyze_categorical_sentiment(df, column_name, title, question_type):
+    """Create pie chart visualization for categorical sentiment column with normalization."""
+    if column_name not in df.columns:
+        st.warning(f"Column '{column_name}' not found in data")
+        return 0, 0  # Return counts
+    
+    # Filter out null values
+    data = df[df[column_name].notna()].copy()
+    
+    if data.empty:
+        st.info(f"No data available for {title}")
+        return 0, 0
+    
+    # Normalize responses
+    data['normalized_response'] = data[column_name].apply(lambda x: normalize_response(x, question_type))
+    
+    # Count "NOT_OBSERVED" responses before filtering
+    total_responses = len(data)
+    not_observed_count = (data['normalized_response'] == 'NOT_OBSERVED').sum()
+    
+    # Filter out "NOT_OBSERVED" responses
+    data_filtered = data[data['normalized_response'] != 'NOT_OBSERVED'].copy()
+    
+    if data_filtered.empty:
+        st.info(f"No observable data for {title} (all responses were 'did not observe')")
+        return not_observed_count, total_responses
+    
+    # Get value counts
+    counts = data_filtered['normalized_response'].value_counts().reset_index()
+    counts.columns = ["Response", "Count"]
+    
+    # Define ordering from bad to good
+    if question_type == "quality":
+        category_order = ["Poor", "Average", "Good", "Excellent"]
+    elif question_type == "relationship":
+        category_order = ["Difficult", "Average", "Good", "Excellent"]
+    else:
+        category_order = None
+    
+    # Create pie chart
+    color_map = get_categorical_sentiment_colors()
+    fig = px.pie(
+        counts,
+        values="Count",
+        names="Response",
+        title=title,
+        color="Response",
+        color_discrete_map=color_map,
+        category_orders={"Response": category_order} if category_order else None
+    )
+    fig.update_traces(textposition='inside', textinfo='percent+label+value')
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Show summary stats
+    st.caption(f"Observable responses: {len(data_filtered)} | Excluded 'did not observe': {not_observed_count}")
+    
+    return not_observed_count, total_responses
+
+def analyze_simplified_sentiment(df, column_name, title, question_type):
+    """Create simplified visualization with 3-5 categories."""
+    if column_name not in df.columns:
+        st.warning(f"Column '{column_name}' not found in data")
+        return
+    
+    # Filter out null values
+    data = df[df[column_name].notna()].copy()
+    
+    if data.empty:
+        st.info(f"No data available for {title}")
+        return
+    
+    # Simplify responses into 3 categories
+    data['simplified_response'] = data[column_name].apply(lambda x: simplify_sentiment_response(x, question_type))
+    
+    # Count "NOT_OBSERVED" responses before filtering
+    total_responses = len(data)
+    not_observed_count = (data['simplified_response'] == 'NOT_OBSERVED').sum()
+    
+    # Filter out "NOT_OBSERVED" responses
+    data_filtered = data[data['simplified_response'] != 'NOT_OBSERVED'].copy()
+    
+    if data_filtered.empty:
+        st.info(f"No observable data for {title}")
+        return
+    
+    # Get value counts
+    counts = data_filtered['simplified_response'].value_counts().reset_index()
+    counts.columns = ["Response", "Count"]
+    
+    # Define custom order for sentiment levels
+    category_order = ["High", "Moderate", "Low"]
+    counts['Response'] = pd.Categorical(counts['Response'], categories=category_order, ordered=True)
+    counts = counts.sort_values('Response')
+    
+    # Create horizontal bar chart
+    color_map = get_categorical_sentiment_colors()
+    fig = px.bar(
+        counts,
+        y="Response",
+        x="Count",
+        title=title,
+        orientation='h',
+        text="Count",
+        color="Response",
+        color_discrete_map=color_map
+    )
+    fig.update_traces(textposition='outside')
+    fig.update_layout(
+        showlegend=False,
+        yaxis_title="",
+        xaxis_title="Number of Visits",
+        height=300
+    )
+    st.plotly_chart(fig, use_container_width=True)
+    
+    # Show summary stats
+    st.caption(f"Observable responses: {len(data_filtered)} | Excluded 'did not observe': {not_observed_count}")
+
+@st.cache_data(ttl=3600)
+def summarize_issues_with_ai(_client, issue_descriptions, issue_type):
+    """Use OpenAI to summarize common patterns in issue descriptions."""
+    if not issue_descriptions or len(issue_descriptions) == 0:
+        return "No issues reported."
+    
+    # Combine all descriptions
+    combined_text = "\n".join([f"- {desc}" for desc in issue_descriptions if pd.notna(desc) and str(desc).strip() != ''])
+    
+    if not combined_text.strip():
+        return "No detailed explanations provided."
+    
+    try:
+        response = _client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are an education data analyst helping to identify patterns in mentor visit feedback. Provide concise, actionable summaries."
+                },
+                {
+                    "role": "user",
+                    "content": f"""Analyze these mentor observations about {issue_type} and identify the 3-5 most common issues or patterns. 
+                    
+For each pattern, provide:
+1. A clear description of the issue
+2. How frequently it appears (estimate based on the data)
+3. A brief recommendation for improvement
+
+Here are the observations:
+{combined_text}
+
+Format your response as a numbered list with clear, concise bullet points."""
+                }
+            ],
+            max_tokens=800,
+            temperature=0.7
+        )
+        
+        return response.choices[0].message.content
+        
+    except Exception as e:
+        return f"Error generating AI summary: {str(e)}"
+
+def analyze_text_sentiment_vader(text_series):
+    """Analyze sentiment of text using VADER."""
+    analyzer = SentimentIntensityAnalyzer()
+    
+    sentiments = []
+    for text in text_series:
+        if pd.notna(text) and str(text).strip() != '':
+            scores = analyzer.polarity_scores(str(text))
+            # Classify based on compound score
+            if scores['compound'] >= 0.05:
+                sentiment = 'Positive'
+            elif scores['compound'] <= -0.05:
+                sentiment = 'Negative'
+            else:
+                sentiment = 'Neutral'
+            sentiments.append({
+                'text': str(text),
+                'sentiment': sentiment,
+                'compound': scores['compound'],
+                'positive': scores['pos'],
+                'neutral': scores['neu'],
+                'negative': scores['neg']
+            })
+    
+    return pd.DataFrame(sentiments)
+
+# ============== END QUALITATIVE ANALYSIS HELPER FUNCTIONS ==============
+
 def load_merged_mentor_visits():
     """Load the merged mentor visits data from the merged CSV file"""
     try:
@@ -157,78 +502,16 @@ def load_merged_mentor_visits():
         st.code(traceback.format_exc())
         return pd.DataFrame()
 
-def display_mentor_visits_dashboard():
-    st.title("📊 Mentor Visits Dashboard")
-
+def display_mentor_visits_dashboard_content(filtered_df):
+    """Display the main quantitative dashboard content (called from tabs)."""
     try:
-        # === Load Data ===
-        df = load_merged_mentor_visits()
-        
-        if df.empty:
-            st.warning("No data available. Please check the data loading process.")
-            return
-
-        # === School Type Toggle ===
-        school_type = st.radio(
-            "Select School Type:",
-            ["Primary Schools", "ECDCs", "DataQuest Schools"],
-            index=0,  # Default to Primary Schools
-            horizontal=True
-        )
-
-        # Filter by school type
-        if school_type == "Primary Schools":
-            df = df[df["Grade"] != "PreR"]
-        elif school_type == "ECDCs":
-            df = df[df["Grade"] == "PreR"]
-        else:  # DataQuest Schools
-            # Filter to only include DataQuest schools using first-word matching (same logic as table flag)
-            dataquest_first_words = [school.split()[0].lower() for school in selected_schools_list]
-
-            def is_dataquest_school_filter(school_name):
-                if pd.isna(school_name) or school_name == "":
-                    return False
-                # Get first word of the school name
-                first_word = str(school_name).split()[0].lower()
-                return first_word in dataquest_first_words
-
-            df = df[df["School Name"].apply(is_dataquest_school_filter)]
-            # Further filter to exclude PreR (ECDCs) since DataQuest are Primary Schools
-            df = df[df["Grade"] != "PreR"]
-
-        # === Sidebar Filters ===
-        mentors = st.sidebar.multiselect("Filter by Mentor", df["Mentor Name"].dropna().unique())
-        schools = st.sidebar.multiselect("Filter by School", df["School Name"].dropna().unique())
-        
-        # Add survey source filter
-        if 'survey_source' in df.columns:
-            survey_sources = st.sidebar.multiselect("Filter by Survey", df["survey_source"].dropna().unique())
-
-        filtered_df = df.copy()
-        if mentors:
-            filtered_df = filtered_df[filtered_df["Mentor Name"].isin(mentors)]
-        if schools:
-            filtered_df = filtered_df[filtered_df["School Name"].isin(schools)]
-        if 'survey_source' in df.columns and survey_sources:
-            filtered_df = filtered_df[filtered_df["survey_source"].isin(survey_sources)]
-
-        st.write(f"Total visits in dataset: **{len(filtered_df)}**")
-        
-        # Show data source breakdown
-        if 'survey_source' in filtered_df.columns:
-            source_counts = filtered_df['survey_source'].value_counts()
-            cols = st.columns(len(source_counts))
-            for idx, (source, count) in enumerate(source_counts.items()):
-                with cols[idx]:
-                    st.metric(label=source, value=count)
-
         # === Charts ===
         ## 1. Number of visits per Mentor
         st.subheader("Visits per Mentor")
         mentor_counts = filtered_df["Mentor Name"].value_counts().reset_index()
         mentor_counts.columns = ["Mentor", "Visits"]
         fig1 = px.bar(mentor_counts, x="Mentor", y="Visits", text="Visits", title="Number of Visits per Mentor")
-        st.plotly_chart(fig1, width='stretch')
+        st.plotly_chart(fig1, use_container_width=True)
 
         ## 2. EA Children Grouping
         st.subheader("EA Children Grouping Correctly")
@@ -278,7 +561,7 @@ def display_mentor_visits_dashboard():
                     fig2_first = px.pie(first_counts, values="Count", names="Response", 
                                         title="First Visit: EA Children Grouping",
                                         color="Response", color_discrete_map=get_yes_no_colors())
-                    st.plotly_chart(fig2_first, width='stretch')
+                    st.plotly_chart(fig2_first, use_container_width=True)
                     st.caption(f"Based on {len(comparison_df)} schools")
                 
                 with col2:
@@ -288,7 +571,7 @@ def display_mentor_visits_dashboard():
                     fig2_recent = px.pie(recent_counts, values="Count", names="Response", 
                                          title="Most Recent Visit: EA Children Grouping",
                                          color="Response", color_discrete_map=get_yes_no_colors())
-                    st.plotly_chart(fig2_recent, width='stretch')
+                    st.plotly_chart(fig2_recent, use_container_width=True)
                     st.caption(f"Based on {len(comparison_df)} schools")
                 
                 # Show detailed table in expander
@@ -306,7 +589,7 @@ def display_mentor_visits_dashboard():
                                   'First Visit Date', 'First Visit Response', 
                                   'Most Recent Visit Date', 'Most Recent Visit Response', 
                                   'Most Recent Visit Mentor', 'Most Recent Visit EA', 'Status']
-                    st.dataframe(display_comparison[table_cols], width='stretch', hide_index=True)
+                    st.dataframe(display_comparison[table_cols], use_container_width=True, hide_index=True)
                     
                     # Summary stats
                     improved = len(display_comparison[display_comparison['Status'] == '✅ Improved'])
@@ -324,7 +607,7 @@ def display_mentor_visits_dashboard():
                                 barmode="group", title="Grouping Correctness by Mentor (All Visits)",
                                 color_discrete_map=get_yes_no_colors())
             fig2_mentor.update_layout(legend=dict(title="", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-            st.plotly_chart(fig2_mentor, width='stretch')
+            st.plotly_chart(fig2_mentor, use_container_width=True)
 
         ## 3. EA Letter Tracker Use
         st.subheader("EA Letter Tracker Usage")
@@ -374,7 +657,7 @@ def display_mentor_visits_dashboard():
                     fig3_first = px.pie(first_counts, values="Count", names="Response", 
                                         title="First Visit: Letter Tracker Usage",
                                         color="Response", color_discrete_map=get_yes_no_colors())
-                    st.plotly_chart(fig3_first, width='stretch')
+                    st.plotly_chart(fig3_first, use_container_width=True)
                     st.caption(f"Based on {len(comparison_df)} schools")
                 
                 with col2:
@@ -384,7 +667,7 @@ def display_mentor_visits_dashboard():
                     fig3_recent = px.pie(recent_counts, values="Count", names="Response", 
                                          title="Most Recent Visit: Letter Tracker Usage",
                                          color="Response", color_discrete_map=get_yes_no_colors())
-                    st.plotly_chart(fig3_recent, width='stretch')
+                    st.plotly_chart(fig3_recent, use_container_width=True)
                     st.caption(f"Based on {len(comparison_df)} schools")
                 
                 # Show detailed table in expander
@@ -402,7 +685,7 @@ def display_mentor_visits_dashboard():
                                   'First Visit Date', 'First Visit Response', 
                                   'Most Recent Visit Date', 'Most Recent Visit Response',
                                   'Most Recent Visit Mentor', 'Most Recent Visit EA', 'Status']
-                    st.dataframe(display_comparison[table_cols], width='stretch', hide_index=True)
+                    st.dataframe(display_comparison[table_cols], use_container_width=True, hide_index=True)
                     
                     # Summary stats
                     improved = len(display_comparison[display_comparison['Status'] == '✅ Improved'])
@@ -420,7 +703,7 @@ def display_mentor_visits_dashboard():
                                 barmode="group", title="Letter Tracker Usage by Mentor (All Visits)",
                                 color_discrete_map=get_yes_no_colors())
             fig3_mentor.update_layout(legend=dict(title="", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-            st.plotly_chart(fig3_mentor, width='stretch')
+            st.plotly_chart(fig3_mentor, use_container_width=True)
 
         ## 4. Teaching at Right Level - Split by Survey Type
         st.subheader("Teaching at the Right Level")
@@ -445,7 +728,7 @@ def display_mentor_visits_dashboard():
                     fig4_old = px.pie(old_counts, values="Count", names="Response", 
                                       title="Teaching Correct Letters (Old Survey)",
                                       color="Response", color_discrete_map=get_yes_no_colors())
-                    st.plotly_chart(fig4_old, width='stretch')
+                    st.plotly_chart(fig4_old, use_container_width=True)
                     
                     # Show counts
                     st.caption(f"Total responses: {len(old_data)}")
@@ -484,7 +767,7 @@ def display_mentor_visits_dashboard():
                                           text="Count")
                         fig4_new.update_layout(xaxis_title="", yaxis_title="Count")
                         fig4_new.update_traces(textposition='outside')
-                        st.plotly_chart(fig4_new, width='stretch')
+                        st.plotly_chart(fig4_new, use_container_width=True)
                         
                         # Show counts
                         st.caption(f"Total individual responses: {len(expanded_records)} (from {len(new_data)} visits)")
@@ -508,7 +791,7 @@ def display_mentor_visits_dashboard():
                                                 title="Old Survey: Teaching Correct Letters by Mentor",
                                                 color_discrete_map=get_yes_no_colors())
                 fig4_old_mentor.update_layout(legend=dict(title="", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-                st.plotly_chart(fig4_old_mentor, width='stretch')
+                st.plotly_chart(fig4_old_mentor, use_container_width=True)
         
         # For new survey data - expand comma-separated values
         if new_survey_col in filtered_df.columns:
@@ -535,21 +818,21 @@ def display_mentor_visits_dashboard():
                                                     barmode="group", 
                                                     title="New Survey: Teaching at Right Level by Mentor")
                     fig4_new_mentor.update_layout(legend=dict(title="", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-                    st.plotly_chart(fig4_new_mentor, width='stretch')
+                    st.plotly_chart(fig4_new_mentor, use_container_width=True)
 
         ## 5. Overall Quality Ratings
         st.subheader("Session Quality Ratings")
         fig5 = px.histogram(filtered_df, x="Mentor Name", color="Please rate the overall quality of the sessions you observe",
                             barmode="group", title="Session Quality Ratings by Mentor")
         fig5.update_layout(legend=dict(title="", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-        st.plotly_chart(fig5, width='stretch')
+        st.plotly_chart(fig5, use_container_width=True)
 
         ## 6. EA-Teacher Relationship
         st.subheader("EA-Teacher Relationships")
         fig6 = px.histogram(filtered_df, x="Mentor Name", color="How is the EA's relationship with their teacher?",
                             barmode="group", title="EA-Teacher Relationship by Mentor")
         fig6.update_layout(legend=dict(title="", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
-        st.plotly_chart(fig6, width='stretch')
+        st.plotly_chart(fig6, use_container_width=True)
 
         st.divider()
 
@@ -615,7 +898,7 @@ def display_mentor_visits_dashboard():
             # Sort by Total Visits descending, then by Last Visit Date descending
             dataquest_df = dataquest_df.sort_values(["Total Visits", "Last Visit Date"], ascending=[False, False])
 
-            st.dataframe(dataquest_df, width='stretch', hide_index=True)
+            st.dataframe(dataquest_df, use_container_width=True, hide_index=True)
 
             # Summary statistics
             total_dataquest_visits = dataquest_df["Total Visits"].sum()
@@ -705,7 +988,7 @@ def display_mentor_visits_dashboard():
             # Display the table with scrolling
             st.dataframe(
                 table_display,
-                width='stretch',
+                use_container_width=True,
                 height=400  # Fixed height to make it scrollable
             )
 
@@ -713,11 +996,387 @@ def display_mentor_visits_dashboard():
         else:
             st.warning("No expected columns found in the data.")
             # Show all available data as fallback
-            st.dataframe(table_df, width='stretch', height=400)
+            st.dataframe(table_df, use_container_width=True, height=400)
 
     except Exception as e:
         st.error("An error occurred while loading or displaying the dashboard.")
         st.code(traceback.format_exc())
 
-# === Call function ===
-display_mentor_visits_dashboard()
+def display_qualitative_analysis(filtered_df):
+    """Display qualitative analysis of mentor visit data."""
+    st.title("📝 Qualitative Analysis")
+    
+    if filtered_df.empty:
+        st.warning("No data available for qualitative analysis.")
+        return
+    
+    # === "DID NOT OBSERVE" METRIC ===
+    st.header("📊 Observation Coverage")
+    
+    # Check if visit has "did not observe" in ANY of the key columns
+    key_columns = [
+        "How engaged did you feel the learners are?",
+        "How energertic & prepared was the EA?",
+        "Please rate the overall quality of the sessions you observe"
+    ]
+    
+    def has_not_observed(row):
+        """Check if ANY of the key columns contains 'did not observe' type response."""
+        for col in key_columns:
+            if col in filtered_df.columns and pd.notna(row.get(col)):
+                normalized = normalize_response(row[col], "general")
+                if normalized == "NOT_OBSERVED":
+                    return True
+        return False
+    
+    # Apply to all rows
+    filtered_df_copy = filtered_df.copy()
+    filtered_df_copy['did_not_observe'] = filtered_df_copy.apply(has_not_observed, axis=1)
+    
+    # Calculate totals
+    total_visits = len(filtered_df_copy)
+    not_observed_visits = filtered_df_copy['did_not_observe'].sum()
+    observed_visits = total_visits - not_observed_visits
+    not_observed_pct = (not_observed_visits / total_visits * 100) if total_visits > 0 else 0
+    observed_pct = 100 - not_observed_pct
+    
+    # Display metric
+    col1, col2, col3 = st.columns([1, 1, 2])
+    
+    with col1:
+        st.metric(
+            "Sessions Observed",
+            f"{observed_visits}",
+            delta=f"{observed_pct:.1f}% of visits"
+        )
+    
+    with col2:
+        st.metric(
+            "Did Not Observe",
+            f"{not_observed_visits}",
+            delta=f"{not_observed_pct:.1f}% of visits",
+            delta_color="inverse"
+        )
+    
+    with col3:
+        st.info(f"📋 **{observed_visits} of {total_visits} visits** had observable session data. Visits are flagged as 'did not observe' if ANY of the key observation questions indicate no session was observed.")
+    
+    st.divider()
+    
+    # === SECTION 1: AI-Powered Issue Analysis ===
+    st.header("1️⃣ AI-Powered Issue Analysis")
+    st.markdown("We have ZaziAI analyze the mentor visit data and provide a summary of common issues identified during mentor visits below. The focus is on Letter Trackers and Children Grouping Issues. This is largely derived from mentor comments. Please also review the Moving Too Fast and Same Letter Groups pages on this portal for quantitative analysis of programme quality issues.")
+    
+    # Initialize OpenAI client
+    client, error = setup_openai_for_qualitative()
+    
+    if error:
+        st.error(f"⚠️ OpenAI API not available: {error}")
+        st.info("💡 Please set the OPENAI_API_KEY environment variable to enable AI-powered analysis")
+    else:
+        # Analyze Letter Tracker Issues
+        st.subheader("📋 Letter Tracker Issues")
+        
+        tracker_col = "Are the EA using their letter tracker correctly?"
+        tracker_explanation_col = "If No, have you corrected it?"
+        
+        if tracker_col in filtered_df.columns and tracker_explanation_col in filtered_df.columns:
+            tracker_issues = filtered_df[filtered_df[tracker_col] == "No"]
+            
+            if not tracker_issues.empty:
+                issue_descriptions = tracker_issues[tracker_explanation_col].dropna().tolist()
+                
+                st.write(f"**Found {len(tracker_issues)} visits where letter tracker was used incorrectly**")
+                
+                if len(issue_descriptions) > 0:
+                    with st.spinner("Analyzing letter tracker issues with AI..."):
+                        summary = summarize_issues_with_ai(
+                            client,
+                            issue_descriptions,
+                            "letter tracker usage problems"
+                        )
+                        st.markdown(summary)
+                    
+                    # Show raw data in expander
+                    with st.expander("📄 View all letter tracker issue descriptions"):
+                        for idx, desc in enumerate(issue_descriptions, 1):
+                            st.write(f"{idx}. {desc}")
+                else:
+                    st.info("No detailed explanations provided for letter tracker issues")
+            else:
+                st.success("✅ No letter tracker issues reported in filtered data")
+        else:
+            st.warning("Letter tracker columns not found in data")
+        
+        st.divider()
+        
+        # Analyze Grouping Issues
+        st.subheader("👥 Children Grouping Issues")
+        
+        grouping_col = "Are the EA's children grouped correctly?"
+        grouping_explanation_col = "If EA grouping are incorrect, please explain why?"
+        
+        if grouping_col in filtered_df.columns and grouping_explanation_col in filtered_df.columns:
+            grouping_issues = filtered_df[filtered_df[grouping_col] == "No"]
+            
+            if not grouping_issues.empty:
+                issue_descriptions = grouping_issues[grouping_explanation_col].dropna().tolist()
+                
+                st.write(f"**Found {len(grouping_issues)} visits where grouping was incorrect**")
+                
+                if len(issue_descriptions) > 0:
+                    with st.spinner("Analyzing grouping issues with AI..."):
+                        summary = summarize_issues_with_ai(
+                            client,
+                            issue_descriptions,
+                            "children grouping problems"
+                        )
+                        st.markdown(summary)
+                    
+                    # Show raw data in expander
+                    with st.expander("📄 View all grouping issue descriptions"):
+                        for idx, desc in enumerate(issue_descriptions, 1):
+                            st.write(f"{idx}. {desc}")
+                else:
+                    st.info("No detailed explanations provided for grouping issues")
+            else:
+                st.success("✅ No grouping issues reported in filtered data")
+        else:
+            st.warning("Grouping columns not found in data")
+    
+    st.divider()
+    
+    # === SECTION 2: Text Sentiment Analysis ===
+    st.header("2️⃣ Sentiment Analysis of Comments")
+    st.markdown("Automated sentiment classification of free-text mentor feedback")
+    
+    commentary_col = "Any additional commentary?"
+    if commentary_col in filtered_df.columns:
+        comments_data = filtered_df[filtered_df[commentary_col].notna()].copy()
+        
+        if not comments_data.empty:
+            with st.spinner("Analyzing sentiment..."):
+                sentiment_df = analyze_text_sentiment_vader(comments_data[commentary_col])
+            
+            if not sentiment_df.empty:
+                # Overall sentiment distribution
+                col1, col2 = st.columns([2, 1])
+                
+                with col1:
+                    sentiment_counts = sentiment_df['sentiment'].value_counts().reset_index()
+                    sentiment_counts.columns = ['Sentiment', 'Count']
+                    
+                    sentiment_colors = {
+                        'Positive': '#2E7D32',
+                        'Neutral': '#FFA726',
+                        'Negative': '#EF5350'
+                    }
+                    
+                    fig = px.pie(
+                        sentiment_counts,
+                        values='Count',
+                        names='Sentiment',
+                        title='Overall Sentiment Distribution',
+                        color='Sentiment',
+                        color_discrete_map=sentiment_colors
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                with col2:
+                    st.metric("Total Comments Analyzed", len(sentiment_df))
+                    
+                    positive_pct = (sentiment_df['sentiment'] == 'Positive').sum() / len(sentiment_df) * 100
+                    negative_pct = (sentiment_df['sentiment'] == 'Negative').sum() / len(sentiment_df) * 100
+                    
+                    st.metric("Positive", f"{positive_pct:.1f}%")
+                    st.metric("Negative", f"{negative_pct:.1f}%")
+                
+                # Sentiment by mentor
+                if 'Mentor Name' in comments_data.columns:
+                    st.subheader("Sentiment by Mentor")
+                    
+                    # Merge sentiment back with mentor names
+                    comments_data['sentiment'] = sentiment_df['sentiment'].values
+                    
+                    mentor_sentiment = comments_data.groupby(['Mentor Name', 'sentiment']).size().reset_index(name='count')
+                    
+                    fig = px.bar(
+                        mentor_sentiment,
+                        x='Mentor Name',
+                        y='count',
+                        color='sentiment',
+                        title='Comment Sentiment by Mentor',
+                        barmode='stack',
+                        color_discrete_map=sentiment_colors
+                    )
+                    st.plotly_chart(fig, use_container_width=True)
+                
+                # Show most positive and negative comments
+                with st.expander("🔍 View Most Positive and Negative Comments"):
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.markdown("**Most Positive Comments**")
+                        positive_comments = sentiment_df[sentiment_df['sentiment'] == 'Positive'].nlargest(5, 'compound')
+                        for idx, row in positive_comments.iterrows():
+                            st.success(f"Score: {row['compound']:.2f}\n\n{row['text'][:200]}...")
+                    
+                    with col2:
+                        st.markdown("**Most Negative Comments**")
+                        negative_comments = sentiment_df[sentiment_df['sentiment'] == 'Negative'].nsmallest(5, 'compound')
+                        for idx, row in negative_comments.iterrows():
+                            st.error(f"Score: {row['compound']:.2f}\n\n{row['text'][:200]}...")
+            else:
+                st.info("No sentiment data could be generated")
+        else:
+            st.info("No comments available in filtered data")
+    else:
+        st.warning("Commentary column not found in data")
+    
+    st.divider()
+    
+    # === SECTION 3: Word Cloud from Comments ===
+    st.header("3️⃣ Common Themes in Comments")
+    st.markdown("Visual representation of frequently mentioned words in mentor feedback")
+    
+    if commentary_col in filtered_df.columns:
+        comments = filtered_df[commentary_col].dropna().tolist()
+        
+        if len(comments) > 0:
+            with st.spinner("Generating word cloud..."):
+                fig = generate_word_cloud_image(comments)
+                
+                if fig:
+                    st.pyplot(fig)
+                    st.caption(f"Generated from {len(comments)} comments")
+                else:
+                    st.info("Not enough text data to generate word cloud")
+        else:
+            st.info("No comments available in the filtered data")
+    else:
+        st.warning("Commentary column not found in data")
+    
+    st.divider()
+    
+    # === SECTION 4: Simplified Sentiment Analysis ===
+    st.header("4️⃣ Key Session Quality Indicators")
+    st.markdown("Simplified overview of session quality across key dimensions (3-5 categories for actionable insights)")
+    
+    # Learner Engagement and EA Energy (simplified to 3 categories)
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        analyze_simplified_sentiment(
+            filtered_df,
+            "How engaged did you feel the learners are?",
+            "Learner Engagement",
+            "engagement"
+        )
+    
+    with col2:
+        analyze_simplified_sentiment(
+            filtered_df,
+            "How energertic & prepared was the EA?",
+            "EA Energy & Preparation",
+            "energy"
+        )
+    
+    # Session Quality and Teacher Relationship (4-5 categories)
+    col3, col4 = st.columns(2)
+    
+    with col3:
+        analyze_categorical_sentiment(
+            filtered_df,
+            "Please rate the overall quality of the sessions you observe",
+            "Overall Session Quality",
+            "quality"
+        )
+    
+    with col4:
+        analyze_categorical_sentiment(
+            filtered_df,
+            "How is the EA's relationship with their teacher?",
+            "EA-Teacher Relationship",
+            "relationship"
+        )
+
+# === Call function with tabs ===
+def main():
+    """Main function to display the mentor visits page with tabs."""
+    st.title("📊 Mentor Visits Analysis")
+    
+    try:
+        # === Load Data ===
+        df = load_merged_mentor_visits()
+        
+        if df.empty:
+            st.warning("No data available. Please check the data loading process.")
+            return
+
+        # === School Type Toggle ===
+        school_type = st.radio(
+            "Select School Type:",
+            ["Primary Schools", "ECDCs", "DataQuest Schools"],
+            index=0,
+            horizontal=True
+        )
+
+        # Filter by school type
+        if school_type == "Primary Schools":
+            df = df[df["Grade"] != "PreR"]
+        elif school_type == "ECDCs":
+            df = df[df["Grade"] == "PreR"]
+        else:  # DataQuest Schools
+            dataquest_first_words = [school.split()[0].lower() for school in selected_schools_list]
+
+            def is_dataquest_school_filter(school_name):
+                if pd.isna(school_name) or school_name == "":
+                    return False
+                first_word = str(school_name).split()[0].lower()
+                return first_word in dataquest_first_words
+
+            df = df[df["School Name"].apply(is_dataquest_school_filter)]
+            df = df[df["Grade"] != "PreR"]
+
+        # === Sidebar Filters ===
+        mentors = st.sidebar.multiselect("Filter by Mentor", df["Mentor Name"].dropna().unique())
+        schools = st.sidebar.multiselect("Filter by School", df["School Name"].dropna().unique())
+        
+        if 'survey_source' in df.columns:
+            survey_sources = st.sidebar.multiselect("Filter by Survey", df["survey_source"].dropna().unique())
+
+        filtered_df = df.copy()
+        if mentors:
+            filtered_df = filtered_df[filtered_df["Mentor Name"].isin(mentors)]
+        if schools:
+            filtered_df = filtered_df[filtered_df["School Name"].isin(schools)]
+        if 'survey_source' in df.columns and survey_sources:
+            filtered_df = filtered_df[filtered_df["survey_source"].isin(survey_sources)]
+
+        st.write(f"Total visits in dataset: **{len(filtered_df)}**")
+        
+        # Show data source breakdown
+        if 'survey_source' in filtered_df.columns:
+            source_counts = filtered_df['survey_source'].value_counts()
+            cols = st.columns(len(source_counts))
+            for idx, (source, count) in enumerate(source_counts.items()):
+                with cols[idx]:
+                    st.metric(label=source, value=count)
+        
+        st.divider()
+        
+        # === CREATE TABS ===
+        tab1, tab2 = st.tabs(["📊 Quantitative Dashboard", "📝 Qualitative Analysis"])
+        
+        with tab1:
+            display_mentor_visits_dashboard_content(filtered_df)
+        
+        with tab2:
+            display_qualitative_analysis(filtered_df)
+            
+    except Exception as e:
+        st.error("An error occurred while loading or displaying the page.")
+        st.code(traceback.format_exc())
+
+# Call main function
+main()

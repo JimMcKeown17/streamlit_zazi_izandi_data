@@ -17,3 +17,5 @@ scipy
 sendgrid
 openai-agents
 streamlit-gradio
+wordcloud
+vaderSentiment
