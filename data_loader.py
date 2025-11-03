@@ -183,8 +183,44 @@ def load_zazi_izandi_new_schools_2024():
         endline_df = pd.read_excel(endline_path, sheet_name=sheet_name_endline, engine='openpyxl')
         return endline_df
 def load_zazi_izandi_2024():
+    """
+    Load 2024 data from Parquet (fast) or Excel (fallback).
+    
+    Returns raw DataFrames. Processing should be done separately.
+    """
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # Try loading from parquet first (10-50x faster)
+    parquet_dir = os.path.join(base_dir, "data/parquet/raw")
+    parquet_files = {
+        'baseline': os.path.join(parquet_dir, "2024_baseline.parquet"),
+        'midline': os.path.join(parquet_dir, "2024_midline.parquet"),
+        'sessions': os.path.join(parquet_dir, "2024_sessions.parquet"),
+        'baseline2': os.path.join(parquet_dir, "2024_baseline2.parquet"),
+        'endline': os.path.join(parquet_dir, "2024_endline.parquet"),
+        'endline2': os.path.join(parquet_dir, "2024_endline2.parquet"),
+    }
+    
+    # Check if all parquet files exist
+    if all(os.path.exists(path) for path in parquet_files.values()):
+        baseline_df = pd.read_parquet(parquet_files['baseline'])
+        midline_df = pd.read_parquet(parquet_files['midline'])
+        sessions_df = pd.read_parquet(parquet_files['sessions'])
+        baseline2_df = pd.read_parquet(parquet_files['baseline2'])
+        endline_df = pd.read_parquet(parquet_files['endline'])
+        endline2_df = pd.read_parquet(parquet_files['endline2'])
+        
+        # Convert key columns to proper numeric types
+        numeric_cols = ['Mcode', 'Number of Sessions']
+        for df in [baseline_df, midline_df, sessions_df, baseline2_df, endline_df, endline2_df]:
+            for col in numeric_cols:
+                if col in df.columns:
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+        
+        return baseline_df, midline_df, sessions_df, baseline2_df, endline_df, endline2_df
+    
+    # Fallback to Excel loading if parquet not found
     if 'user' in st.session_state and st.session_state.user:
-        base_dir = os.path.dirname(os.path.abspath(__file__))
         baseline_path = os.path.join(base_dir, "data/Zazi iZandi Children's database (Baseline)7052024.xlsx")
         sheet_name_baseline = "ZZ Childrens Database"
         midline_path = os.path.join(base_dir, "data/Zazi iZandi Midline Assessments database (1).xlsx")
@@ -205,7 +241,6 @@ def load_zazi_izandi_2024():
         endline2_df = pd.read_excel(endline_zz2_path, sheet_name=sheet_name_zz2_endline, engine='openpyxl')
         return baseline_df, midline_df, sessions_df, baseline2_df, endline_df, endline2_df
     else:
-        base_dir = os.path.dirname(os.path.abspath(__file__))
         baseline_path = os.path.join(base_dir, "data/Zazi iZandi Children's database (Baseline)7052024 - anonymized.xlsx")
         sheet_name_baseline = "ZZ Childrens Database"
         midline_path = os.path.join(base_dir, "data/Zazi iZandi Midline Assessments database (1) - anonymized.xlsx")
@@ -227,8 +262,34 @@ def load_zazi_izandi_2024():
         return baseline_df, midline_df, sessions_df, baseline2_df, endline_df, endline2_df
 
 def load_zazi_izandi_2023():
+    """
+    Load 2023 data from Parquet (fast) or Excel (fallback).
+    
+    Returns processed DataFrame directly if available in parquet,
+    otherwise loads and processes from Excel files.
+    """
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    
+    # Try loading from parquet first (10-50x faster)
+    parquet_path = os.path.join(dir_path, "data/parquet/raw/2023_endline.parquet")
+    sessions_parquet_path = os.path.join(dir_path, "data/parquet/raw/2023_sessions.parquet")
+    
+    if os.path.exists(parquet_path) and os.path.exists(sessions_parquet_path):
+        endline_df = pd.read_parquet(parquet_path)
+        sessions_df = pd.read_parquet(sessions_parquet_path)
+        
+        # Convert key columns to proper numeric types
+        numeric_cols = ['Mcode']
+        for col in numeric_cols:
+            if col in endline_df.columns:
+                endline_df[col] = pd.to_numeric(endline_df[col], errors='coerce')
+            if col in sessions_df.columns:
+                sessions_df[col] = pd.to_numeric(sessions_df[col], errors='coerce')
+        
+        return endline_df, sessions_df
+    
+    # Fallback to Excel loading if parquet not found
     if 'user' in st.session_state and st.session_state.user:
-        dir_path = os.path.dirname(os.path.abspath(__file__))
         endline_path = os.path.join(dir_path, "data/ZZ Children's Database 2023 (Endline) 20231130.xlsx")
         sheet_name_endline = "Database"
         endline_df = pd.read_excel(endline_path, sheet_name=sheet_name_endline, engine='openpyxl')
@@ -238,7 +299,6 @@ def load_zazi_izandi_2023():
         sessions_df = pd.read_excel(sessions_path, sheet_name=sheet_name_sessions, engine='openpyxl')
         return endline_df, sessions_df
     else:
-        dir_path = os.path.dirname(os.path.abspath(__file__))
         endline_path = os.path.join(dir_path, "data/ZZ Children's Database 2023 (Endline) 20231130 - anonymized.xlsx")
         sheet_name_endline = "Database"
         endline_df = pd.read_excel(endline_path, sheet_name=sheet_name_endline, engine='openpyxl')
