@@ -1322,7 +1322,6 @@ try:
             time_str = f"{int(time_ago.total_seconds() / 60)} min ago"
         else:
             time_str = f"{int(hours_ago)} hours ago"
-        st.caption(f"📊 Data last updated: {time_str} | Auto-refreshes nightly via cron job")
     else:
         st.caption("📊 Database status: No data found")
 except:
@@ -1383,10 +1382,11 @@ with tab2:
     display_ea_implementation_analysis(df)
 
 with tab3:
-    display_data_quality(df)
+    display_el_schools_analysis(df)
 
 with tab4:
     display_selected_schools_analysis(df)
 
 with tab5:
-    display_el_schools_analysis(df)
+    
+    display_data_quality(df)
