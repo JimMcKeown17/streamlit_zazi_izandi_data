@@ -10,7 +10,7 @@ import sys
 import pandas as pd
 import plotly.express as px
 import streamlit as st
-import gradio as gr
+# gradio is only imported when running standalone (see bottom of file)
 
 
 load_dotenv(override=True)
@@ -228,6 +228,7 @@ def chat(message, history):
 
 def create_gradio_interface():
     """Create and return the Gradio ChatInterface for embedding in Streamlit"""
+    import gradio as gr
     return gr.ChatInterface(
         fn=chat,
         title="Zazi iZandi AI Assistant",
@@ -236,4 +237,5 @@ def create_gradio_interface():
 
 # Only launch if running directly (not when imported)
 if __name__ == "__main__":
+    import gradio as gr  # Only import gradio when running standalone
     create_gradio_interface().launch()

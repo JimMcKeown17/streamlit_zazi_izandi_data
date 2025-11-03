@@ -107,8 +107,8 @@ def coach_assistant_page():
     @st.cache_resource
     def load_coach_agent():
         try:
-            from agents.literacy_coach_mentor import create_supervisor_agent
-            from agents import Runner
+            from zazi_agents.literacy_coach_mentor import create_supervisor_agent
+            from agents import Runner  # This now imports from the openai-agents package
             
             agent = create_supervisor_agent()
             return agent, Runner
@@ -138,7 +138,7 @@ def coach_assistant_page():
             with st.chat_message("assistant"):
                 with st.spinner("Analyzing your data..."):
                     try:
-                        from agents import trace
+                        from agents import trace  # This now imports from the openai-agents package
                         
                         # Create context with user_id
                         user_id = st.session_state.coach_user_id
@@ -208,7 +208,7 @@ def coach_assistant_page():
             # Generate response
             with st.spinner("Analyzing your data..."):
                 try:
-                    from agents import trace
+                    from agents import trace  # This now imports from the openai-agents package
                     user_id = st.session_state.coach_user_id
                     enhanced_prompt = f"[Coach User ID: {user_id}] {quick_prompt}"
                     

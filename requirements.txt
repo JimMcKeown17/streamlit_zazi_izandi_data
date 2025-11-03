@@ -16,6 +16,7 @@ sqlalchemy
 scipy
 sendgrid
 openai-agents
+gradio
 streamlit-gradio
 wordcloud
 vaderSentiment

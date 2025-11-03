@@ -29,8 +29,8 @@ def ai_assistant_page():
     @st.cache_resource
     def load_agent():
         try:
-            # Add agents directory to path  
-            agents_path = os.path.join(root_dir, 'agents', 'agentv2')
+            # Add zazi_agents directory to path  
+            agents_path = os.path.join(root_dir, 'zazi_agents', 'agentv2')
             if agents_path not in sys.path:
                 sys.path.append(agents_path)
             
@@ -66,7 +66,7 @@ def ai_assistant_page():
                 with st.spinner("Thinking..."):
                     try:
                         import asyncio
-                        from agents import trace
+                        from agents import trace  # This now imports from the openai-agents package
                         
                         # Run the agent
                         async def get_response():
@@ -97,7 +97,7 @@ def ai_assistant_page():
         **Troubleshooting:**
         1. Check that all dependencies are installed
         2. Ensure your OpenAI API key is set in .env file
-        3. Try running the standalone version: `python agents/agentv2/agentv2.py`
+        3. Try running the standalone version: `python zazi_agents/agentv2/agentv2.py`
         """)
     
 
