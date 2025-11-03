@@ -1373,7 +1373,7 @@ except Exception as e:
 # School type and mentor classification are now handled in the database loading function
 
 # CREATE TABS FOR DIFFERENT VIEWS
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["EA Sessions Analysis", "EA Implementation Status", "Data Quality", "DataQuest Schools", "East London Schools"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["EA Sessions Analysis", "EA Implementation Status", "East London Schools", "DataQuest Schools", "Data Quality"])
 
 with tab1:
     display_session_analysis(df)
@@ -1388,5 +1388,4 @@ with tab4:
     display_selected_schools_analysis(df)
 
 with tab5:
-    
     display_data_quality(df)
