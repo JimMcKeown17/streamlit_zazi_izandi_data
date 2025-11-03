@@ -1,15 +1,11 @@
 from dotenv import load_dotenv
-from agents import Agent, Runner, trace, function_tool
+from agents import Agent, Runner, trace
 from openai.types.responses import ResponseTextDeltaEvent
 from typing import Dict
 import sendgrid
 import os
 from sendgrid.helpers.mail import Mail, Email, To, Content
 import asyncio
-import sys
-import pandas as pd
-import plotly.express as px
-import streamlit as st
 # gradio is only imported when running standalone (see bottom of file)
 
 
@@ -45,17 +41,31 @@ The Grade R children improved the number of letters they knew from 3 to 12.
 #TOOLS
 If you need to know the number of children on the programme, you can use the get_2023_number_of_children function."""
 
-instructions_2024 = f"""You are a helpful data analyst. You help the user with understanding the performance of the Zazi iZandi literacy programme in 2023. {zz_background}. 
+instructions_2024 = f"""You are a helpful data analyst. You help the user with understanding the performance of the Zazi iZandi literacy programme in 2024. {zz_background}. 
 In 2024, Zazi iZandi was piloted in 16 schools. 82 youth were hired to work with 3490 children. 
 
 # RESULTS
  
 The Grade 1 children improved their Early Grade Reading Assessment (EGRA) scores from 14 to 38.
-The percent of Grade 1 children that reached the target Reading Benchmark increased from 13%to 53%.
+The percent of Grade 1 children that reached the target Reading Benchmark increased from 13% to 53%.
 The Grade R children improved their EGRA scores from 1 to 25.
 
-#TOOLS
-If you need to know the number of children on the programme, you can use the get_2023_number_of_children function."""
+# BENCHMARKS
+- Grade R benchmark: 20+ on EGRA
+- Grade 1 benchmark: 40+ on EGRA
+
+# TOOLS AVAILABLE
+You have access to powerful analysis tools:
+- `get_2024_number_of_children`: Get total number of children in the programme
+- `percentage_at_benchmark_2024`: Calculate percentage of children meeting grade level benchmarks. Can filter by grade, school, and assessment period (Baseline, Midline, Endline). Can return top N performing schools.
+- `improvement_scores_2024`: Calculate improvement in EGRA or Letters Known from baseline. Can analyze by grade, school, and assessment period.
+- `total_scores_2024`: Get detailed statistics (average, median, max, min) for EGRA or Letters assessments.
+
+When analyzing data:
+1. Be specific about which assessment period you're analyzing (Baseline, Midline, or Endline)
+2. Specify grades clearly (Grade R, Grade 1, or All Grades)
+3. Use school names exactly as they appear in the data or use "All Schools" for programme-wide analysis
+4. Provide context and interpretation, not just raw numbers"""
 
 instructions_2025 = f"""You are a helpful data analyst. You help the user with understanding the performance of the Zazi iZandi literacy programme in 2025. {zz_background}. 
 Your information is updated through June, so we're only halfway through the year. 
@@ -72,106 +82,58 @@ The Early Childhood Development (ECD) children improved their EGRA scores from 1
 If you need to know the number of children on the programme, you can use the get_2025_number_of_children function."""
 
 
-# We need to set root directory so we can find the zz_data_process_23.py file. I should obviously move this into a better named directory, will do so in the future.
-root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-if root_dir not in sys.path:
-    sys.path.append(root_dir)
+# IMPORT TOOLS
+import sys
+import os
 
-# IMPORT DATA FOR THE TOOLS
+# Add current directory to path for imports
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
 
-#2023 Data
-from zz_data_process_23 import process_zz_data_23
-from data_loader import load_zazi_izandi_2023
-
-def import_2023_results():
-    # Import dataframes
-    endline_df, sessions_df = load_zazi_izandi_2023()
-    endline = process_zz_data_23(endline_df, sessions_df)
-    return endline
-
-#2024 Data
-from zz_data_processing import process_zz_data_midline, process_zz_data_endline, grade1_df, gradeR_df
-from data_loader import load_zazi_izandi_2024
-
-def import_2024_results():
-    baseline_df, midline_df, sessions_df, baseline2_df, endline_df, endline2_df = load_zazi_izandi_2024()
-    
-    # Create deep copies to ensure data independence between tabs
-    baseline_df = baseline_df.copy()
-    midline_df = midline_df.copy()
-    sessions_df = sessions_df.copy()
-    endline_df = endline_df.copy()
-
-    midline, baseline = process_zz_data_midline(baseline_df, midline_df, sessions_df)
-    endline = process_zz_data_endline(endline_df)
-    grade1 = grade1_df(endline)
-    gradeR = gradeR_df(endline)
-    
-    return endline
-
-root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-if root_dir not in sys.path:
-    sys.path.append(root_dir)
-    
-from process_survey_cto_updated import process_egra_data
-from data_loader import load_zazi_izandi_2025
-
-def import_2025_results():
-    # Load data
-    df_full, df_ecd = load_zazi_izandi_2025()
-    df_full['submission_date'] = pd.to_datetime(df_full['date'])
-
-    # Create initial and midline datasets for comparison charts
-    initial_df = df_full[df_full['submission_date'] < pd.Timestamp('2025-04-15')]
-    midline_df = df_full[df_full['submission_date'] >= pd.Timestamp('2025-04-15')]
-    
-    return midline_df
-
-@function_tool
-def get_2023_number_of_children():
-    """
-    Get the number of children on the programme in 2023
-    """
-    endline_2023 = import_2023_results()
-    number_of_children = len(endline_2023)
-    return number_of_children
-
-@function_tool
-def get_2024_number_of_children():
-    """
-    Get the number of children on the programme in 2024
-    """
-    endline_2024 = import_2024_results()
-    number_of_children = len(endline_2024)
-    return number_of_children
-
-@function_tool
-def get_2025_number_of_children():
-    """
-    Get the number of children on the programme in 2024
-    """
-    midline_2025 = import_2025_results()
-    number_of_children = len(midline_2025)
-    return number_of_children
+# Import tools (try relative first, fallback to absolute)
+try:
+    from .tools import (
+        get_2023_number_of_children,
+        get_2024_number_of_children,
+        get_2025_number_of_children,
+        percentage_at_benchmark_2024,
+        improvement_scores_2024,
+        total_scores_2024
+    )
+except ImportError:
+    from tools import (
+        get_2023_number_of_children,
+        get_2024_number_of_children,
+        get_2025_number_of_children,
+        percentage_at_benchmark_2024,
+        improvement_scores_2024,
+        total_scores_2024
+    )
 
 zazi_2023_agent = Agent(
         name="Zazi 2023 Agent",
         instructions=instructions_2023,
-        model="gpt-4o-mini",
+        model="gpt-5-mini",
         tools=[get_2023_number_of_children]
 )
 
 zazi_2024_agent = Agent(
         name="Zazi 2024 Agent",
         instructions=instructions_2024,
-        model="gpt-4o-mini",
-        tools=[get_2024_number_of_children]
+        model="gpt-5-mini",
+        tools=[
+            get_2024_number_of_children,
+            percentage_at_benchmark_2024,
+            improvement_scores_2024,
+            total_scores_2024
+        ]
 )
 
 zazi_2025_agent = Agent(
         name="Zazi 2025 Agent",
         instructions=instructions_2025,
-        model="gpt-4o-mini",
+        model="gpt-5-mini",
         tools=[get_2025_number_of_children]
 )
 
@@ -211,7 +173,7 @@ Always aim to provide both **data and narrative** so users can make informed dec
 zazi_supervisor = Agent(
         name="Zazi Supervisor",
         instructions=instructions_supervisor,
-        model="gpt-4o",
+        model="gpt-5-mini",
         tools=[tool_2023, tool_2024, tool_2025]
 )
 
