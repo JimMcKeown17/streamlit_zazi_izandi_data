@@ -4,7 +4,7 @@ import streamlit as st
 import openpyxl
 from process_survey_cto_updated import process_egra_data
 import dotenv
-from data_utility_functions.teampact_apis import fetch_all_survey_responses
+from data_utility_functions.teampact_apis import fetch_all_survey_responses, fetch_survey_responses_nested, process_egra_survey_data
 
 def load_mentor_visits_2025_tp():
     ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
@@ -110,33 +110,170 @@ def load_zazi_izandi_2025_tp_api():
     
     # Fetch data for each language
     try:
-        st.info("🔄 Fetching data from TeamPact API...")
+        st.info("🔄 Fetching NMB Baseline data from TeamPact API...")
         
-        with st.spinner("Fetching isiXhosa data..."):
-            xhosa_responses = fetch_all_survey_responses(survey_ids['xhosa'], api_token)
+        with st.spinner("Fetching isiXhosa baseline data..."):
+            xhosa_responses, xhosa_questions = fetch_survey_responses_nested(survey_ids['xhosa'], api_token)
         
-        with st.spinner("Fetching English data..."):
-            english_responses = fetch_all_survey_responses(survey_ids['english'], api_token)
+        with st.spinner("Fetching English baseline data..."):
+            english_responses, english_questions = fetch_survey_responses_nested(survey_ids['english'], api_token)
         
-        with st.spinner("Fetching Afrikaans data..."):
-            afrikaans_responses = fetch_all_survey_responses(survey_ids['afrikaans'], api_token)
+        with st.spinner("Fetching Afrikaans baseline data..."):
+            afrikaans_responses, afrikaans_questions = fetch_survey_responses_nested(survey_ids['afrikaans'], api_token)
         
         if not all([xhosa_responses, english_responses, afrikaans_responses]):
             st.error("Failed to fetch data from one or more surveys")
             return None, None, None
         
-        # Convert to DataFrames (API returns list of dicts, just like CSV would)
-        xhosa_df = pd.json_normalize(xhosa_responses)
-        english_df = pd.json_normalize(english_responses) 
-        afrikaans_df = pd.json_normalize(afrikaans_responses)
+        # Process the nested EGRA data
+        xhosa_df = process_egra_survey_data(xhosa_responses, survey_ids['xhosa'])
+        english_df = process_egra_survey_data(english_responses, survey_ids['english']) 
+        afrikaans_df = process_egra_survey_data(afrikaans_responses, survey_ids['afrikaans'])
         
-        st.success(f"✅ API data loaded successfully!")
+        st.success(f"✅ NMB Baseline API data loaded successfully!")
         st.info(f"Records: isiXhosa ({len(xhosa_df)}), English ({len(english_df)}), Afrikaans ({len(afrikaans_df)})")
         
         return xhosa_df, english_df, afrikaans_df
     
     except Exception as e:
         st.error(f"Error loading API data: {str(e)}")
+        return None, None, None
+
+def normalize_endline_columns(df, language_suffix):
+    """
+    Normalize endline CSV columns to match baseline format
+    The endline CSVs have different column names and structure
+    """
+    # Rename columns to match baseline format WITH language suffix
+    # The baseline has format: "Total cells correct - EGRA Letters - isiXhosa"
+    # The endline has two formats:
+    #   - isiXhosa: "Total cells correct - NMB Schools Endline isiXhosa" (no parentheses)
+    #   - English/Afrikaans: "Total cells correct - NMB Schools Endline (English)" (with parentheses)
+    # We need to convert to baseline format so duplicate_columns_without_language() works
+    
+    # Try both patterns (with and without parentheses)
+    column_mapping = {
+        'Participant ID': 'User ID',
+        # Without parentheses (isiXhosa)
+        f'Total cells correct - NMB Schools Endline {language_suffix}': f'Total cells correct - EGRA Letters - {language_suffix}',
+        f'Total cells incorrect - NMB Schools Endline {language_suffix}': f'Total cells incorrect - EGRA Letters - {language_suffix}',
+        f'Total cells attempted - NMB Schools Endline {language_suffix}': f'Total cells attempted - EGRA Letters - {language_suffix}',
+        f'Total cells not attempted - NMB Schools Endline {language_suffix}': f'Total cells not attempted - EGRA Letters - {language_suffix}',
+        f'Assessment Complete? - NMB Schools Endline {language_suffix}': f'Assessment Complete? - EGRA Letters - {language_suffix}',
+        f'Stop rule reached? - NMB Schools Endline {language_suffix}': f'Stop rule reached? - EGRA Letters - {language_suffix}',
+        f'Timer elapsed? - NMB Schools Endline {language_suffix}': f'Timer elapsed? - EGRA Letters - {language_suffix}',
+        f'Time elapsed at completion - NMB Schools Endline {language_suffix}': f'Time elapsed at completion - EGRA Letters - {language_suffix}',
+        # With parentheses (English/Afrikaans)
+        f'Total cells correct - NMB Schools Endline ({language_suffix})': f'Total cells correct - EGRA Letters - {language_suffix}',
+        f'Total cells incorrect - NMB Schools Endline ({language_suffix})': f'Total cells incorrect - EGRA Letters - {language_suffix}',
+        f'Total cells attempted - NMB Schools Endline ({language_suffix})': f'Total cells attempted - EGRA Letters - {language_suffix}',
+        f'Total cells not attempted - NMB Schools Endline ({language_suffix})': f'Total cells not attempted - EGRA Letters - {language_suffix}',
+        f'Assessment Complete? - NMB Schools Endline ({language_suffix})': f'Assessment Complete? - EGRA Letters - {language_suffix}',
+        f'Stop rule reached? - NMB Schools Endline ({language_suffix})': f'Stop rule reached? - EGRA Letters - {language_suffix}',
+        f'Timer elapsed? - NMB Schools Endline ({language_suffix})': f'Timer elapsed? - EGRA Letters - {language_suffix}',
+        f'Time elapsed at completion - NMB Schools Endline ({language_suffix})': f'Time elapsed at completion - EGRA Letters - {language_suffix}'
+    }
+    
+    df = df.rename(columns=column_mapping)
+    
+    # Derive Grade from Class Name (first character)
+    if 'Class Name' in df.columns:
+        df['Grade '] = df['Class Name'].astype(str).str[0].apply(lambda x: f'Grade {x}' if x else '')
+    else:
+        df['Grade '] = ''
+    
+    # Add missing columns that process_teampact_data expects
+    if 'Email' not in df.columns:
+        df['Email'] = ''
+    if 'Class' not in df.columns:
+        df['Class'] = ''
+    if 'Learner First Name' not in df.columns:
+        df['Learner First Name'] = ''
+    if 'Learner Surname ' not in df.columns:
+        df['Learner Surname '] = ''
+    if 'Learner Gender' not in df.columns:
+        df['Learner Gender'] = ''
+    if 'Learner EMIS' not in df.columns:
+        df['Learner EMIS'] = ''
+    
+    return df
+
+def load_zazi_izandi_nmb_2025_endline_tp_csv():
+    """
+    Load NMB 2025 endline data from CSV files
+    Returns DataFrames for isiXhosa, English, and Afrikaans
+    """
+    ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+    
+    # CSV filenames for NMB endline assessments
+    xhosa_filename = "survey725_nmb-schools-endline-isixhosa_masinyusane_2025-11-04_10-59-29.csv"
+    english_filename = "survey726_nmb-schools-endline-english_masinyusane_2025-11-04_11-21-19.csv"
+    afrikaans_filename = "survey727_nmb-schools-endline-afrikaans_masinyusane_2025-11-04_11-21-58.csv"
+    
+    xhosa_path = os.path.join(ROOT_DIR, "data/Teampact", xhosa_filename)
+    english_path = os.path.join(ROOT_DIR, "data/Teampact", english_filename)
+    afrikaans_path = os.path.join(ROOT_DIR, "data/Teampact", afrikaans_filename)
+    
+    xhosa_df = pd.read_csv(xhosa_path)
+    english_df = pd.read_csv(english_path)
+    afrikaans_df = pd.read_csv(afrikaans_path)
+    
+    # Normalize column names to match baseline format
+    xhosa_df = normalize_endline_columns(xhosa_df, 'isiXhosa')
+    english_df = normalize_endline_columns(english_df, 'English')
+    afrikaans_df = normalize_endline_columns(afrikaans_df, 'Afrikaans')
+    
+    return xhosa_df, english_df, afrikaans_df
+
+def load_zazi_izandi_nmb_2025_endline_tp():
+    """
+    Load NMB 2025 endline data via TeamPact API
+    Handles nested survey response structure with EGRA assessment data
+    Returns DataFrames for isiXhosa, English, and Afrikaans
+    """
+    dotenv.load_dotenv()
+    api_token = os.getenv("TEAMPACT_API_TOKEN")
+    
+    if not api_token:
+        st.error("TEAMPACT_API_TOKEN not found in environment variables")
+        return None, None, None
+    
+    # Survey IDs for NMB endline assessments
+    survey_ids = {
+        'xhosa': 725,
+        'english': 726, 
+        'afrikaans': 727
+    }
+    
+    # Fetch data for each language
+    try:
+        st.info("🔄 Fetching NMB Endline data from TeamPact API...")
+        
+        with st.spinner("Fetching isiXhosa endline data..."):
+            xhosa_responses, xhosa_questions = fetch_survey_responses_nested(survey_ids['xhosa'], api_token)
+        
+        with st.spinner("Fetching English endline data..."):
+            english_responses, english_questions = fetch_survey_responses_nested(survey_ids['english'], api_token)
+        
+        with st.spinner("Fetching Afrikaans endline data..."):
+            afrikaans_responses, afrikaans_questions = fetch_survey_responses_nested(survey_ids['afrikaans'], api_token)
+        
+        if not all([xhosa_responses, english_responses, afrikaans_responses]):
+            st.error("Failed to fetch data from one or more surveys")
+            return None, None, None
+        
+        # Process the nested EGRA data
+        xhosa_df = process_egra_survey_data(xhosa_responses, survey_ids['xhosa'])
+        english_df = process_egra_survey_data(english_responses, survey_ids['english']) 
+        afrikaans_df = process_egra_survey_data(afrikaans_responses, survey_ids['afrikaans'])
+        
+        st.success(f"✅ NMB Endline API data loaded successfully!")
+        st.info(f"Records: isiXhosa ({len(xhosa_df)}), English ({len(english_df)}), Afrikaans ({len(afrikaans_df)})")
+        
+        return xhosa_df, english_df, afrikaans_df
+    
+    except Exception as e:
+        st.error(f"Error loading NMB Endline API data: {str(e)}")
         return None, None, None
 
 def load_zazi_izandi_2025():
