@@ -13,6 +13,13 @@ def load_mentor_visits_2025_tp():
     df = pd.read_csv(path)
     return df
 
+def load_zazi_izandi_ecd_endline():
+    ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+    filename = "survey723_nmb-endline-ecd_masinyusane_2025-11-05_12-59-13.csv"
+    path = os.path.join(ROOT_DIR, "data/Teampact", filename)
+    df = pd.read_csv(path)
+    return df
+
 def load_zazi_izandi_east_london_2025_tp():
     ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__)))
     xhosa_filename = "survey644_egra-letters-isixhosa-el_masinyusane_2025-09-28_12-15-34.csv"

@@ -55,7 +55,7 @@ session_analysis_page_24 = st.Page("new_pages/2024/session_analysis_2024.py", ic
 baseline_page_25 = st.Page("new_pages/2025/baseline_2025.py", icon="📖", title="2025 Baseline NMB (Cohort 1)", url_path="baseline_25")
 midline_page_25 = st.Page("new_pages/2025/midline_2025.py", icon="📊", title="2025 Midline NMB (Cohort 1)", url_path="midline_25")
 sessions_page_25 = st.Page("new_pages/2025/sessions_2025.py", icon="📈", title="2025 Sessions", url_path="sessions_25")
-midline_ecd_page_25 = st.Page("new_pages/2025/midline_2025_ecd.py", icon="🏫", title="2025 ECD NMB Midline", url_path="midline_ecd_25")
+ecd_page_25 = st.Page("new_pages/2025/ecd_2025.py", icon="🏫", title="2025 ECD NMB Results", url_path="ecd_25")
 nmb_assessments_page_25 = st.Page("new_pages/2025/nmb_assessments.py", icon="🏫", title="2025 Baseline NMB (Cohort 2)", url_path="nmb_assessments_25")
 nmb_endline_cohort_page_25 = st.Page("new_pages/2025/nmb_endline_cohort_analysis.py", icon="📊", title="2025 Endline NMB (Cohort 2)", url_path="nmb_endline_cohort_25")
 el_assessments_page_25 = st.Page("new_pages/2025/el_assessments.py", icon="🏫", title="2025 Baseline BCM (Cohort 2)", url_path="el_assessments_25")
@@ -81,7 +81,7 @@ flag_moving_too_fast_page = st.Page("new_pages/project_management/flag_moving_to
 pages_2024_public = [letter_knowledge_page_24, word_reading_page_24, new_schools_page_24, session_analysis_page_24]
 pages_2024_internal = []
 
-pages_2025_public = [ midline_page_25, baseline_page_25, midline_ecd_page_25, ]
+pages_2025_public = [ ecd_page_25, baseline_page_25, midline_page_25 ]
 pages_2025_internal = [nmb_assessments_page_25, nmb_endline_cohort_page_25, teampact_sessions_page_25, east_london_sessions_page_25, el_assessments_page_25]
 
 pages_research_public = [research_page]
