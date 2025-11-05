@@ -4,13 +4,100 @@ import plotly.express as px
 import plotly.graph_objects as go
 from process_teampact_data import process_teampact_data
 import os
+import sys
 from datetime import datetime as dt
 from dotenv import load_dotenv
 from data_loader import load_zazi_izandi_2025_tp, load_zazi_izandi_nmb_2025_endline_tp, load_zazi_izandi_nmb_2025_endline_tp_csv
 import traceback
 
+# Ensure the project root is on the import path
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if ROOT_DIR not in sys.path:
+    sys.path.append(ROOT_DIR)
+
+from database_utils import get_database_engine, check_table_exists
+
 # Load environment variables
 load_dotenv()
+
+@st.cache_data(ttl=3600)  # Cache for 1 hour
+def load_endline_data_from_db():
+    """
+    Load endline assessment data from Django database
+    Returns data in format compatible with the assessment charts
+    """
+    try:
+        # Check if table exists
+        if not check_table_exists("teampact_assessment_endline_2025"):
+            st.error("Endline assessment table not found in database. Please ensure sync has been run.")
+            return None, None, None, None
+        
+        engine = get_database_engine()
+        
+        # Load all endline assessment data
+        query = """
+        SELECT 
+            response_id,
+            user_id,
+            survey_id,
+            survey_name,
+            program_name as "Program Name",
+            class_name as "Class Name",
+            collected_by as "Collected By",
+            response_date as "Response Date",
+            first_name as "First Name",
+            last_name as "Last Name",
+            email,
+            gender as "Gender",
+            grade as "Grade",
+            language as "Language",
+            total_correct as "Total cells correct - EGRA Letters",
+            total_incorrect,
+            total_attempted,
+            total_not_attempted,
+            assessment_complete,
+            stop_rule_reached,
+            timer_elapsed,
+            time_elapsed_completion,
+            assessment_type,
+            session_count_total,
+            session_count_30_days,
+            session_count_90_days,
+            cohort_session_range,
+            flag_moving_too_fast,
+            flag_same_letter_groups,
+            cohort_calculated_at,
+            created_at,
+            updated_at,
+            data_refresh_timestamp
+        FROM teampact_assessment_endline_2025
+        WHERE assessment_type = 'endline'
+        ORDER BY response_date DESC
+        """
+        
+        df = pd.read_sql(query, engine)
+        
+        if df.empty:
+            st.warning("No endline assessment data found in database.")
+            return None, None, None, None
+        
+        # Convert date columns to datetime
+        date_columns = ['Response Date', 'cohort_calculated_at', 'created_at', 'updated_at', 'data_refresh_timestamp']
+        for col in date_columns:
+            if col in df.columns:
+                df[col] = pd.to_datetime(df[col], errors='coerce')
+        
+        # Split by language for compatibility with existing chart code
+        xhosa_df = df[df['Language'] == 'isiXhosa'].copy()
+        english_df = df[df['Language'] == 'English'].copy()
+        afrikaans_df = df[df['Language'] == 'Afrikaans'].copy()
+        
+        return df, xhosa_df, english_df, afrikaans_df
+        
+    except Exception as e:
+        st.error(f"Error loading endline data from database: {e}")
+        st.error(traceback.format_exc())
+        return None, None, None, None
 
 def display_2025_teampact():
     # Check authentication
@@ -19,12 +106,13 @@ def display_2025_teampact():
 
     st.title("2025 NMB Assessments")
     
-    # Add data source toggle
+    # Add data source toggle (for BASELINE only)
     st.sidebar.header("📊 Data Source")
+    st.sidebar.markdown("**Baseline Data:**")
     use_api = st.sidebar.toggle("Use API instead of CSV files", value=False, key="api_toggle")
     
     if use_api:
-        st.sidebar.info("🔄 Using TeamPact API")
+        st.sidebar.info("🔄 Baseline: Using TeamPact API")
         # Add API token check
         import os
         import dotenv
@@ -33,7 +121,10 @@ def display_2025_teampact():
         if not api_token:
             st.sidebar.error("⚠️ TEAMPACT_API_TOKEN not set in environment")
     else:
-        st.sidebar.info("📁 Using CSV files")
+        st.sidebar.info("📁 Baseline: Using CSV files")
+    
+    st.sidebar.markdown("**Endline Data:**")
+    st.sidebar.success("🗄️ Endline: Using Database")
     
     # Load BASELINE data
     baseline_df = None
@@ -68,43 +159,30 @@ def display_2025_teampact():
         st.error(traceback.format_exc())
         baseline_df = None
     
-    # Load ENDLINE data
+    # Load ENDLINE data from database
     endline_df = None
     endline_xhosa_df = None
     endline_english_df = None
     endline_afrikaans_df = None
     
     try:
-        if use_api:
-            # Use the new endline API loader
-            endline_result = load_zazi_izandi_nmb_2025_endline_tp()
-            
-            if endline_result and all(df is not None for df in endline_result):
-                endline_xhosa_df, endline_english_df, endline_afrikaans_df = endline_result
-            
-                # Process endline data
-                endline_df = process_teampact_data(endline_xhosa_df, endline_english_df, endline_afrikaans_df)
-                
-                if endline_df.empty:
-                    st.warning("⚠️ No endline assessment data was found.")
-                    endline_df = None
-            else:
-                st.error("Failed to load endline API data")
-        else:
-            # Use CSV loader for endline
-            endline_xhosa_df, endline_english_df, endline_afrikaans_df = load_zazi_izandi_nmb_2025_endline_tp_csv()
-            
-            # Process endline data
-            endline_df = process_teampact_data(endline_xhosa_df, endline_english_df, endline_afrikaans_df)
-            
-            if endline_df.empty:
-                st.warning("⚠️ No endline assessment data was found.")
-                endline_df = None
+        # Load endline data from database (always use database for endline)
+        endline_df, endline_xhosa_df, endline_english_df, endline_afrikaans_df = load_endline_data_from_db()
+        
+        if endline_df is None or endline_df.empty:
+            st.warning("⚠️ No endline assessment data was found in database.")
+            endline_df = None
+            endline_xhosa_df = None
+            endline_english_df = None
+            endline_afrikaans_df = None
         
     except Exception as e:
-        st.error(f"Error loading endline data: {e}")
+        st.error(f"Error loading endline data from database: {e}")
         st.error(traceback.format_exc())
         endline_df = None
+        endline_xhosa_df = None
+        endline_english_df = None
+        endline_afrikaans_df = None
     
     # Check if we have at least one dataset
     if baseline_df is None and endline_df is None:
@@ -122,6 +200,12 @@ def display_2025_teampact():
     
     # Helper function to render all charts for a dataset
     def render_assessment_charts(df, xhosa_df, english_df, afrikaans_df, period_name):
+        # Show data refresh info for endline data from database
+        if period_name == "endline" and 'data_refresh_timestamp' in df.columns and not df['data_refresh_timestamp'].isna().all():
+            last_refresh = df['data_refresh_timestamp'].max()
+            st.info(f"📅 Data last refreshed: {last_refresh.strftime('%Y-%m-%d %H:%M:%S')}")
+            st.divider()
+        
         # Okay, let's create some charts!
         col1, col2, col3, col4 = st.columns(4)
         with col1:
