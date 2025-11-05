@@ -223,18 +223,23 @@ if 'user' in st.session_state and st.session_state.user:
     - 🏫 **School & EA Insights** - School-level and education assistant performance breakdown
     - 📈 **Data Explorer** - Interactive data exploration tools
     
-    ### 📱 2025 Sessions (Cohort 2)
-    **Internal Access** - Comprehensive session tracking and analysis for Cohort 2 showing education assistant activity, implementation quality, and school-level session patterns.
+    ### 📱 2025 Sessions NMB (Cohort 2)
+    **Internal Access** - Comprehensive session tracking and analysis for Nelson Mandela Bay Cohort 2 showing education assistant activity, implementation quality, and school-level session patterns.
     
     **Tabs:**
     - **EA Sessions Analysis** - Education assistant session counts, frequency, and activity patterns
     - **EA Implementation Status** - Current implementation status by EA including session counts and last session date
-    - **East London Schools** - Session analysis specific to East London partner schools
     - **DataQuest Schools** - Session analysis for DataQuest partner schools
-    - **Group Session Analysis** - Analysis of group-level session patterns and attendance
-    - **Data Quality** - Session data quality metrics and validation checks
+    - **Group Session Analysis** - Analysis of group-level session patterns and attendance (NMB schools only)
     
-    ### 📋 2025 Baseline EL (Cohort 2)
+    ### 📱 2025 Sessions East London (Cohort 2)
+    **Internal Access** - Dedicated session tracking and analysis page for East London schools showing EA activity, school-level performance, and implementation patterns specific to the East London region.
+    
+    **Tabs:**
+    - **EA Sessions Analysis** - Education assistant session counts, frequency, and activity patterns for East London schools
+    - **Group Session Analysis** - Analysis of group-level session patterns and attendance for East London schools
+    
+    ### 📋 2025 Baseline BCM (Cohort 2)
     **Internal Access** - Baseline assessment results for East London Cohort 2 schools showing initial literacy levels across the East London implementation area.
     """)
 

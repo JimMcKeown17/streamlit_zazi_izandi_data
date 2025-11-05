@@ -274,84 +274,130 @@ def create_school_workload_summary(df):
 def display_session_analysis(df):
     """Display comprehensive session analysis dashboard"""
     
-    # Calculate 60-day cutoff for summary metrics
-    max_date = pd.to_datetime(df['session_started_at']).max()
-    sixty_days_ago = max_date - timedelta(days=60)
-    df_60days = df[pd.to_datetime(df['session_started_at']) >= sixty_days_ago]
-    df_60days['session_date'] = pd.to_datetime(df_60days['session_started_at']).dt.date
+    # Prepare date columns for all data
+    df_all = df.copy()
+    df_all['session_date'] = pd.to_datetime(df_all['session_started_at']).dt.date
     
-    # UPDATED METRICS - PAST 60 DAYS ONLY (Moved to top)
-    st.subheader("Session Overview Metrics - Past 60 Days")
+    # UPDATED METRICS - ALL DATA
+    st.subheader("Session Overview Metrics - All Data")
     
     # Primary School metrics
     st.markdown("**Primary Schools**")
-    df_primary_60days = df_60days[df_60days['school_type'] == 'Primary School']
+    df_primary_all = df_all[df_all['school_type'] == 'Primary School']
     col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
-        primary_eas_active = df_primary_60days['user_name'].nunique()
-        st.metric("School EAs Active 1+ Days", primary_eas_active)
-    
-    with col2:
-        primary_ea_activity = df_primary_60days.groupby('user_name')['session_date'].nunique()
+        primary_ea_activity = df_primary_all.groupby('user_name')['session_date'].nunique()
         primary_eas_3plus = (primary_ea_activity >= 3).sum()
         st.metric("School EAs Active 3+ Days", primary_eas_3plus)
     
+    with col2:
+        primary_ea_activity = df_primary_all.groupby('user_name')['session_date'].nunique()
+        primary_eas_15plus = (primary_ea_activity >= 15).sum()
+        st.metric("School EAs Active 15+ Days", primary_eas_15plus)
+    
     with col3:
-        primary_sessions = df_primary_60days['session_id'].nunique()
+        primary_sessions = df_primary_all['session_id'].nunique()
+        primary_eas_active = df_primary_all['user_name'].nunique()
         primary_avg_sessions = primary_sessions / primary_eas_active if primary_eas_active > 0 else 0
         st.metric("Avg Sessions per School EA", f"{primary_avg_sessions:.1f}")
     
     with col4:
         # Count schools where EAs have been active 3+ days
-        primary_ea_activity = df_primary_60days.groupby('user_name')['session_date'].nunique()
+        primary_ea_activity = df_primary_all.groupby('user_name')['session_date'].nunique()
         primary_eas_3plus_users = primary_ea_activity[primary_ea_activity >= 3].index
-        primary_schools_3plus = df_primary_60days[df_primary_60days['user_name'].isin(primary_eas_3plus_users)]['program_name'].nunique()
+        primary_schools_3plus = df_primary_all[df_primary_all['user_name'].isin(primary_eas_3plus_users)]['program_name'].nunique()
         st.metric("Schools Running 3+ Days", primary_schools_3plus)
     
     with col5:
-        # Count schools where any EA has been active 1+ days
-        primary_schools_1plus = df_primary_60days['program_name'].nunique()
-        st.metric("Schools Running 1+ Days", primary_schools_1plus)
+        # Count schools where EAs have been active 15+ days
+        primary_ea_activity = df_primary_all.groupby('user_name')['session_date'].nunique()
+        primary_eas_15plus_users = primary_ea_activity[primary_ea_activity >= 15].index
+        primary_schools_15plus = df_primary_all[df_primary_all['user_name'].isin(primary_eas_15plus_users)]['program_name'].nunique()
+        st.metric("Schools Running 15+ Days", primary_schools_15plus)
     
     # ECD metrics
     st.markdown("**Early Childhood Development Centers**")
-    df_ecd_60days = df_60days[df_60days['school_type'] == 'ECD']
+    df_ecd_all = df_all[df_all['school_type'] == 'ECD']
     col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
-        ecd_eas_active = df_ecd_60days['user_name'].nunique()
-        st.metric("ECD EAs Active 1+ Days", ecd_eas_active)
-    
-    with col2:
-        ecd_ea_activity = df_ecd_60days.groupby('user_name')['session_date'].nunique()
+        ecd_ea_activity = df_ecd_all.groupby('user_name')['session_date'].nunique()
         ecd_eas_3plus = (ecd_ea_activity >= 3).sum()
         st.metric("ECD EAs Active 3+ Days", ecd_eas_3plus)
     
+    with col2:
+        ecd_ea_activity = df_ecd_all.groupby('user_name')['session_date'].nunique()
+        ecd_eas_15plus = (ecd_ea_activity >= 15).sum()
+        st.metric("ECD EAs Active 15+ Days", ecd_eas_15plus)
+    
     with col3:
-        ecd_sessions = df_ecd_60days['session_id'].nunique()
+        ecd_sessions = df_ecd_all['session_id'].nunique()
+        ecd_eas_active = df_ecd_all['user_name'].nunique()
         ecd_avg_sessions = ecd_sessions / ecd_eas_active if ecd_eas_active > 0 else 0
         st.metric("Avg Sessions per ECD EA", f"{ecd_avg_sessions:.1f}")
     
     with col4:
         # Count ECDs where EAs have been active 3+ days
-        ecd_ea_activity = df_ecd_60days.groupby('user_name')['session_date'].nunique()
+        ecd_ea_activity = df_ecd_all.groupby('user_name')['session_date'].nunique()
         ecd_eas_3plus_users = ecd_ea_activity[ecd_ea_activity >= 3].index
-        ecd_schools_3plus = df_ecd_60days[df_ecd_60days['user_name'].isin(ecd_eas_3plus_users)]['program_name'].nunique()
+        ecd_schools_3plus = df_ecd_all[df_ecd_all['user_name'].isin(ecd_eas_3plus_users)]['program_name'].nunique()
         st.metric("ECDs Running 3+ Days", ecd_schools_3plus)
     
     with col5:
-        # Count ECDs where any EA has been active 1+ days
-        ecd_schools_1plus = df_ecd_60days['program_name'].nunique()
-        st.metric("ECDs Running 1+ Days", ecd_schools_1plus)
+        # Count ECDs where EAs have been active 15+ days
+        ecd_ea_activity = df_ecd_all.groupby('user_name')['session_date'].nunique()
+        ecd_eas_15plus_users = ecd_ea_activity[ecd_ea_activity >= 15].index
+        ecd_schools_15plus = df_ecd_all[df_ecd_all['user_name'].isin(ecd_eas_15plus_users)]['program_name'].nunique()
+        st.metric("ECDs Running 15+ Days", ecd_schools_15plus)
+    
+    st.divider()
+    
+    # HISTOGRAM: DAYS WORKED DISTRIBUTION
+    st.subheader("Distribution of Days Worked by EAs")
+    
+    # Calculate days worked for each EA
+    ea_days_worked = df_all.groupby('user_name')['session_date'].nunique().reset_index()
+    ea_days_worked.columns = ['EA_Name', 'Days_Worked']
+    
+    # Create histogram with bucket size of 1
+    fig_histogram = px.histogram(
+        ea_days_worked,
+        x='Days_Worked',
+        nbins=int(ea_days_worked['Days_Worked'].max()) if not ea_days_worked.empty else 50,
+        title="Number of EAs by Days Worked",
+        labels={'Days_Worked': 'Days Worked', 'count': 'Number of EAs'},
+        color_discrete_sequence=['#1f77b4']
+    )
+    
+    # Update layout for better readability
+    fig_histogram.update_layout(
+        xaxis_title="Days Worked",
+        yaxis_title="Number of EAs",
+        bargap=0.1,
+        showlegend=False
+    )
+    
+    st.plotly_chart(fig_histogram, width='stretch')
+    
+    # Show summary statistics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Total EAs", len(ea_days_worked))
+    with col2:
+        st.metric("Avg Days per EA", f"{ea_days_worked['Days_Worked'].mean():.1f}")
+    with col3:
+        st.metric("Median Days per EA", f"{ea_days_worked['Days_Worked'].median():.0f}")
+    with col4:
+        st.metric("Max Days Worked", f"{ea_days_worked['Days_Worked'].max():.0f}")
     
     st.divider()
 
-    # UNIQUE EAs BY SCHOOLS & ECDs - PAST 60 DAYS (Moved to top)
-    st.subheader("Active EAs by Schools & ECDs - Past 60 Days")
+    # UNIQUE EAs BY SCHOOLS & ECDs - ALL DATA
+    st.subheader("Active EAs by Schools & ECDs")
     
     # Group by date and school type for unique EAs count
-    daily_school_type_eas = df_60days.groupby(['session_date', 'school_type'])['user_name'].nunique().reset_index()
+    daily_school_type_eas = df_all.groupby(['session_date', 'school_type'])['user_name'].nunique().reset_index()
     daily_school_type_eas.columns = ['Date', 'School_Type', 'Active_EAs']
     
     if not daily_school_type_eas.empty:
@@ -360,21 +406,16 @@ def display_session_analysis(df):
             x='Date',
             y='Active_EAs',
             color='School_Type',
-            title="Daily Active EAs by Schools & ECDs (Past 60 Days)",
+            title="Daily Active EAs by Schools & ECDs",
             labels={'Active_EAs': 'Number of Active EAs', 'Date': 'Date'}
         )
         st.plotly_chart(fig_school_type_eas, width='stretch')
     
-    # SESSIONS BY SCHOOLS & ECDs - PAST 30 DAYS (Moved below)
-    st.subheader("Total Sessions by Schools & ECDs - Past 30 Days")
-    
-    # Calculate 30-day cutoff
-    thirty_days_ago = max_date - timedelta(days=30)
-    df_30days = df[pd.to_datetime(df['session_started_at']) >= thirty_days_ago]
-    df_30days['session_date'] = pd.to_datetime(df_30days['session_started_at']).dt.date
+    # SESSIONS BY SCHOOLS & ECDs - ALL DATA
+    st.subheader("Total Sessions by Schools & ECDs")
     
     # Group by date and school type for sessions count
-    daily_school_type_sessions = df_30days.groupby(['session_date', 'school_type'])['session_id'].nunique().reset_index()
+    daily_school_type_sessions = df_all.groupby(['session_date', 'school_type'])['session_id'].nunique().reset_index()
     daily_school_type_sessions.columns = ['Date', 'School_Type', 'Sessions']
     
     if not daily_school_type_sessions.empty:
@@ -383,21 +424,23 @@ def display_session_analysis(df):
             x='Date',
             y='Sessions',
             color='School_Type',
-            title="Daily Sessions by Schools & ECDs (Past 30 Days)",
+            title="Daily Sessions by Schools & ECDs",
             labels={'Sessions': 'Number of Sessions', 'Date': 'Date'},
             markers=True
         )
         st.plotly_chart(fig_school_type_sessions, width='stretch')
     
-    # ACTIVE EAs (3+ DAYS) TREND - PAST 30 DAYS
-    st.subheader("Active EAs (3+ Days) Trend - Past 30 Days")
+    # ACTIVE EAs (3+ DAYS) TREND - ALL DATA
+    st.subheader("Active EAs (3+ Days) Trend")
     
-    # Calculate active EAs (3+ days) for each day over past 30 days
+    # Calculate active EAs (3+ days) for each day over all available data
     df_with_date = df.copy()
     df_with_date['session_date'] = pd.to_datetime(df_with_date['session_started_at']).dt.date
     
-    # Get all unique dates in the past 30 days
-    all_dates = pd.date_range(start=thirty_days_ago.date(), end=max_date.date(), freq='D').date
+    # Get all unique dates in the data
+    max_date = pd.to_datetime(df['session_started_at']).max()
+    min_date = pd.to_datetime(df['session_started_at']).min()
+    all_dates = pd.date_range(start=min_date.date(), end=max_date.date(), freq='D').date
     
     active_ea_trend_data = []
     
@@ -435,7 +478,7 @@ def display_session_analysis(df):
             x='Date',
             y='Active_EAs_3Plus',
             color='School_Type',
-            title="Daily Count of Active EAs (3+ Days) - Past 30 Days",
+            title="Daily Count of Active EAs (3+ Days)",
             labels={'Active_EAs_3Plus': 'Number of Active EAs (3+ Days)', 'Date': 'Date'},
             markers=True
         )
@@ -854,6 +897,8 @@ def display_ea_implementation_analysis(df_sessions):
 def display_selected_schools_analysis(df):
     """Display session analysis for DataQuest schools subset"""
     
+    st.header("DataQuest Schools - Session Analysis")
+    
     # Filter data to only include selected schools using lowercase comparison
     # Convert both the database program names and our list to lowercase for matching
     selected_schools_lower = [school.lower() for school in selected_schools_list]
@@ -865,384 +910,197 @@ def display_selected_schools_analysis(df):
         return
     
     st.info(f"Showing data for {len(selected_schools_list)} DataQuest schools ({len(filtered_df):,} records)")
-
-def display_el_schools_analysis(df):
-    """Display session analysis for East London schools subset"""
     
-    # Filter data to only include East London schools using lowercase comparison
-    # Convert both the database program names and our list to lowercase for matching
-    el_schools_lower = [school.lower() for school in el_schools]
-    filtered_df = df[df['program_name'].str.lower().isin(el_schools_lower)]
+    # Prepare date columns for all data
+    df_all = filtered_df.copy()
+    df_all['session_date'] = pd.to_datetime(df_all['session_started_at']).dt.date
     
-    if filtered_df.empty:
-        st.warning("No data found for the East London schools.")
-        st.info("The East London schools list may not match the program names in the database exactly.")
-        return
-    
-    st.info(f"Showing data for {len(el_schools)} East London schools ({len(filtered_df):,} records)")
-    
-    # Calculate 60-day cutoff for summary metrics
-    max_date = pd.to_datetime(filtered_df['session_started_at']).max()
-    sixty_days_ago = max_date - timedelta(days=60)
-    df_60days = filtered_df[pd.to_datetime(filtered_df['session_started_at']) >= sixty_days_ago]
-    df_60days['session_date'] = pd.to_datetime(df_60days['session_started_at']).dt.date
-    
-    # SESSION OVERVIEW METRICS - PAST 60 DAYS
-    st.subheader("Session Overview Metrics - Past 60 Days (East London Schools)")
+    # SESSION OVERVIEW METRICS - ALL DATA
+    st.subheader("Session Overview Metrics - DataQuest Schools")
     
     # Primary School metrics (filtered)
     st.markdown("**Primary Schools**")
-    df_primary_60days = df_60days[df_60days['school_type'] == 'Primary School']
+    df_primary_all = df_all[df_all['school_type'] == 'Primary School']
     col1, col2, col3, col4, col5 = st.columns(5)
     
     with col1:
-        primary_eas_active = df_primary_60days['user_name'].nunique()
-        st.metric("School EAs Active 1+ Days", primary_eas_active)
-    
-    with col2:
-        primary_ea_activity = df_primary_60days.groupby('user_name')['session_date'].nunique()
+        primary_ea_activity = df_primary_all.groupby('user_name')['session_date'].nunique()
         primary_eas_3plus = (primary_ea_activity >= 3).sum()
         st.metric("School EAs Active 3+ Days", primary_eas_3plus)
     
+    with col2:
+        primary_ea_activity = df_primary_all.groupby('user_name')['session_date'].nunique()
+        primary_eas_15plus = (primary_ea_activity >= 15).sum()
+        st.metric("School EAs Active 15+ Days", primary_eas_15plus)
+    
     with col3:
-        primary_sessions = df_primary_60days['session_id'].nunique()
+        primary_sessions = df_primary_all['session_id'].nunique()
+        primary_eas_active = df_primary_all['user_name'].nunique()
         primary_avg_sessions = primary_sessions / primary_eas_active if primary_eas_active > 0 else 0
         st.metric("Avg Sessions per School EA", f"{primary_avg_sessions:.1f}")
     
     with col4:
         # Count schools where EAs have been active 3+ days
-        primary_ea_activity = df_primary_60days.groupby('user_name')['session_date'].nunique()
+        primary_ea_activity = df_primary_all.groupby('user_name')['session_date'].nunique()
         primary_eas_3plus_users = primary_ea_activity[primary_ea_activity >= 3].index
-        primary_schools_3plus = df_primary_60days[df_primary_60days['user_name'].isin(primary_eas_3plus_users)]['program_name'].nunique()
+        primary_schools_3plus = df_primary_all[df_primary_all['user_name'].isin(primary_eas_3plus_users)]['program_name'].nunique()
         st.metric("Schools Running 3+ Days", primary_schools_3plus)
     
     with col5:
-        # Count schools where any EA has been active 1+ days
-        primary_schools_1plus = df_primary_60days['program_name'].nunique()
-        st.metric("Schools Running 1+ Days", primary_schools_1plus)
+        # Count schools where EAs have been active 15+ days
+        primary_ea_activity = df_primary_all.groupby('user_name')['session_date'].nunique()
+        primary_eas_15plus_users = primary_ea_activity[primary_ea_activity >= 15].index
+        primary_schools_15plus = df_primary_all[df_primary_all['user_name'].isin(primary_eas_15plus_users)]['program_name'].nunique()
+        st.metric("Schools Running 15+ Days", primary_schools_15plus)
     
     st.divider()
     
-    # EAST LONDON SCHOOLS BREAKDOWN TABLE
-    st.subheader("EA Activity by East London School - Past 60 Days")
+    # HISTOGRAM: DAYS WORKED DISTRIBUTION
+    st.subheader("Distribution of Days Worked by EAs - DataQuest Schools")
     
-    # Create table showing each East London school with EA activity metrics
+    # Calculate days worked for each EA
+    ea_days_worked = df_all.groupby('user_name')['session_date'].nunique().reset_index()
+    ea_days_worked.columns = ['EA_Name', 'Days_Worked']
+    
+    # Create histogram with bucket size of 1
+    fig_histogram = px.histogram(
+        ea_days_worked,
+        x='Days_Worked',
+        nbins=int(ea_days_worked['Days_Worked'].max()) if not ea_days_worked.empty else 50,
+        title="Number of EAs by Days Worked - DataQuest Schools",
+        labels={'Days_Worked': 'Days Worked', 'count': 'Number of EAs'},
+        color_discrete_sequence=['#1f77b4']
+    )
+    
+    # Update layout for better readability
+    fig_histogram.update_layout(
+        xaxis_title="Days Worked",
+        yaxis_title="Number of EAs",
+        bargap=0.1,
+        showlegend=False
+    )
+    
+    st.plotly_chart(fig_histogram, width='stretch')
+    
+    # Show summary statistics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Total EAs", len(ea_days_worked))
+    with col2:
+        st.metric("Avg Days per EA", f"{ea_days_worked['Days_Worked'].mean():.1f}")
+    with col3:
+        st.metric("Median Days per EA", f"{ea_days_worked['Days_Worked'].median():.0f}")
+    with col4:
+        st.metric("Max Days Worked", f"{ea_days_worked['Days_Worked'].max():.0f}")
+    
+    st.divider()
+    
+    # DATAQUEST SCHOOLS BREAKDOWN TABLE
+    st.subheader("EA Activity by DataQuest School")
+    
+    # Create table showing each DataQuest school with EA activity metrics
     school_activity_data = []
     
-    for school in el_schools:
+    for school in selected_schools_list:
         # Find matching school in data (case-insensitive)
-        school_data = df_60days[df_60days['program_name'].str.lower() == school.lower()]
+        school_data = df_all[df_all['program_name'].str.lower() == school.lower()]
         
         if not school_data.empty:
-            # Calculate EAs active 1+ days for this school
-            eas_1plus = school_data['user_name'].nunique()
-            
             # Calculate EAs active 3+ days for this school
-            ea_activity = school_data.groupby('user_name')['session_date'].nunique()
-            eas_3plus = (ea_activity >= 3).sum()
+            eas_3plus_activity = school_data.groupby('user_name')['session_date'].nunique()
+            eas_3plus = (eas_3plus_activity >= 3).sum()
+            
+            # Calculate EAs active 15+ days for this school
+            eas_15plus = (eas_3plus_activity >= 15).sum()
+            
+            # Total sessions for this school
+            total_sessions = school_data['session_id'].nunique()
             
             # Get the actual school name from the data (proper case)
             actual_school_name = school_data['program_name'].iloc[0]
         else:
             # No data for this school
-            eas_1plus = 0
             eas_3plus = 0
+            eas_15plus = 0
+            total_sessions = 0
             actual_school_name = school  # Use the name from our list
         
         school_activity_data.append({
             'School Name': actual_school_name,
-            'EAs Active 1+ Days': eas_1plus,
-            'EAs Active 3+ Days': eas_3plus
+            'EAs Active 3+ Days': eas_3plus,
+            'EAs Active 15+ Days': eas_15plus,
+            'Total Sessions': total_sessions
         })
     
     # Create DataFrame and display
     school_activity_df = pd.DataFrame(school_activity_data)
     
-    # Sort by EAs Active 3+ Days (descending), then by EAs Active 1+ Days (descending)
-    school_activity_df = school_activity_df.sort_values(['EAs Active 3+ Days', 'EAs Active 1+ Days'], ascending=[False, False])
+    # Sort by Total Sessions (descending)
+    school_activity_df = school_activity_df.sort_values('Total Sessions', ascending=False)
     
     # Display the table
     st.dataframe(school_activity_df, width='stretch', hide_index=True)
     
     # Add summary info
-    total_schools_with_data = (school_activity_df['EAs Active 1+ Days'] > 0).sum()
+    total_schools_with_data = (school_activity_df['Total Sessions'] > 0).sum()
     schools_with_3plus = (school_activity_df['EAs Active 3+ Days'] > 0).sum()
-    st.info(f"📊 **Summary**: {total_schools_with_data} of {len(el_schools)} East London schools have EA activity in the past 60 days. {schools_with_3plus} schools have EAs active 3+ days.")
+    schools_with_15plus = (school_activity_df['EAs Active 15+ Days'] > 0).sum()
+    st.info(f"📊 **Summary**: {total_schools_with_data} of {len(selected_schools_list)} DataQuest schools have session data. {schools_with_3plus} schools have EAs active 3+ days. {schools_with_15plus} schools have EAs active 15+ days.")
     
     st.divider()
-
-    # UNIQUE EAs BY SCHOOLS & ECDs - PAST 60 DAYS
-    st.subheader("Active EAs by Schools & ECDs - Past 60 Days (East London Schools)")
     
-    # Group by date and school type for unique EAs count
-    daily_school_type_eas = df_60days.groupby(['session_date', 'school_type'])['user_name'].nunique().reset_index()
-    daily_school_type_eas.columns = ['Date', 'School_Type', 'Active_EAs']
+    # SESSIONS BY SCHOOL CHART
+    st.subheader("Total Sessions by DataQuest School")
     
-    if not daily_school_type_eas.empty:
-        fig_school_type_eas = px.bar(
-            daily_school_type_eas,
-            x='Date',
-            y='Active_EAs',
-            color='School_Type',
-            title="Daily Active EAs by Schools & ECDs - East London Schools (Past 60 Days)",
-            labels={'Active_EAs': 'Number of Active EAs', 'Date': 'Date'}
-        )
-        st.plotly_chart(fig_school_type_eas, width='stretch')
-    
-    # SESSIONS BY SCHOOLS & ECDs - PAST 30 DAYS
-    st.subheader("Total Sessions by Schools & ECDs - Past 30 Days (East London Schools)")
-    
-    # Calculate 30-day cutoff
-    thirty_days_ago = max_date - timedelta(days=30)
-    df_30days = filtered_df[pd.to_datetime(filtered_df['session_started_at']) >= thirty_days_ago]
-    df_30days['session_date'] = pd.to_datetime(df_30days['session_started_at']).dt.date
-    
-    # Group by date and school type for sessions count
-    daily_school_type_sessions = df_30days.groupby(['session_date', 'school_type'])['session_id'].nunique().reset_index()
-    daily_school_type_sessions.columns = ['Date', 'School_Type', 'Sessions']
-    
-    if not daily_school_type_sessions.empty:
-        fig_school_type_sessions = px.line(
-            daily_school_type_sessions,
-            x='Date',
-            y='Sessions',
-            color='School_Type',
-            title="Daily Sessions by Schools & ECDs - East London Schools (Past 30 Days)",
-            labels={'Sessions': 'Number of Sessions', 'Date': 'Date'},
-            markers=True
-        )
-        st.plotly_chart(fig_school_type_sessions, width='stretch')
-    
-    # ACTIVE EAs (3+ DAYS) TREND - PAST 30 DAYS
-    st.subheader("Active EAs (3+ Days) Trend - Past 30 Days (East London Schools)")
-    
-    # Calculate active EAs (3+ days) for each day over past 30 days
-    df_with_date = filtered_df.copy()
-    df_with_date['session_date'] = pd.to_datetime(df_with_date['session_started_at']).dt.date
-    
-    # Get all unique dates in the past 30 days
-    all_dates = pd.date_range(start=thirty_days_ago.date(), end=max_date.date(), freq='D').date
-    
-    active_ea_trend_data = []
-    
-    for current_date in all_dates:
-        # Calculate 7-day window ending on current_date
-        seven_days_before = current_date - timedelta(days=6)  # 6 days before + current day = 7 days
+    if not school_activity_df.empty:
+        # Filter to schools with data
+        schools_with_sessions = school_activity_df[school_activity_df['Total Sessions'] > 0]
         
-        # Filter data to this 7-day window
-        window_data = df_with_date[
-            (df_with_date['session_date'] >= seven_days_before) & 
-            (df_with_date['session_date'] <= current_date)
-        ]
-        
-        if not window_data.empty:
-            # Count EAs active 3+ days in this window, by school type
-            for school_type in ['Primary School', 'ECD']:
-                school_data = window_data[window_data['school_type'] == school_type]
-                if not school_data.empty:
-                    ea_activity = school_data.groupby('user_name')['session_date'].nunique()
-                    active_eas_count = (ea_activity >= 3).sum()
-                else:
-                    active_eas_count = 0
-                
-                active_ea_trend_data.append({
-                    'Date': current_date,
-                    'School_Type': school_type,
-                    'Active_EAs_3Plus': active_eas_count
-                })
-    
-    if active_ea_trend_data:
-        active_ea_trend_df = pd.DataFrame(active_ea_trend_data)
-        
-        fig_active_ea_trend = px.line(
-            active_ea_trend_df,
-            x='Date',
-            y='Active_EAs_3Plus',
-            color='School_Type',
-            title="Daily Count of Active EAs (3+ Days) - East London Schools (Past 30 Days)",
-            labels={'Active_EAs_3Plus': 'Number of Active EAs (3+ Days)', 'Date': 'Date'},
-            markers=True
-        )
-        st.plotly_chart(fig_active_ea_trend, width='stretch')
-        
-        st.info("📊 **Note**: For each day, we count EAs who were active 3+ days within the 7-day period ending on that day.")
-    
-    # Create the views with filtered data
-    daily_summary, weekly_summary, assistant_summary = create_session_views(filtered_df)
-    
-    # SCHOOL TYPE FILTER
-    st.subheader("Filter by School Type (East London Schools)")
-    school_type_filter = st.selectbox(
-        "Select School Type:",
-        options=["All", "ECD", "Primary School"],
-        index=0,
-        key="el_schools_type_filter"
-    )
-    
-    # Apply filter
-    if school_type_filter != "All":
-        type_filtered_df = filtered_df[filtered_df['school_type'] == school_type_filter]
-        st.info(f"Showing data for {school_type_filter} only ({len(type_filtered_df):,} records)")
-    else:
-        type_filtered_df = filtered_df
-        st.info(f"Showing all school types ({len(type_filtered_df):,} records)")
-    
-    # Recalculate views with type-filtered data
-    daily_summary_filtered, weekly_summary_filtered, assistant_summary_filtered = create_session_views(type_filtered_df)
-    
-    # EA WORKLOAD COMPARISON
-    st.subheader("EA Workload Comparison (East London Schools)")
-    
-    # Total sessions bar chart
-    fig_total = px.bar(
-        assistant_summary_filtered.sort_values('Total_Sessions', ascending=True),
-        x='user_name',
-        y='Total_Sessions',
-        title=f"Total Sessions by EA - East London Schools ({school_type_filter})"
-    )
-    st.plotly_chart(fig_total, width='stretch')
-    
-    # Average daily sessions
-    fig_avg = px.bar(
-        assistant_summary_filtered.sort_values('Avg_Sessions_Per_Day', ascending=True),
-        x='user_name',
-        y='Avg_Sessions_Per_Day',
-        title=f"Average Sessions per Day - East London Schools ({school_type_filter})"
-    )
-    st.plotly_chart(fig_avg, width='stretch')
-    
-    # EA ACTIVITY TABLE - PAST 10 WEEKDAYS
-    st.subheader("EA Session Activity - Past 10 Weekdays (East London Schools)")
-    
-    # Create two columns for the filters
-    filter_col1, filter_col2 = st.columns(2)
-    
-    with filter_col1:
-        # School type filter for this section
-        ea_school_type_filter = st.selectbox(
-            "Filter by School Type:",
-            options=["Primary School", "ECD", "All"],
-            index=0,  # Default to Primary School
-            key="el_ea_activity_filter"
-        )
-    
-    with filter_col2:
-        # Mentor filter for this section
-        mentor_options = ["All mentors"] + list(mentors_to_schools.keys())
-        ea_mentor_filter = st.selectbox(
-            "Filter by Mentor:",
-            options=mentor_options,
-            index=0,  # Default to All mentors
-            key="el_ea_mentor_filter"
-        )
-    
-    # Apply filters for EA activity section
-    ea_filtered_df = filtered_df.copy()
-    
-    if ea_school_type_filter != "All":
-        ea_filtered_df = ea_filtered_df[ea_filtered_df['school_type'] == ea_school_type_filter]
-    
-    if ea_mentor_filter != "All mentors":
-        ea_filtered_df = ea_filtered_df[ea_filtered_df['mentor'] == ea_mentor_filter]
-    
-    # Create the activity table
-    activity_table = create_ea_activity_table(ea_filtered_df)
-    
-    if not activity_table.empty:
-        # ACTIVE DAYS BREAKDOWN AND PIE CHART
-        col1, col2 = st.columns([1, 1])
-        
-        with col1:
-            # Create filter text for display
-            filter_parts = []
-            if ea_school_type_filter != "All":
-                filter_parts.append(ea_school_type_filter)
-            if ea_mentor_filter != "All mentors":
-                filter_parts.append(f"Mentor: {ea_mentor_filter}")
-            
-            filter_text = f" ({', '.join(filter_parts)})" if filter_parts else ""
-            st.info(f"**Here's a breakdown of how many days each EA has worked over the past 10 weekdays{filter_text} - East London Schools.**")
-            
-            # Create breakdown of Total Active Days
-            active_days_counts = activity_table['Total Active Days'].value_counts().sort_index(ascending=False)
-            total_eas = len(activity_table)
-            
-            # Create breakdown table
-            breakdown_df = pd.DataFrame({
-                'No. of Days Worked': active_days_counts.index,
-                'Count of EAs': active_days_counts.values,
-                'Percentage of EAs': (active_days_counts.values / total_eas * 100).round(1)
-            })
-            
-            st.dataframe(breakdown_df, width='stretch', hide_index=True)
-        
-        with col2:   
-            
-            st.info(f"**Charting the distribution of days worked by EAs (over the past 10 weekdays{filter_text}) - East London Schools.**")         
-            # Create work frequency categories
-            def categorize_work_frequency(days):
-                if days == 0:
-                    return "0 days"
-                elif 1 <= days <= 3:
-                    return "1-3 days"
-                elif 4 <= days <= 6:
-                    return "4-6 days"
-                else:
-                    return "7+ days"
-            
-            # Apply categorization
-            activity_table['Work_Category'] = activity_table['Total Active Days'].apply(categorize_work_frequency)
-            category_counts = activity_table['Work_Category'].value_counts()
-            
-            # Create pie chart with custom colors
-            chart_title = f"Days Worked Distribution by EAs{filter_text} - East London Schools"
-            
-            # Define color mapping
-            color_map = {
-                "0 days": "#FF0000",      # RED
-                "1-3 days": "#FFB3B3",   # Light red
-                "4-6 days": "#6495ED",   # Streamlit info blue
-                "7+ days": "#0000FF"     # Dark blue
-            }
-            
-            # Create ordered colors list based on category_counts index
-            colors = [color_map.get(category, "#CCCCCC") for category in category_counts.index]
-            
-            fig_pie = px.pie(
-                values=category_counts.values,
-                names=category_counts.index,
-                title=chart_title,
-                color_discrete_sequence=colors
+        if not schools_with_sessions.empty:
+            fig_school_sessions = px.bar(
+                schools_with_sessions.sort_values('Total Sessions', ascending=True),
+                x='School Name',
+                y='Total Sessions',
+                title="Total Sessions by DataQuest School",
+                color='Total Sessions',
+                color_continuous_scale='Blues'
             )
-            st.plotly_chart(fig_pie, width='stretch')
-        
-        st.divider()
-        
-        st.markdown("**Number of sessions run by each EA on each weekday (Monday-Friday) - East London Schools**")
-        st.dataframe(activity_table.drop('Work_Category', axis=1), width='stretch')
-        
-        # Add summary info
-        active_weekdays = len([col for col in activity_table.columns if col not in ['Total Active Days', 'Work_Category']])
-        summary_text = f"Showing {total_eas} Education Assistants across {active_weekdays} most recent weekdays (East London Schools)"
-        if filter_parts:
-            summary_text += f" ({', '.join(filter_parts)} only)"
-        st.info(summary_text)
-    else:
-        st.warning("No session data available for the activity table.")
+            fig_school_sessions.update_layout(
+                xaxis_tickangle=-45,
+                showlegend=False
+            )
+            st.plotly_chart(fig_school_sessions, width='stretch')
     
-    
+    return filtered_df  # Return for potential use in other sections
+
 def display_class_session_analysis(df):
-    """Display group-level session analysis showing distribution of sessions per group"""
+    """Display group-level session analysis showing distribution of sessions per group - NMB Schools Only"""
     
-    st.header("Group-Level Session Analysis")
+    st.header("Group-Level Session Analysis - NMB Schools")
+    
+    # Filter to NMB schools only (exclude East London schools and ECDs)
+    el_schools_lower = [school.lower() for school in el_schools]
+    ecd_list_lower = [school.lower() for school in ecd_list]
+    
+    # Keep only schools that are NOT in el_schools and NOT in ecd_list
+    nmb_df = df[
+        ~df['program_name'].str.lower().isin(el_schools_lower) & 
+        ~df['program_name'].str.lower().isin(ecd_list_lower)
+    ]
+    
+    if nmb_df.empty:
+        st.warning("No data found for NMB schools.")
+        return
+    
+    st.info(f"Showing data for NMB schools only ({len(nmb_df):,} records, {nmb_df['program_name'].nunique()} unique schools)")
     
     # Check if class_name column exists
-    if 'class_name' not in df.columns:
+    if 'class_name' not in nmb_df.columns:
         st.error("The 'class_name' column is not available in the dataset.")
         return
     
     # Group by class_name and count unique session_ids
-    class_sessions = df.groupby('class_name')['session_id'].nunique().reset_index()
+    class_sessions = nmb_df.groupby('class_name')['session_id'].nunique().reset_index()
     class_sessions.columns = ['Group Name', 'Total Sessions']
     
     # Calculate average sessions per group
@@ -1263,7 +1121,7 @@ def display_class_session_analysis(df):
         st.metric("Median Sessions per Group", f"{median_sessions_per_group:.0f}")
     
     with col4:
-        total_unique_sessions = df['session_id'].nunique()
+        total_unique_sessions = nmb_df['session_id'].nunique()
         st.metric("Total Unique Sessions", f"{total_unique_sessions:,}")
     
     st.divider()
@@ -1346,87 +1204,11 @@ def display_class_session_analysis(df):
     st.markdown("### Export Group Data")
     csv = class_sessions_sorted.to_csv(index=False)
     st.download_button(
-        label="Download Group Session Report",
+        label="Download NMB Group Session Report",
         data=csv,
-        file_name=f"group_sessions_report_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+        file_name=f"nmb_group_sessions_report_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
         mime="text/csv"
     )
-
-def display_data_quality(df):
-    """Data quality and export section"""
-    
-    st.header("Data Quality & Export")
-    
-    # School type breakdown
-    st.subheader("School Type Distribution")
-    school_type_counts = df['school_type'].value_counts()
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        fig_school_pie = px.pie(
-            values=school_type_counts.values,
-            names=school_type_counts.index,
-            title="Sessions by School Type"
-        )
-        st.plotly_chart(fig_school_pie, width='stretch')
-    
-    with col2:
-        st.dataframe(school_type_counts.to_frame('Count'), width='stretch')
-    
-    # Data Quality Check
-    st.markdown("### Data Quality")
-    
-    col1, col2 = st.columns([1, 1])
-    
-    with col1:
-        st.markdown("**Missing Data:**")
-        missing_data = df.isnull().sum()
-        missing_data = missing_data[missing_data > 0]
-        if len(missing_data) > 0:
-            st.dataframe(missing_data.to_frame('Missing Count'))
-        else:
-            st.success("No missing data!")
-    
-    with col2:
-        st.markdown("**Data Info:**")
-        st.text(f"Total columns: {len(df.columns)}")
-        st.text(f"Total rows: {len(df):,}")
-        st.text(f"Date range: {df['session_started_at'].min()} to {df['session_started_at'].max()}")
-    
-    # Raw Data Preview
-    with st.expander("View Raw Data", expanded=False):
-        st.markdown(f"**Showing first 100 records out of {len(df):,} total**")
-        st.dataframe(df.head(100), width='stretch')
-    
-    # Data Export
-    st.markdown("### Data Export")
-    
-    col1, col2 = st.columns([1, 1])
-    
-    with col1:
-        csv = df.to_csv(index=False)
-        st.download_button(
-            label="Download Full CSV",
-            data=csv,
-            file_name=f"teampact_sessions_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
-            mime="text/csv"
-        )
-    
-    with col2:
-        try:
-            last_refresh = get_last_refresh_timestamp()
-            if last_refresh:
-                refresh_info = f"Data last refreshed: {last_refresh.strftime('%Y-%m-%d %H:%M:%S')}"
-                st.info(refresh_info)
-                
-                # Show database summary
-                summary = get_data_summary()
-                if summary:
-                    st.caption(f"Database: {summary['total_records']:,} records, {summary['unique_sessions']:,} sessions")
-            else:
-                st.warning("No refresh timestamp available")
-        except Exception as e:
-            st.error(f"Could not get database info: {e}")
 
 # MAIN APP STARTS HERE
 st.title("TeamPact Education Assistant Analytics")
@@ -1494,7 +1276,7 @@ except Exception as e:
 # School type and mentor classification are now handled in the database loading function
 
 # CREATE TABS FOR DIFFERENT VIEWS
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["EA Sessions Analysis", "EA Implementation Status", "East London Schools", "DataQuest Schools", "Group Session Analysis", "Data Quality"])
+tab1, tab2, tab3, tab4 = st.tabs(["EA Sessions Analysis", "EA Implementation Status", "DataQuest Schools", "Group Session Analysis"])
 
 with tab1:
     display_session_analysis(df)
@@ -1503,13 +1285,7 @@ with tab2:
     display_ea_implementation_analysis(df)
 
 with tab3:
-    display_el_schools_analysis(df)
-
-with tab4:
     display_selected_schools_analysis(df)
 
-with tab5:
+with tab4:
     display_class_session_analysis(df)
-
-with tab6:
-    display_data_quality(df)
