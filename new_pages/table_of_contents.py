@@ -117,7 +117,7 @@ with col3:
     **Multiple Testing Streams:**
     
     *SEF Youth (Feb-May):*
-    - X schools, Y part-time TAs
+    - 18 schools, 75 part-time TAs
     - 4 days/week model
     
     *Government TAs - NMB (Aug-Oct):*
@@ -228,9 +228,10 @@ if 'user' in st.session_state and st.session_state.user:
     
     **Tabs:**
     - **EA Sessions Analysis** - Education assistant session counts, frequency, and activity patterns
+    - **Children's Sessions** - Analysis of session participation from children's perspective including sessions received per child, average weekly sessions, and participation distribution
+    - **Group Sessions** - Analysis of group-level session patterns and attendance (NMB schools only)
     - **EA Implementation Status** - Current implementation status by EA including session counts and last session date
     - **DataQuest Schools** - Session analysis for DataQuest partner schools
-    - **Group Session Analysis** - Analysis of group-level session patterns and attendance (NMB schools only)
     
     ### 📱 2025 Sessions East London (Cohort 2)
     **Internal Access** - Dedicated session tracking and analysis page for East London schools showing EA activity, school-level performance, and implementation patterns specific to the East London region.

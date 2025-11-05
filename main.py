@@ -58,7 +58,7 @@ sessions_page_25 = st.Page("new_pages/2025/sessions_2025.py", icon="📈", title
 midline_ecd_page_25 = st.Page("new_pages/2025/midline_2025_ecd.py", icon="🏫", title="2025 ECD NMB Midline", url_path="midline_ecd_25")
 nmb_assessments_page_25 = st.Page("new_pages/2025/nmb_assessments.py", icon="🏫", title="2025 Baseline NMB (Cohort 2)", url_path="nmb_assessments_25")
 nmb_endline_cohort_page_25 = st.Page("new_pages/2025/nmb_endline_cohort_analysis.py", icon="📊", title="2025 Endline NMB (Cohort 2)", url_path="nmb_endline_cohort_25")
-el_assessments_page_25 = st.Page("new_pages/2025/el_assessments.py", icon="🏫", title="2025 Baselin BCM (Cohort 2)", url_path="el_assessments_25")
+el_assessments_page_25 = st.Page("new_pages/2025/el_assessments.py", icon="🏫", title="2025 Baseline BCM (Cohort 2)", url_path="el_assessments_25")
 teampact_sessions_page_25 = st.Page("new_pages/2025/teampact_sessions_2025.py", icon="📱", title="2025 Sessions NMB (Cohort 2)", url_path="teampact_sessions_25")
 east_london_sessions_page_25 = st.Page("new_pages/2025/east_london_sessions.py", icon="📱", title="2025 Sessions BCM (Cohort 2)", url_path="east_london_sessions_25")
 mentor_visits_page_25 = st.Page("new_pages/2025/mentor_visits_2025.py", icon="👁️", title="2025 Mentor Visits (Cohort 2)", url_path="mentor_visits_25")

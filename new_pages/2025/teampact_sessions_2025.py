@@ -1073,6 +1073,243 @@ def display_selected_schools_analysis(df):
     
     return filtered_df  # Return for potential use in other sections
 
+def display_children_session_analysis(df):
+    """Display session analysis from children's perspective"""
+    
+    st.header("Children's Session Participation Analysis")
+    
+    # Check if participant_id column exists
+    if 'participant_id' not in df.columns:
+        st.error("The 'participant_id' column is not available in the dataset.")
+        return
+    
+    # Prepare date columns
+    df_children = df.copy()
+    df_children['session_date'] = pd.to_datetime(df_children['session_started_at']).dt.date
+    df_children['session_week'] = pd.to_datetime(df_children['session_started_at']).dt.to_period('W')
+    
+    # Calculate sessions per child
+    child_sessions = df_children.groupby('participant_id').agg({
+        'session_id': 'nunique',  # Total unique sessions
+        'session_date': 'nunique',  # Total unique days attended
+        'session_week': 'nunique',  # Total weeks with sessions
+        'participant_name': 'first',  # Get child's name
+        'program_name': 'first',  # Get school name
+        'class_name': 'first',  # Get class name
+        'school_type': 'first'  # Get school type
+    }).reset_index()
+    
+    child_sessions.columns = ['participant_id', 'total_sessions', 'days_attended', 'weeks_attended', 
+                              'child_name', 'school_name', 'class_name', 'school_type']
+    
+    # Calculate average sessions per week (only for weeks where they had at least 1 session)
+    child_sessions['avg_sessions_per_week'] = (child_sessions['total_sessions'] / 
+                                                child_sessions['weeks_attended']).round(2)
+    
+    # OVERVIEW METRICS
+    st.subheader("Overall Participation Metrics")
+    
+    # Primary School metrics
+    st.markdown("**Primary Schools**")
+    primary_children = child_sessions[child_sessions['school_type'] == 'Primary School']
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        st.metric("Total Children", f"{len(primary_children):,}")
+    
+    with col2:
+        st.metric("Avg Sessions per Child", f"{primary_children['total_sessions'].mean():.1f}" if len(primary_children) > 0 else "0.0")
+    
+    with col3:
+        st.metric("Median Sessions per Child", f"{primary_children['total_sessions'].median():.0f}" if len(primary_children) > 0 else "0")
+    
+    with col4:
+        st.metric("Max Sessions (One Child)", f"{primary_children['total_sessions'].max():.0f}" if len(primary_children) > 0 else "0")
+    
+    with col5:
+        st.metric("Children with 10+ Sessions", f"{(primary_children['total_sessions'] >= 10).sum():,}")
+    
+    # ECD metrics
+    st.markdown("**Early Childhood Development Centers**")
+    ecd_children = child_sessions[child_sessions['school_type'] == 'ECD']
+    col1, col2, col3, col4, col5 = st.columns(5)
+    
+    with col1:
+        st.metric("Total Children", f"{len(ecd_children):,}")
+    
+    with col2:
+        st.metric("Avg Sessions per Child", f"{ecd_children['total_sessions'].mean():.1f}" if len(ecd_children) > 0 else "0.0")
+    
+    with col3:
+        st.metric("Median Sessions per Child", f"{ecd_children['total_sessions'].median():.0f}" if len(ecd_children) > 0 else "0")
+    
+    with col4:
+        st.metric("Max Sessions (One Child)", f"{ecd_children['total_sessions'].max():.0f}" if len(ecd_children) > 0 else "0")
+    
+    with col5:
+        st.metric("Children with 10+ Sessions", f"{(ecd_children['total_sessions'] >= 10).sum():,}")
+    
+    st.divider()
+    
+    # HISTOGRAM: SESSIONS PER CHILD
+    st.subheader("Distribution of Sessions per Child")
+    
+    # Create histogram with bucket size of 1
+    fig_histogram = px.histogram(
+        child_sessions,
+        x='total_sessions',
+        nbins=int(child_sessions['total_sessions'].max()) if not child_sessions.empty else 50,
+        title="Number of Children by Sessions Received",
+        labels={'total_sessions': 'Sessions Received', 'count': 'Number of Children'},
+        color_discrete_sequence=['#2ca02c']
+    )
+    
+    # Update layout for better readability
+    fig_histogram.update_layout(
+        xaxis_title="Sessions Received",
+        yaxis_title="Number of Children",
+        bargap=0.1,
+        showlegend=False
+    )
+    
+    st.plotly_chart(fig_histogram, width='stretch')
+    
+    # Show distribution statistics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        children_0_5 = ((child_sessions['total_sessions'] >= 0) & (child_sessions['total_sessions'] <= 5)).sum()
+        pct_0_5 = (children_0_5 / len(child_sessions) * 100) if len(child_sessions) > 0 else 0
+        st.metric("0-5 Sessions", f"{children_0_5:,}", f"{pct_0_5:.1f}%")
+    with col2:
+        children_6_15 = ((child_sessions['total_sessions'] >= 6) & (child_sessions['total_sessions'] <= 15)).sum()
+        pct_6_15 = (children_6_15 / len(child_sessions) * 100) if len(child_sessions) > 0 else 0
+        st.metric("6-15 Sessions", f"{children_6_15:,}", f"{pct_6_15:.1f}%")
+    with col3:
+        children_16_30 = ((child_sessions['total_sessions'] >= 16) & (child_sessions['total_sessions'] <= 30)).sum()
+        pct_16_30 = (children_16_30 / len(child_sessions) * 100) if len(child_sessions) > 0 else 0
+        st.metric("16-30 Sessions", f"{children_16_30:,}", f"{pct_16_30:.1f}%")
+    with col4:
+        children_31_plus = (child_sessions['total_sessions'] >= 31).sum()
+        pct_31_plus = (children_31_plus / len(child_sessions) * 100) if len(child_sessions) > 0 else 0
+        st.metric("31+ Sessions", f"{children_31_plus:,}", f"{pct_31_plus:.1f}%")
+    
+    st.divider()
+    
+    # AVERAGE SESSIONS PER WEEK HISTOGRAM
+    st.subheader("Distribution of Average Sessions per Week")
+    
+    st.info("**Note**: This shows the average number of sessions per week for weeks where the child attended at least one session.")
+    
+    # Create histogram for avg sessions per week
+    fig_weekly = px.histogram(
+        child_sessions,
+        x='avg_sessions_per_week',
+        nbins=20,
+        title="Number of Children by Average Weekly Sessions",
+        labels={'avg_sessions_per_week': 'Avg Sessions per Week', 'count': 'Number of Children'},
+        color_discrete_sequence=['#ff7f0e']
+    )
+    
+    fig_weekly.update_layout(
+        xaxis_title="Average Sessions per Week",
+        yaxis_title="Number of Children",
+        bargap=0.1,
+        showlegend=False
+    )
+    
+    st.plotly_chart(fig_weekly, width='stretch')
+    
+    # Show weekly statistics
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Avg Weekly Sessions (All)", f"{child_sessions['avg_sessions_per_week'].mean():.2f}")
+    with col2:
+        st.metric("Median Weekly Sessions", f"{child_sessions['avg_sessions_per_week'].median():.2f}")
+    with col3:
+        st.metric("Children with 2+ per week", f"{(child_sessions['avg_sessions_per_week'] >= 2).sum():,}")
+    with col4:
+        st.metric("Children with 3+ per week", f"{(child_sessions['avg_sessions_per_week'] >= 3).sum():,}")
+    
+    st.divider()
+    
+    # BREAKDOWN BY SCHOOL TYPE
+    st.subheader("Participation by School Type")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Sessions by school type
+        school_type_sessions = child_sessions.groupby('school_type')['total_sessions'].agg(['count', 'mean', 'median']).round(1)
+        school_type_sessions.columns = ['Number of Children', 'Avg Sessions', 'Median Sessions']
+        st.markdown("**Session Participation by School Type**")
+        st.dataframe(school_type_sessions, width='stretch')
+    
+    with col2:
+        # Box plot showing distribution by school type
+        fig_box = px.box(
+            child_sessions,
+            x='school_type',
+            y='total_sessions',
+            title="Session Distribution by School Type",
+            labels={'total_sessions': 'Sessions Received', 'school_type': 'School Type'},
+            color='school_type'
+        )
+        st.plotly_chart(fig_box, width='stretch')
+    
+    st.divider()
+    
+    # DETAILED DATA TABLE
+    st.subheader("Children Session Details")
+    
+    # Add search and filter options
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        school_type_filter = st.selectbox(
+            "Filter by School Type:",
+            options=["All"] + sorted(child_sessions['school_type'].unique().tolist()),
+            key="children_school_type_filter"
+        )
+    
+    with col2:
+        min_sessions_filter = st.number_input(
+            "Minimum Sessions:",
+            min_value=0,
+            max_value=int(child_sessions['total_sessions'].max()),
+            value=0,
+            key="children_min_sessions"
+        )
+    
+    # Apply filters
+    filtered_children = child_sessions.copy()
+    if school_type_filter != "All":
+        filtered_children = filtered_children[filtered_children['school_type'] == school_type_filter]
+    filtered_children = filtered_children[filtered_children['total_sessions'] >= min_sessions_filter]
+    
+    # Sort by total sessions descending
+    filtered_children = filtered_children.sort_values('total_sessions', ascending=False)
+    
+    st.info(f"Showing {len(filtered_children):,} children")
+    
+    # Display table
+    display_columns = ['child_name', 'school_name', 'class_name', 'school_type', 
+                      'total_sessions', 'days_attended', 'weeks_attended', 'avg_sessions_per_week']
+    display_children = filtered_children[display_columns].copy()
+    display_children.columns = ['Child Name', 'School', 'Class', 'School Type', 
+                                'Total Sessions', 'Days Attended', 'Weeks Attended', 'Avg Sessions/Week']
+    
+    st.dataframe(display_children, width='stretch', height=400, hide_index=True)
+    
+    # Export option
+    st.markdown("### Export Data")
+    csv = display_children.to_csv(index=False)
+    st.download_button(
+        label="Download Children Session Report",
+        data=csv,
+        file_name=f"children_sessions_report_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+        mime="text/csv"
+    )
+
 def display_class_session_analysis(df):
     """Display group-level session analysis showing distribution of sessions per group - NMB Schools Only"""
     
@@ -1276,16 +1513,19 @@ except Exception as e:
 # School type and mentor classification are now handled in the database loading function
 
 # CREATE TABS FOR DIFFERENT VIEWS
-tab1, tab2, tab3, tab4 = st.tabs(["EA Sessions Analysis", "EA Implementation Status", "DataQuest Schools", "Group Session Analysis"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs(["EA Sessions Analysis", "Children's Sessions", "Group Sessions", "EA Implementation Status", "DataQuest Schools"])
 
 with tab1:
     display_session_analysis(df)
 
 with tab2:
-    display_ea_implementation_analysis(df)
+    display_children_session_analysis(df)
 
 with tab3:
-    display_selected_schools_analysis(df)
+    display_class_session_analysis(df)
 
 with tab4:
-    display_class_session_analysis(df)
+    display_ea_implementation_analysis(df)
+
+with tab5:
+    display_selected_schools_analysis(df)
