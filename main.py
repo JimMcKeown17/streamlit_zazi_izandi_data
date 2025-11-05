@@ -39,6 +39,7 @@ else:
 
 # --- Page Definitions ---
 home_page = st.Page("new_pages/home_page.py", icon="🏠", title="Home", default=True)
+table_of_contents_page = st.Page("new_pages/table_of_contents.py", icon="📑", title="Table of Contents", url_path="table_of_contents")
 
 
 #2023 Pages
@@ -109,7 +110,7 @@ if st.session_state.user:
 
 if st.session_state.user:
     pages = {
-        "Home": [home_page],
+        "Home": [home_page, table_of_contents_page],
         "Project Management": pages_project_management,
         "2025 Results": pages_2025,
         "2024 Results": pages_2024,
@@ -118,7 +119,7 @@ if st.session_state.user:
     }
 else:
     pages = {
-        "Home": [home_page],
+        "Home": [home_page, table_of_contents_page],
         "2025 Results": pages_2025,
         "2024 Results": pages_2024,
         "2023 Results": pages_2023,
