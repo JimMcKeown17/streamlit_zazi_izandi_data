@@ -115,7 +115,7 @@ def display_nmb_endline_cohort_analysis():
     """Main function to display the cohort and quality analysis page"""
     
     st.title("📊 NMB 2025 Endline Analysis")
-    st.info("Internal notes: Note the multiple tabs. We need to make decisions around which data to exclude, as many of these schools never really ran the programme. We also have to be aware of Grade 1 graduates showing up in the low session buckets and skewing the data. They didn't receive sessions b/c they already knew 40+, but it's hard to exclude currently b/c of Teampact's setup.")    
+    st.warning("Internal notes: We need to make decisions around which data to exclude, as many of these schools never really ran the programme. We also have to be aware of Grade 1 graduates showing up in the low session buckets and skewing the data. They didn't receive sessions b/c they already knew 40+, but it's hard to exclude currently b/c of Teampact's setup. There is, potentially, a lot of noise in this data until Teampact can help us determine which kids were a) originally assessed b) on the programme and c) also assessed at endline.")    
     # Load data
     with st.spinner("Loading assessment data from database..."):
         df = load_assessment_data_from_db()
@@ -287,8 +287,9 @@ def render_overview_tab(df):
             
             fig = px.bar(grade_counts, x='Grade', y='count', 
                         color='Grade',
-                        title='Assessments by Grade')
-            fig.update_traces(text=grade_counts['count'], textposition='outside')
+                        title='Assessments by Grade',
+                        text='count')
+            fig.update_traces(textposition='outside')
             st.plotly_chart(fig, use_container_width=True)
         
         with col2:
@@ -297,8 +298,9 @@ def render_overview_tab(df):
             
             fig = px.bar(language_counts, x='Language', y='count',
                         color='Language',
-                        title='Assessments by Language')
-            fig.update_traces(text=language_counts['count'], textposition='outside')
+                        title='Assessments by Language',
+                        text='count')
+            fig.update_traces(textposition='outside')
             st.plotly_chart(fig, use_container_width=True)
     
     st.divider()
