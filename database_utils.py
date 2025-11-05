@@ -74,8 +74,8 @@ def get_database_engine():
         pool_pre_ping=True,      # Verify connections before use
         pool_recycle=3600,       # Recycle connections after 1 hour
         connect_args={
-            "connect_timeout": 10,  # 10 second connection timeout
-            "options": "-c statement_timeout=30000"  # 30 second query timeout
+            "connect_timeout": 30,  # 30 second connection timeout
+            "options": "-c statement_timeout=300000"  # 5 minute query timeout for large datasets
         },
         echo=False               # Set to True for SQL debugging
     )
@@ -207,9 +207,29 @@ def _load_session_data_internal(_cache_key):
     try:
         engine = get_database_engine()
         
-        # Load all data from the table
-        query = "SELECT * FROM teampact_sessions_complete ORDER BY session_started_at DESC"
-        df = pd.read_sql(query, engine)
+        # Show loading message for large datasets
+        with st.spinner('Loading session data from database... This may take a minute for large datasets.'):
+            # Load all data from the table with optimized query
+            query = "SELECT * FROM teampact_sessions_complete ORDER BY session_started_at DESC"
+            
+            # Use chunksize for better memory efficiency with large datasets
+            chunks = []
+            chunk_size = 50000  # Process 50k rows at a time
+            
+            try:
+                # Try loading in chunks for better performance
+                for chunk in pd.read_sql(query, engine, chunksize=chunk_size):
+                    chunks.append(chunk)
+                
+                if chunks:
+                    df = pd.concat(chunks, ignore_index=True)
+                else:
+                    df = pd.DataFrame()
+                    
+            except Exception as chunk_error:
+                # If chunking fails, try loading all at once
+                st.warning("Chunked loading failed, trying full load...")
+                df = pd.read_sql(query, engine)
         
         if df.empty:
             return df
@@ -218,10 +238,14 @@ def _load_session_data_internal(_cache_key):
         df['school_type'] = df['program_name'].apply(get_school_type)
         df['mentor'] = df['program_name'].apply(get_mentor)
         
+        # Show success message with data info
+        st.success(f"✅ Loaded {len(df):,} records from database")
+        
         return df
         
     except Exception as e:
         st.error(f"Error loading session data: {e}")
+        st.info("💡 If you're running locally, this may be due to network latency. The data loads fine on Render's servers.")
         return pd.DataFrame()
 
 def test_database_connection():

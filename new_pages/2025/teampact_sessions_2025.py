@@ -1231,6 +1231,127 @@ def display_el_schools_analysis(df):
         st.warning("No session data available for the activity table.")
     
     
+def display_class_session_analysis(df):
+    """Display group-level session analysis showing distribution of sessions per group"""
+    
+    st.header("Group-Level Session Analysis")
+    
+    # Check if class_name column exists
+    if 'class_name' not in df.columns:
+        st.error("The 'class_name' column is not available in the dataset.")
+        return
+    
+    # Group by class_name and count unique session_ids
+    class_sessions = df.groupby('class_name')['session_id'].nunique().reset_index()
+    class_sessions.columns = ['Group Name', 'Total Sessions']
+    
+    # Calculate average sessions per group
+    avg_sessions_per_group = class_sessions['Total Sessions'].mean()
+    median_sessions_per_group = class_sessions['Total Sessions'].median()
+    
+    # Display key metrics
+    st.subheader("Group Session Metrics")
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("Total Groups", len(class_sessions))
+    
+    with col2:
+        st.metric("Avg Sessions per Group", f"{avg_sessions_per_group:.1f}")
+    
+    with col3:
+        st.metric("Median Sessions per Group", f"{median_sessions_per_group:.0f}")
+    
+    with col4:
+        total_unique_sessions = df['session_id'].nunique()
+        st.metric("Total Unique Sessions", f"{total_unique_sessions:,}")
+    
+    st.divider()
+    
+    # Create cohort buckets
+    def categorize_sessions(session_count):
+        if session_count <= 10:
+            return "0-10 sessions"
+        elif session_count <= 20:
+            return "11-20 sessions"
+        elif session_count <= 30:
+            return "21-30 sessions"
+        else:
+            return "31+ sessions"
+    
+    class_sessions['Cohort'] = class_sessions['Total Sessions'].apply(categorize_sessions)
+    
+    # Count groups in each cohort
+    cohort_counts = class_sessions['Cohort'].value_counts().reindex(
+        ["0-10 sessions", "11-20 sessions", "21-30 sessions", "31+ sessions"],
+        fill_value=0
+    )
+    
+    # Display cohort distribution
+    st.subheader("Group Distribution by Session Count")
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        # Create DataFrame for display
+        cohort_df = pd.DataFrame({
+            'Session Range': cohort_counts.index,
+            'Number of Groups': cohort_counts.values,
+            'Percentage': (cohort_counts.values / len(class_sessions) * 100).round(1)
+        })
+        st.dataframe(cohort_df, width='stretch', hide_index=True)
+    
+    with col2:
+        # Create bar chart
+        fig_cohort = px.bar(
+            cohort_df,
+            x='Session Range',
+            y='Number of Groups',
+            title="Distribution of Groups by Session Count",
+            color='Session Range',
+            color_discrete_map={
+                "0-10 sessions": "#FF6B6B",
+                "11-20 sessions": "#FFD93D",
+                "21-30 sessions": "#6BCF7F",
+                "31+ sessions": "#4D96FF"
+            }
+        )
+        fig_cohort.update_layout(showlegend=False)
+        st.plotly_chart(fig_cohort, width='stretch')
+    
+    st.divider()
+    
+    # Show detailed group list
+    st.subheader("Detailed Group Session List")
+    
+    # Sort by total sessions descending
+    class_sessions_sorted = class_sessions.sort_values('Total Sessions', ascending=False)
+    
+    # Add rank
+    class_sessions_sorted.insert(0, 'Rank', range(1, len(class_sessions_sorted) + 1))
+    
+    # Display with search
+    search_term = st.text_input("Search for a specific group:", "")
+    
+    if search_term:
+        filtered_groups = class_sessions_sorted[
+            class_sessions_sorted['Group Name'].str.contains(search_term, case=False, na=False)
+        ]
+        st.info(f"Found {len(filtered_groups)} groups matching '{search_term}'")
+        st.dataframe(filtered_groups, width='stretch', hide_index=True)
+    else:
+        st.dataframe(class_sessions_sorted, width='stretch', hide_index=True, height=400)
+    
+    # Export option
+    st.markdown("### Export Group Data")
+    csv = class_sessions_sorted.to_csv(index=False)
+    st.download_button(
+        label="Download Group Session Report",
+        data=csv,
+        file_name=f"group_sessions_report_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+        mime="text/csv"
+    )
+
 def display_data_quality(df):
     """Data quality and export section"""
     
@@ -1373,7 +1494,7 @@ except Exception as e:
 # School type and mentor classification are now handled in the database loading function
 
 # CREATE TABS FOR DIFFERENT VIEWS
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["EA Sessions Analysis", "EA Implementation Status", "East London Schools", "DataQuest Schools", "Data Quality"])
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(["EA Sessions Analysis", "EA Implementation Status", "East London Schools", "DataQuest Schools", "Group Session Analysis", "Data Quality"])
 
 with tab1:
     display_session_analysis(df)
@@ -1388,4 +1509,7 @@ with tab4:
     display_selected_schools_analysis(df)
 
 with tab5:
+    display_class_session_analysis(df)
+
+with tab6:
     display_data_quality(df)

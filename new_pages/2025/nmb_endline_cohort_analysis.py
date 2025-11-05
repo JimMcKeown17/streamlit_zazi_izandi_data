@@ -130,6 +130,21 @@ def display_nmb_endline_cohort_analysis():
         last_refresh = df['data_refresh_timestamp'].max()
         st.info(f"📅 Data last refreshed: {last_refresh.strftime('%Y-%m-%d %H:%M:%S')}")
     
+    # Global session filter toggle
+    st.divider()
+    col_toggle, col_info = st.columns([1, 3])
+    with col_toggle:
+        filter_sessions = st.toggle("📌 Show only 11+ sessions", value=False, key="global_session_filter")
+    
+    # Apply global filter if enabled
+    if filter_sessions:
+        df_filtered = df[df['session_count_total'] >= 11].copy()
+        with col_info:
+            st.info(f"🔍 Filtered to {len(df_filtered):,} assessments with 11+ sessions (from {len(df):,} total)")
+        df = df_filtered
+    
+    st.divider()
+    
     # Create tabs
     tabs = st.tabs([
         "📊 Overview",
@@ -286,6 +301,352 @@ def render_overview_tab(df):
                         title='Assessments by Language')
             fig.update_traces(text=language_counts['count'], textposition='outside')
             st.plotly_chart(fig, use_container_width=True)
+    
+    st.divider()
+    
+    # EGRA Scores by Grade
+    st.subheader("📈 EGRA Scores by Grade")
+    
+    col_title, col_toggle = st.columns([3, 1])
+    with col_toggle:
+        use_mean_grade = st.toggle("📊 Show Mean", value=False, key="overview_grade_mean_toggle")
+    
+    stat_method = 'mean' if use_mean_grade else 'median'
+    stat_label = 'Mean' if use_mean_grade else 'Median'
+    
+    agg_results = df_filtered.groupby('Grade').agg({
+        'First Name': 'count',
+        'Total cells correct - EGRA Letters': stat_method
+    }).reset_index()
+    
+    fig = px.bar(agg_results, x='Grade', y='Total cells correct - EGRA Letters', color='Grade',
+                 category_orders={'Grade': ['Grade R', 'Grade 1', 'Grade 2']},
+                 title=f'{stat_label} EGRA Letter Scores by Grade')
+    fig.update_yaxes(title=f'{stat_label} Correct Letters')
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.divider()
+    
+    # EGRA Scores by Language (only show if All Grades selected)
+    if grade_filter == 'All Grades':
+        st.subheader("🗣️ EGRA Scores by Language")
+        
+        col_title2, col_toggle2 = st.columns([3, 1])
+        with col_toggle2:
+            use_mean_language = st.toggle("📊 Show Mean", value=False, key="overview_language_mean_toggle")
+        
+        stat_method = 'mean' if use_mean_language else 'median'
+        stat_label = 'Mean' if use_mean_language else 'Median'
+        
+        agg_results = df_filtered.groupby(['Language', 'Grade']).agg({
+            'First Name': 'count',
+            'Total cells correct - EGRA Letters': stat_method
+        }).reset_index()
+        
+        fig = px.bar(agg_results, x='Language', y='Total cells correct - EGRA Letters', color='Grade', barmode='group',
+                     category_orders={'Grade': ['Grade R', 'Grade 1', 'Grade 2']},
+                     title=f'{stat_label} EGRA Letter Scores by Language')
+        fig.update_yaxes(title=f'{stat_label} Correct Letters')
+        st.plotly_chart(fig, use_container_width=True)
+        
+        st.divider()
+    
+    # Average EGRA Scores by Data Collector
+    st.subheader("📋 Average EGRA Scores by Data Collector")
+    
+    # Grade selector for data collector chart
+    if grade_filter == 'All Grades':
+        grade_options = ['Grade R', 'Grade 1', 'Grade 2']
+        selected_grade_dc = st.selectbox('Select Grade', grade_options, key='overview_grade_selector_dc')
+        filtered_df_dc = df[df['Grade'] == selected_grade_dc]
+    else:
+        filtered_df_dc = df_filtered
+    
+    # Group by 'Collected By' and calculate mean and count
+    collector_stats = filtered_df_dc.groupby('Collected By').agg({
+        'Total cells correct - EGRA Letters': 'mean',
+        'First Name': 'count'
+    }).reset_index()
+    
+    collector_stats = collector_stats.rename(columns={
+        'Total cells correct - EGRA Letters': 'Mean_Score',
+        'First Name': 'Count'
+    })
+    
+    collector_stats = collector_stats.sort_values('Mean_Score', ascending=False)
+    
+    fig = px.bar(
+        collector_stats, 
+        x='Collected By', 
+        y='Mean_Score',
+        title='Average Total Cells Correct by Data Collector',
+        labels={
+            'Mean_Score': 'Mean Correct Cells',
+            'Collected By': 'Collected By'
+        }
+    )
+    
+    fig.update_traces(
+        text=[f'n={count}' for count in collector_stats['Count']],
+        textposition='outside'
+    )
+    
+    fig.update_xaxes(tickangle=45, categoryorder='total descending')
+    st.plotly_chart(fig, use_container_width=True)
+    
+    st.divider()
+    
+    # Number of Children Assessed by Data Collector
+    st.subheader("📊 Number of Children Assessed by Data Collector")
+    
+    # Grade selector for assessment count chart
+    if grade_filter == 'All Grades':
+        grade_options_count = ['Grade R', 'Grade 1', 'Grade 2']
+        selected_grade_count = st.selectbox('Select Grade', grade_options_count, key='overview_grade_count_selector')
+        filtered_df_count = df[df['Grade'] == selected_grade_count]
+    else:
+        filtered_df_count = df_filtered
+    
+    # Group by 'Collected By' and count records
+    collector_counts = filtered_df_count.groupby('Collected By').agg({
+        'First Name': 'count'
+    }).reset_index()
+    
+    collector_counts = collector_counts.rename(columns={
+        'First Name': 'Count'
+    })
+    
+    collector_counts = collector_counts.sort_values('Count', ascending=False)
+    
+    fig_count = px.bar(
+        collector_counts, 
+        x='Collected By', 
+        y='Count',
+        title='Number of Children Assessed by Data Collector',
+        labels={
+            'Count': 'Number of Children',
+            'Collected By': 'Collected By'
+        }
+    )
+    
+    fig_count.update_traces(
+        text=collector_counts['Count'],
+        textposition='outside'
+    )
+    
+    fig_count.update_xaxes(tickangle=45, categoryorder='total descending')
+    st.plotly_chart(fig_count, use_container_width=True)
+    
+    st.divider()
+    
+    # Percentage Above Benchmark - Pie Charts
+    st.subheader("📊 Percentage Above Benchmark")
+    
+    # LPM threshold slider
+    col_title, col_slider = st.columns([3, 1])
+    with col_slider:
+        lpm_threshold = st.slider("Set LPM Threshold", min_value=10, max_value=50, value=40, step=5, 
+                                  key="overview_lpm_threshold")
+    
+    # Filter based on grade selection
+    if grade_filter == 'All Grades':
+        # Show Grade 1 and Grade 2 side by side
+        col1, col2 = st.columns(2)
+        
+        for i, grade in enumerate(['Grade 1', 'Grade 2']):
+            grade_data = df_filtered[df_filtered['Grade'] == grade]
+            
+            if len(grade_data) > 0:
+                above_threshold = grade_data[grade_data['Total cells correct - EGRA Letters'] > lpm_threshold]
+                at_or_below_threshold = grade_data[grade_data['Total cells correct - EGRA Letters'] <= lpm_threshold]
+                
+                n_above = len(above_threshold)
+                n_below = len(at_or_below_threshold)
+                n_total = len(grade_data)
+                
+                # Create pie chart
+                labels = [f'Above {lpm_threshold}lpm', f'At or Below {lpm_threshold}lpm']
+                values = [n_above, n_below]
+                colors = ['#00cc44', '#ff4444']
+                
+                fig_pie = go.Figure(data=[go.Pie(
+                    labels=labels,
+                    values=values,
+                    marker_colors=colors,
+                    textinfo='label+percent',
+                    textposition='auto'
+                )])
+                
+                fig_pie.update_layout(
+                    title=f'{grade}<br>Total: {n_total:,} children',
+                    showlegend=False,
+                    height=500,
+                    margin=dict(t=80, b=20, l=20, r=20)
+                )
+                
+                if i == 0:
+                    with col1:
+                        st.plotly_chart(fig_pie, use_container_width=True)
+                else:
+                    with col2:
+                        st.plotly_chart(fig_pie, use_container_width=True)
+            else:
+                if i == 0:
+                    with col1:
+                        st.warning(f"No data available for {grade}")
+                else:
+                    with col2:
+                        st.warning(f"No data available for {grade}")
+    else:
+        # Show single pie chart for selected grade
+        grade_data = df_filtered
+        
+        if len(grade_data) > 0:
+            above_threshold = grade_data[grade_data['Total cells correct - EGRA Letters'] > lpm_threshold]
+            at_or_below_threshold = grade_data[grade_data['Total cells correct - EGRA Letters'] <= lpm_threshold]
+            
+            n_above = len(above_threshold)
+            n_below = len(at_or_below_threshold)
+            n_total = len(grade_data)
+            
+            labels = [f'Above {lpm_threshold}lpm', f'At or Below {lpm_threshold}lpm']
+            values = [n_above, n_below]
+            colors = ['#00cc44', '#ff4444']
+            
+            fig_pie = go.Figure(data=[go.Pie(
+                labels=labels,
+                values=values,
+                marker_colors=colors,
+                textinfo='label+percent',
+                textposition='auto'
+            )])
+            
+            fig_pie.update_layout(
+                title=f'{grade_filter}<br>Total: {n_total:,} children',
+                showlegend=False,
+                height=500,
+                margin=dict(t=80, b=20, l=20, r=20)
+            )
+            
+            st.plotly_chart(fig_pie, use_container_width=True)
+        else:
+            st.warning(f"No data available for {grade_filter}")
+    
+    # School-Level Breakdown
+    with st.expander("📊 School-Level Breakdown by Grade"):
+        # Filter for Grade 1 and Grade 2 only (or selected grade)
+        if grade_filter == 'All Grades':
+            grade_1_2_df = df_filtered[df_filtered['Grade'].isin(['Grade 1', 'Grade 2'])]
+        else:
+            grade_1_2_df = df_filtered.copy()
+        
+        if len(grade_1_2_df) > 0:
+            school_summary = []
+            
+            # Determine which grades to analyze
+            if grade_filter == 'All Grades':
+                grades_to_analyze = ['Grade 1', 'Grade 2']
+            else:
+                grades_to_analyze = [grade_filter]
+            
+            for school in grade_1_2_df['Program Name'].unique():
+                for grade in grades_to_analyze:
+                    school_grade_data = grade_1_2_df[
+                        (grade_1_2_df['Program Name'] == school) & 
+                        (grade_1_2_df['Grade'] == grade)
+                    ]
+                    
+                    if len(school_grade_data) > 0:
+                        above_count = len(school_grade_data[school_grade_data['Total cells correct - EGRA Letters'] > lpm_threshold])
+                        total_count = len(school_grade_data)
+                        below_count = total_count - above_count
+                        percentage_above = (above_count / total_count * 100) if total_count > 0 else 0
+                        
+                        school_summary.append({
+                            'School': school,
+                            'Grade': grade,
+                            'Total Children': total_count,
+                            f'Above {lpm_threshold}lpm': above_count,
+                            f'At/Below {lpm_threshold}lpm': below_count,
+                            '% Above Threshold': f"{percentage_above:.1f}%"
+                        })
+            
+            if school_summary:
+                summary_df = pd.DataFrame(school_summary)
+                
+                # Convert percentage to numeric for sorting
+                summary_df['% Above Threshold Numeric'] = summary_df['% Above Threshold'].str.rstrip('%').astype(float)
+                summary_df = summary_df.sort_values('% Above Threshold Numeric', ascending=False)
+                summary_df = summary_df.drop('% Above Threshold Numeric', axis=1)
+                
+                st.dataframe(summary_df, use_container_width=True, hide_index=True)
+                
+                # Summary statistics
+                st.write("**Summary:**")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    total_schools = summary_df['School'].nunique()
+                    st.metric("Schools Analyzed", total_schools)
+                with col2:
+                    total_children = summary_df['Total Children'].sum()
+                    st.metric("Total Children", total_children)
+                with col3:
+                    total_above = summary_df[f'Above {lpm_threshold}lpm'].sum()
+                    overall_percentage = (total_above / total_children * 100) if total_children > 0 else 0
+                    st.metric("Overall % Above Threshold", f"{overall_percentage:.1f}%")
+            else:
+                st.warning("No data available for analysis")
+        else:
+            st.warning("No data available for selected grade(s)")
+    
+    # Grade 1 Only Breakdown (only show if All Grades or Grade 1 selected)
+    if grade_filter in ['All Grades', 'Grade 1']:
+        with st.expander("📊 Grade 1 Only - School Breakdown"):
+            grade_1_df = df[df['Grade'] == 'Grade 1']
+            
+            if len(grade_1_df) > 0:
+                grade_1_summary = []
+                
+                for school in grade_1_df['Program Name'].unique():
+                    school_data = grade_1_df[grade_1_df['Program Name'] == school]
+                    
+                    if len(school_data) > 0:
+                        above_count = len(school_data[school_data['Total cells correct - EGRA Letters'] > lpm_threshold])
+                        total_count = len(school_data)
+                        below_count = total_count - above_count
+                        percentage_above = (above_count / total_count * 100) if total_count > 0 else 0
+                        
+                        grade_1_summary.append({
+                            'School': school,
+                            'Total Children': total_count,
+                            f'Above {lpm_threshold}lpm': above_count,
+                            f'At/Below {lpm_threshold}lpm': below_count,
+                            '% Above Threshold': percentage_above
+                        })
+                
+                if grade_1_summary:
+                    grade_1_df_summary = pd.DataFrame(grade_1_summary)
+                    grade_1_df_summary = grade_1_df_summary.sort_values('% Above Threshold', ascending=False)
+                    grade_1_df_summary['% Above Threshold'] = grade_1_df_summary['% Above Threshold'].apply(lambda x: f"{x:.1f}%")
+                    
+                    st.dataframe(grade_1_df_summary, use_container_width=True, hide_index=True)
+                    
+                    # Grade 1 Summary statistics
+                    st.write("**Grade 1 Summary:**")
+                    col1, col2, col3 = st.columns(3)
+                    with col1:
+                        st.metric("Grade 1 Schools", len(grade_1_summary))
+                    with col2:
+                        total_children_g1 = sum([s['Total Children'] for s in grade_1_summary])
+                        st.metric("Total Grade 1 Children", total_children_g1)
+                    with col3:
+                        total_above_g1 = sum([s[f'Above {lpm_threshold}lpm'] for s in grade_1_summary])
+                        overall_pct_g1 = (total_above_g1 / total_children_g1 * 100) if total_children_g1 > 0 else 0
+                        st.metric("Grade 1 % Above Threshold", f"{overall_pct_g1:.1f}%")
+                else:
+                    st.warning("No Grade 1 data available")
+            else:
+                st.warning("No Grade 1 data available")
 
 def render_cohort_performance_tab(df):
     """Render cohort performance analysis"""

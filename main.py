@@ -51,15 +51,15 @@ new_schools_page_24 = st.Page("new_pages/2024/new_schools_2024.py", icon="🏫",
 session_analysis_page_24 = st.Page("new_pages/2024/session_analysis_2024.py", icon="📈", title="2024 Session Analysis", url_path="session_analysis_24")
 
 #2025 Pages
-baseline_page_25 = st.Page("new_pages/2025/baseline_2025.py", icon="📖", title="2025 Baseline", url_path="baseline_25")
-midline_page_25 = st.Page("new_pages/2025/midline_2025.py", icon="📊", title="2025 Midline", url_path="midline_25")
+baseline_page_25 = st.Page("new_pages/2025/baseline_2025.py", icon="📖", title="2025 Baseline NMB (Cohort 1)", url_path="baseline_25")
+midline_page_25 = st.Page("new_pages/2025/midline_2025.py", icon="📊", title="2025 Midline NMB (Cohort 1)", url_path="midline_25")
 sessions_page_25 = st.Page("new_pages/2025/sessions_2025.py", icon="📈", title="2025 Sessions", url_path="sessions_25")
-midline_ecd_page_25 = st.Page("new_pages/2025/midline_2025_ecd.py", icon="🏫", title="2025 ECD Midline", url_path="midline_ecd_25")
-nmb_assessments_page_25 = st.Page("new_pages/2025/nmb_assessments.py", icon="🏫", title="2025 NMB (July TP)", url_path="nmb_assessments_25")
-nmb_endline_cohort_page_25 = st.Page("new_pages/2025/nmb_endline_cohort_analysis.py", icon="📊", title="2025 NMB Endline Analysis", url_path="nmb_endline_cohort_25")
-el_assessments_page_25 = st.Page("new_pages/2025/el_assessments.py", icon="🏫", title="2025 EL (July TP)", url_path="el_assessments_25")
-teampact_sessions_page_25 = st.Page("new_pages/2025/teampact_sessions_2025.py", icon="🏫", title="2025 Sessions (July+)", url_path="teampact_sessions_25")
-mentor_visits_page_25 = st.Page("new_pages/2025/mentor_visits_2025.py", icon="🏫", title="2025 Mentor Visits (July+)", url_path="mentor_visits_25")
+midline_ecd_page_25 = st.Page("new_pages/2025/midline_2025_ecd.py", icon="🏫", title="2025 ECD NMB Midline", url_path="midline_ecd_25")
+nmb_assessments_page_25 = st.Page("new_pages/2025/nmb_assessments.py", icon="🏫", title="2025 Baseline NMB (Cohort 2)", url_path="nmb_assessments_25")
+nmb_endline_cohort_page_25 = st.Page("new_pages/2025/nmb_endline_cohort_analysis.py", icon="📊", title="2025 Endline NMB (Cohort 2)", url_path="nmb_endline_cohort_25")
+el_assessments_page_25 = st.Page("new_pages/2025/el_assessments.py", icon="🏫", title="2025 Baselin EL (Cohort 2)", url_path="el_assessments_25")
+teampact_sessions_page_25 = st.Page("new_pages/2025/teampact_sessions_2025.py", icon="🏫", title="2025 Sessions (Cohort 2)", url_path="teampact_sessions_25")
+mentor_visits_page_25 = st.Page("new_pages/2025/mentor_visits_2025.py", icon="🏫", title="2025 Mentor Visits (Cohort 2)", url_path="mentor_visits_25")
 # Research & Other Pages
 ai_assistant_page = st.Page("new_pages/ai_assistant.py", icon="🤖", title="Zazi Bot", url_path="ai_assistant")
 research_page = st.Page("new_pages/Research & Benchmarks.py", icon="🔍", title="Research & Benchmarks", url_path="research")
@@ -68,9 +68,9 @@ ea_sessions_test_page = st.Page("new_pages/ea_sessions_test.py", icon="🧪", ti
 
 # Project Management Pages
 letter_progress_25 = st.Page("new_pages/project_management/letter_progress.py", icon="🔍", title="Letter Progress (Jan-Jun)", url_path="letter_progress_25")
-letter_progress_detailed_25 = st.Page("new_pages/project_management/letter_progress_detailed.py", icon="🔍", title="Letter Progress Detailed (Jan-Jun)", url_path="letter_progress_detailed_25")
-letter_progress_july_cohort = st.Page("new_pages/project_management/letter_progress_july_cohort.py", icon="📚", title="Letter Progress July Cohort", url_path="letter_progress_july_cohort")
-letter_progress_detailed_july_cohort = st.Page("new_pages/project_management/letter_progress_detailed_july_cohort.py", icon="📚", title="Letter Progress Detailed July Cohort", url_path="letter_progress_detailed_july_cohort")
+letter_progress_detailed_25 = st.Page("new_pages/project_management/letter_progress_detailed.py", icon="🔍", title="Letter Progress Detailed (Cohort 1)", url_path="letter_progress_detailed_25")
+letter_progress_july_cohort = st.Page("new_pages/project_management/letter_progress_july_cohort.py", icon="📚", title="Letter Progress (Cohort 2)", url_path="letter_progress_july_cohort")
+letter_progress_detailed_july_cohort = st.Page("new_pages/project_management/letter_progress_detailed_july_cohort.py", icon="📚", title="Letter Progress Detailed (Cohort 2)", url_path="letter_progress_detailed_july_cohort")
 school_reports_page = st.Page("new_pages/project_management/school_reports.py", icon="📊", title="School Reports", url_path="school_reports")
 session_quality_review_page = st.Page("new_pages/project_management/session_quality_review.py", icon="📚", title="Session Quality Review", url_path="session_quality_review")
 flag_same_letter_groups_page = st.Page("new_pages/project_management/flag_same_letter_groups.py", icon="🚩", title="Check: Same Letter Groups", url_path="flag_same_letter_groups")
