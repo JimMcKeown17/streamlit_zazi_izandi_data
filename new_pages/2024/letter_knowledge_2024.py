@@ -1,5 +1,6 @@
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 from zz_data_processing import process_zz_data_midline, process_zz_data_endline, grade1_df, gradeR_df
 from data_loader import load_zazi_izandi_2024
 import os
@@ -185,6 +186,91 @@ def letter_knowledge_page():
 
         with st.expander('Click to view data:'):
             st.dataframe(df)
+    st.divider()
+
+    # Zero Letter Learners Section
+    with st.container():
+        st.subheader("Zero Letter Learners: Baseline vs Endline")
+        st.info("These charts show the percentage of children who could not identify a single letter at baseline vs endline. This metric helps us understand our impact on the most vulnerable learners.")
+        
+        # Grade selector dropdown
+        grade_selection_zero = st.selectbox('Select Grade', ['Grade 1', 'Grade R'], key="zero_learners_grade")
+        
+        # Select the appropriate dataframe based on grade selection
+        if grade_selection_zero == 'Grade 1':
+            selected_df = grade1
+        else:
+            selected_df = gradeR
+        
+        # Create two columns for side-by-side pie charts
+        col1_zero, col2_zero = st.columns(2)
+        
+        # Baseline Zero Letter Learners
+        with col1_zero:
+            baseline_zero = (selected_df['EGRA Baseline'] == 0).sum()
+            baseline_non_zero = (selected_df['EGRA Baseline'] > 0).sum()
+            total_baseline = baseline_zero + baseline_non_zero
+            
+            labels = ['Zero Letter Learners', '1+ Letters']
+            values = [baseline_zero, baseline_non_zero]
+            colors = ['#ef4444', '#10b981']  # Red for zero, green for 1+
+            
+            fig_pie_baseline_zero = go.Figure(data=[go.Pie(
+                labels=labels,
+                values=values,
+                marker_colors=colors,
+                textinfo='label+percent',
+                textposition='auto'
+            )])
+            
+            fig_pie_baseline_zero.update_layout(
+                title=f'{grade_selection_zero} Baseline<br>Total: {total_baseline:,} children',
+                showlegend=False,
+                height=400,
+                margin=dict(t=80, b=20, l=20, r=20)
+            )
+            
+            st.plotly_chart(fig_pie_baseline_zero, use_container_width=True)
+        
+        # Endline Zero Letter Learners
+        with col2_zero:
+            endline_zero = (selected_df['EGRA Endline'] == 0).sum()
+            endline_non_zero = (selected_df['EGRA Endline'] > 0).sum()
+            total_endline = endline_zero + endline_non_zero
+            
+            labels = ['Zero Letter Learners', '1+ Letters']
+            values = [endline_zero, endline_non_zero]
+            colors = ['#ef4444', '#10b981']  # Red for zero, green for 1+
+            
+            fig_pie_endline_zero = go.Figure(data=[go.Pie(
+                labels=labels,
+                values=values,
+                marker_colors=colors,
+                textinfo='label+percent',
+                textposition='auto'
+            )])
+            
+            fig_pie_endline_zero.update_layout(
+                title=f'{grade_selection_zero} Endline<br>Total: {total_endline:,} children',
+                showlegend=False,
+                height=400,
+                margin=dict(t=80, b=20, l=20, r=20)
+            )
+            
+            st.plotly_chart(fig_pie_endline_zero, use_container_width=True)
+        
+        # Show improvement metrics
+        baseline_zero_pct = (baseline_zero / total_baseline * 100) if total_baseline > 0 else 0
+        endline_zero_pct = (endline_zero / total_endline * 100) if total_endline > 0 else 0
+        reduction = baseline_zero_pct - endline_zero_pct
+        
+        if reduction > 0:
+            st.success(f"✅ Zero letter learners decreased by {reduction:.1f} percentage points (from {baseline_zero_pct:.1f}% to {endline_zero_pct:.1f}%)")
+        elif reduction < 0:
+            st.warning(f"⚠️ Zero letter learners increased by {abs(reduction):.1f} percentage points (from {baseline_zero_pct:.1f}% to {endline_zero_pct:.1f}%)")
+        else:
+            st.info(f"Zero letter learners remained at {baseline_zero_pct:.1f}%")
+    
     st.divider()
 
     with st.container():
