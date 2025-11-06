@@ -1768,14 +1768,26 @@ def render_data_explorer_tab(df):
         
         st.dataframe(display_df, use_container_width=True, hide_index=True)
         
-        # Export button
-        csv = display_df.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="📥 Download as CSV",
-            data=csv,
-            file_name=f'nmb_endline_filtered_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
-            mime='text/csv',
-        )
+        # Export buttons
+        col_export1, col_export2 = st.columns(2)
+        
+        with col_export1:
+            csv = display_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Download as CSV",
+                data=csv,
+                file_name=f'nmb_endline_filtered_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
+                mime='text/csv',
+            )
+        
+        with col_export2:
+            json_data = display_df.to_json(orient='records', date_format='iso').encode('utf-8')
+            st.download_button(
+                label="📥 Download as JSON",
+                data=json_data,
+                file_name=f'nmb_endline_filtered_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json',
+                mime='application/json',
+            )
     else:
         st.warning("No assessments match the selected filters")
 
