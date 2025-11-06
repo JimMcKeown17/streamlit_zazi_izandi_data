@@ -117,7 +117,7 @@ with col3:
     **Multiple Testing Streams:**
     
     *SEF Youth (Feb-May):*
-    - 18 schools, 75 part-time TAs
+    - 42 schools, 73 part-time TAs
     - 4 days/week model
     
     *Government TAs - NMB (Aug-Oct):*
