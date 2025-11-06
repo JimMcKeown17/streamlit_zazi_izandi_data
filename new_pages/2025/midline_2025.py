@@ -151,7 +151,7 @@ def display_midline():
                     # Allow user to select benchmark threshold (multiples of 5)
 
                 st.subheader("Percentage of Grade 1's On Grade Level")
-                st.success("The number of Grade 1 children 'On Grade Level' for letter knowledge more than quadrupled, increasing from 13% to 53%!")
+                st.success("The endline benchmark shown below is for December, while this data is as of May.")
 
                 # Filter for Grade 1 only
                 g1_initial = initial_df[initial_df['grade_label'] == 'Grade 1']
