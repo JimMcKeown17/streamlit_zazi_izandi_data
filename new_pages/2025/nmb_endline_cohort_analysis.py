@@ -15,9 +15,40 @@ if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
 
 from database_utils import get_database_engine, check_table_exists
+from data_loader import load_zazi_izandi_2025_tp
+from process_teampact_data import process_teampact_data
 
 # Load environment variables
 load_dotenv()
+
+@st.cache_data(ttl=3600)  # Cache for 1 hour
+def load_baseline_data():
+    """
+    Load baseline assessment data from CSV files
+    
+    Returns:
+        pandas.DataFrame: Baseline assessment data
+    """
+    try:
+        # Load baseline data from CSV files
+        baseline_xhosa_df, baseline_english_df, baseline_afrikaans_df = load_zazi_izandi_2025_tp()
+        
+        # Process baseline data
+        if baseline_xhosa_df is not None:
+            baseline_df = process_teampact_data(baseline_xhosa_df, baseline_english_df, baseline_afrikaans_df)
+            
+            if baseline_df.empty:
+                return pd.DataFrame()
+            
+            return baseline_df
+        else:
+            return pd.DataFrame()
+            
+    except Exception as e:
+        st.error(f"Error loading baseline data: {e}")
+        import traceback
+        st.error(traceback.format_exc())
+        return pd.DataFrame()
 
 @st.cache_data(ttl=3600)  # Cache for 1 hour
 def load_assessment_data_from_db():
@@ -219,26 +250,376 @@ def render_overview_tab(df):
     
     st.divider()
     
-    # Flag breakdown
-    st.subheader("🚩 Quality Flag Breakdown")
+    # Baseline vs Endline Comparison - MOVED TO TOP
+    st.subheader("📊 Baseline vs Endline Comparison")
+    
+    col_toggle_comparison = st.columns([3, 1])
+    with col_toggle_comparison[1]:
+        use_mean_comparison = st.toggle("📊 Show Mean", value=False, key="comparison_mean_toggle")
+    
+    stat_method_comparison = 'mean' if use_mean_comparison else 'median'
+    stat_label_comparison = 'Mean' if use_mean_comparison else 'Median'
+    
+    # Load baseline data
+    baseline_df = load_baseline_data()
+    
+    # Calculate baseline scores dynamically
+    baseline_scores = {}
+    if not baseline_df.empty:
+        # Filter to only expected grades in baseline data
+        baseline_df_filtered = baseline_df[baseline_df['Grade'].isin(['Grade R', 'Grade 1', 'Grade 2'])]
+        
+        baseline_by_grade = baseline_df_filtered.groupby('Grade').agg({
+            'Total cells correct - EGRA Letters': stat_method_comparison
+        }).reset_index()
+        
+        for _, row in baseline_by_grade.iterrows():
+            baseline_scores[row['Grade']] = row['Total cells correct - EGRA Letters']
+    
+    # If baseline data failed to load, use fallback values with a warning
+    if not baseline_scores:
+        st.warning("⚠️ Could not load baseline data. Using fallback median values.")
+        baseline_scores = {
+            'Grade R': 2,
+            'Grade 1': 15,
+            'Grade 2': 37
+        }
+    
+    # Get endline scores for comparison
+    endline_scores_comparison = df_filtered.groupby('Grade').agg({
+        'Total cells correct - EGRA Letters': stat_method_comparison
+    }).reset_index()
+    
+    # Create comparison dataframe
+    comparison_data = []
+    for grade in ['Grade R', 'Grade 1', 'Grade 2']:
+        baseline_score = baseline_scores.get(grade, 0)
+        endline_row = endline_scores_comparison[endline_scores_comparison['Grade'] == grade]
+        endline_score = endline_row['Total cells correct - EGRA Letters'].values[0] if len(endline_row) > 0 else 0
+        
+        comparison_data.append({
+            'Grade': grade,
+            'Period': 'Baseline (August)',
+            'Score': baseline_score
+        })
+        comparison_data.append({
+            'Grade': grade,
+            'Period': 'Endline (Oct)',
+            'Score': endline_score
+        })
+    
+    comparison_df = pd.DataFrame(comparison_data)
+    
+    # Create grouped bar chart
+    fig_comparison = px.bar(
+        comparison_df, 
+        x='Grade', 
+        y='Score',
+        color='Period',
+        barmode='group',
+        category_orders={'Grade': ['Grade R', 'Grade 1', 'Grade 2']},
+        title=f'{stat_label_comparison} EGRA Scores: Baseline vs Endline',
+        color_discrete_map={'Baseline (August)': '#94a3b8', 'Endline (Oct)': '#3b82f6'}
+    )
+    
+    # Add value labels on bars
+    fig_comparison.update_traces(texttemplate='%{y:.1f}', textposition='outside')
+    fig_comparison.update_yaxes(title=f'{stat_label_comparison} Correct Letters')
+    
+    st.plotly_chart(fig_comparison, use_container_width=True)
+    
+    # Calculate and display improvements
     col1, col2, col3 = st.columns(3)
+    for i, grade in enumerate(['Grade R', 'Grade 1', 'Grade 2']):
+        baseline = baseline_scores[grade]
+        endline_row = endline_scores_comparison[endline_scores_comparison['Grade'] == grade]
+        endline = endline_row['Total cells correct - EGRA Letters'].values[0] if len(endline_row) > 0 else 0
+        improvement = endline - baseline
+        pct_improvement = (improvement / baseline * 100) if baseline > 0 else 0
+        
+        with [col1, col2, col3][i]:
+            st.metric(
+                grade,
+                f"{endline:.1f}",
+                delta=f"+{improvement:.1f} ({pct_improvement:+.1f}%)",
+                delta_color="normal"
+            )
     
-    moving_fast = df_filtered['flag_moving_too_fast'].sum()
-    same_letter = df_filtered['flag_same_letter_groups'].sum()
-    both_flags = df_filtered['Both Flags'].sum()
+    st.divider()
     
-    with col1:
-        pct = (moving_fast/len(df_filtered)*100) if len(df_filtered) > 0 else 0
-        st.metric("Moving Too Fast", f"{moving_fast:,}", 
-                 delta=f"{pct:.1f}%", delta_color="off")
-    with col2:
-        pct = (same_letter/len(df_filtered)*100) if len(df_filtered) > 0 else 0
-        st.metric("Same Letter Groups", f"{same_letter:,}", 
-                 delta=f"{pct:.1f}%", delta_color="off")
-    with col3:
-        pct = (both_flags/len(df_filtered)*100) if len(df_filtered) > 0 else 0
-        st.metric("Both Flags", f"{both_flags:,}", 
-                 delta=f"{pct:.1f}%", delta_color="off")
+    # Grade 1 Benchmark Comparison
+    st.subheader("🎯 Grade 1: Baseline vs Endline Benchmark Achievement")
+    
+    col_slider_g1 = st.columns([3, 1])
+    with col_slider_g1[1]:
+        grade1_threshold = st.slider("Grade 1 Benchmark (LPM)", min_value=20, max_value=40, value=40, step=5, key="grade1_benchmark_slider")
+    
+    # Get Grade 1 data for baseline and endline
+    baseline_g1 = baseline_df[baseline_df['Grade'] == 'Grade 1'] if not baseline_df.empty else pd.DataFrame()
+    endline_g1 = df_filtered[df_filtered['Grade'] == 'Grade 1']
+    
+    col1_g1, col2_g1 = st.columns(2)
+    
+    # Baseline Grade 1 pie chart
+    with col1_g1:
+        if len(baseline_g1) > 0:
+            above_baseline = len(baseline_g1[baseline_g1['Total cells correct - EGRA Letters'] > grade1_threshold])
+            below_baseline = len(baseline_g1) - above_baseline
+            
+            labels = [f'Above {grade1_threshold}lpm', f'At or Below {grade1_threshold}lpm']
+            values = [above_baseline, below_baseline]
+            colors = ['#00cc44', '#ff4444']
+            
+            fig_pie_baseline = go.Figure(data=[go.Pie(
+                labels=labels,
+                values=values,
+                marker_colors=colors,
+                textinfo='label+percent',
+                textposition='auto'
+            )])
+            
+            fig_pie_baseline.update_layout(
+                title=f'Grade 1 Baseline (August)<br>Total: {len(baseline_g1):,} children',
+                showlegend=False,
+                height=400,
+                margin=dict(t=80, b=20, l=20, r=20)
+            )
+            
+            st.plotly_chart(fig_pie_baseline, use_container_width=True)
+        else:
+            st.warning("No Grade 1 baseline data available")
+    
+    # Endline Grade 1 pie chart
+    with col2_g1:
+        if len(endline_g1) > 0:
+            above_endline = len(endline_g1[endline_g1['Total cells correct - EGRA Letters'] > grade1_threshold])
+            below_endline = len(endline_g1) - above_endline
+            
+            labels = [f'Above {grade1_threshold}lpm', f'At or Below {grade1_threshold}lpm']
+            values = [above_endline, below_endline]
+            colors = ['#00cc44', '#ff4444']
+            
+            fig_pie_endline = go.Figure(data=[go.Pie(
+                labels=labels,
+                values=values,
+                marker_colors=colors,
+                textinfo='label+percent',
+                textposition='auto'
+            )])
+            
+            fig_pie_endline.update_layout(
+                title=f'Grade 1 Endline (Oct)<br>Total: {len(endline_g1):,} children',
+                showlegend=False,
+                height=400,
+                margin=dict(t=80, b=20, l=20, r=20)
+            )
+            
+            st.plotly_chart(fig_pie_endline, use_container_width=True)
+        else:
+            st.warning("No Grade 1 endline data available")
+    
+    st.divider()
+    
+    # Grade R Benchmark Comparison
+    st.subheader("🎯 Grade R: Baseline vs Endline Benchmark Achievement")
+    
+    col_slider_gr = st.columns([3, 1])
+    with col_slider_gr[1]:
+        gradeR_threshold = st.slider("Grade R Benchmark (LPM)", min_value=0, max_value=40, value=10, step=10, key="gradeR_benchmark_slider")
+    
+    # Get Grade R data for baseline and endline
+    baseline_gr = baseline_df[baseline_df['Grade'] == 'Grade R'] if not baseline_df.empty else pd.DataFrame()
+    endline_gr = df_filtered[df_filtered['Grade'] == 'Grade R']
+    
+    col1_gr, col2_gr = st.columns(2)
+    
+    # Baseline Grade R pie chart
+    with col1_gr:
+        if len(baseline_gr) > 0:
+            above_baseline = len(baseline_gr[baseline_gr['Total cells correct - EGRA Letters'] > gradeR_threshold])
+            below_baseline = len(baseline_gr) - above_baseline
+            
+            labels = [f'Above {gradeR_threshold}lpm', f'At or Below {gradeR_threshold}lpm']
+            values = [above_baseline, below_baseline]
+            colors = ['#22c55e', '#f87171']  # Lighter shades for Grade R
+            
+            fig_pie_baseline = go.Figure(data=[go.Pie(
+                labels=labels,
+                values=values,
+                marker_colors=colors,
+                textinfo='label+percent',
+                textposition='auto'
+            )])
+            
+            fig_pie_baseline.update_layout(
+                title=f'Grade R Baseline (August)<br>Total: {len(baseline_gr):,} children',
+                showlegend=False,
+                height=400,
+                margin=dict(t=80, b=20, l=20, r=20)
+            )
+            
+            st.plotly_chart(fig_pie_baseline, use_container_width=True)
+        else:
+            st.warning("No Grade R baseline data available")
+    
+    # Endline Grade R pie chart
+    with col2_gr:
+        if len(endline_gr) > 0:
+            above_endline = len(endline_gr[endline_gr['Total cells correct - EGRA Letters'] > gradeR_threshold])
+            below_endline = len(endline_gr) - above_endline
+            
+            labels = [f'Above {gradeR_threshold}lpm', f'At or Below {gradeR_threshold}lpm']
+            values = [above_endline, below_endline]
+            colors = ['#22c55e', '#f87171']  # Lighter shades for Grade R
+            
+            fig_pie_endline = go.Figure(data=[go.Pie(
+                labels=labels,
+                values=values,
+                marker_colors=colors,
+                textinfo='label+percent',
+                textposition='auto'
+            )])
+            
+            fig_pie_endline.update_layout(
+                title=f'Grade R Endline (Oct)<br>Total: {len(endline_gr):,} children',
+                showlegend=False,
+                height=400,
+                margin=dict(t=80, b=20, l=20, r=20)
+            )
+            
+            st.plotly_chart(fig_pie_endline, use_container_width=True)
+        else:
+            st.warning("No Grade R endline data available")
+    
+    st.divider()
+    
+    # Grade R Zero Letter Learners
+    st.subheader("📊 Grade R: Zero Letter Learners (Baseline vs Endline)")
+    
+    col1_gr_zero, col2_gr_zero = st.columns(2)
+    
+    # Baseline Grade R zero learners
+    with col1_gr_zero:
+        if len(baseline_gr) > 0:
+            zero_learners = len(baseline_gr[baseline_gr['Total cells correct - EGRA Letters'] == 0])
+            non_zero_learners = len(baseline_gr) - zero_learners
+            
+            labels = ['Zero Letter Learners', '1+ Letters']
+            values = [zero_learners, non_zero_learners]
+            colors = ['#ef4444', '#10b981']  # Red for zero, green for 1+
+            
+            fig_pie_zero_baseline = go.Figure(data=[go.Pie(
+                labels=labels,
+                values=values,
+                marker_colors=colors,
+                textinfo='label+percent',
+                textposition='auto'
+            )])
+            
+            fig_pie_zero_baseline.update_layout(
+                title=f'Grade R Baseline (August)<br>Total: {len(baseline_gr):,} children',
+                showlegend=False,
+                height=400,
+                margin=dict(t=80, b=20, l=20, r=20)
+            )
+            
+            st.plotly_chart(fig_pie_zero_baseline, use_container_width=True)
+        else:
+            st.warning("No Grade R baseline data available")
+    
+    # Endline Grade R zero learners
+    with col2_gr_zero:
+        if len(endline_gr) > 0:
+            zero_learners = len(endline_gr[endline_gr['Total cells correct - EGRA Letters'] == 0])
+            non_zero_learners = len(endline_gr) - zero_learners
+            
+            labels = ['Zero Letter Learners', '1+ Letters']
+            values = [zero_learners, non_zero_learners]
+            colors = ['#ef4444', '#10b981']  # Red for zero, green for 1+
+            
+            fig_pie_zero_endline = go.Figure(data=[go.Pie(
+                labels=labels,
+                values=values,
+                marker_colors=colors,
+                textinfo='label+percent',
+                textposition='auto'
+            )])
+            
+            fig_pie_zero_endline.update_layout(
+                title=f'Grade R Endline (Oct)<br>Total: {len(endline_gr):,} children',
+                showlegend=False,
+                height=400,
+                margin=dict(t=80, b=20, l=20, r=20)
+            )
+            
+            st.plotly_chart(fig_pie_zero_endline, use_container_width=True)
+        else:
+            st.warning("No Grade R endline data available")
+    
+    st.divider()
+    
+    # Grade 1 Zero Letter Learners
+    st.subheader("📊 Grade 1: Zero Letter Learners (Baseline vs Endline)")
+    
+    col1_g1_zero, col2_g1_zero = st.columns(2)
+    
+    # Baseline Grade 1 zero learners
+    with col1_g1_zero:
+        if len(baseline_g1) > 0:
+            zero_learners = len(baseline_g1[baseline_g1['Total cells correct - EGRA Letters'] == 0])
+            non_zero_learners = len(baseline_g1) - zero_learners
+            
+            labels = ['Zero Letter Learners', '1+ Letters']
+            values = [zero_learners, non_zero_learners]
+            colors = ['#ef4444', '#10b981']  # Red for zero, green for 1+
+            
+            fig_pie_zero_baseline = go.Figure(data=[go.Pie(
+                labels=labels,
+                values=values,
+                marker_colors=colors,
+                textinfo='label+percent',
+                textposition='auto'
+            )])
+            
+            fig_pie_zero_baseline.update_layout(
+                title=f'Grade 1 Baseline (August)<br>Total: {len(baseline_g1):,} children',
+                showlegend=False,
+                height=400,
+                margin=dict(t=80, b=20, l=20, r=20)
+            )
+            
+            st.plotly_chart(fig_pie_zero_baseline, use_container_width=True)
+        else:
+            st.warning("No Grade 1 baseline data available")
+    
+    # Endline Grade 1 zero learners
+    with col2_g1_zero:
+        if len(endline_g1) > 0:
+            zero_learners = len(endline_g1[endline_g1['Total cells correct - EGRA Letters'] == 0])
+            non_zero_learners = len(endline_g1) - zero_learners
+            
+            labels = ['Zero Letter Learners', '1+ Letters']
+            values = [zero_learners, non_zero_learners]
+            colors = ['#ef4444', '#10b981']  # Red for zero, green for 1+
+            
+            fig_pie_zero_endline = go.Figure(data=[go.Pie(
+                labels=labels,
+                values=values,
+                marker_colors=colors,
+                textinfo='label+percent',
+                textposition='auto'
+            )])
+            
+            fig_pie_zero_endline.update_layout(
+                title=f'Grade 1 Endline (Oct)<br>Total: {len(endline_g1):,} children',
+                showlegend=False,
+                height=400,
+                margin=dict(t=80, b=20, l=20, r=20)
+            )
+            
+            st.plotly_chart(fig_pie_zero_endline, use_container_width=True)
+        else:
+            st.warning("No Grade 1 endline data available")
     
     st.divider()
     
@@ -444,81 +825,30 @@ def render_overview_tab(df):
     
     st.divider()
     
-    # Percentage Above Benchmark - Pie Charts
-    st.subheader("📊 Percentage Above Benchmark")
+    # Grade 2 Benchmark Comparison
+    st.subheader("🎯 Grade 2: Baseline vs Endline Benchmark Achievement")
     
-    # LPM threshold slider
-    col_title, col_slider = st.columns([3, 1])
-    with col_slider:
-        lpm_threshold = st.slider("Set LPM Threshold", min_value=10, max_value=50, value=40, step=5, 
-                                  key="overview_lpm_threshold")
+    col_slider_g2 = st.columns([3, 1])
+    with col_slider_g2[1]:
+        grade2_threshold = st.slider("Grade 2 Benchmark (LPM)", min_value=20, max_value=50, value=40, step=5, key="grade2_benchmark_slider")
     
-    # Filter based on grade selection
-    if grade_filter == 'All Grades':
-        # Show Grade 1 and Grade 2 side by side
-        col1, col2 = st.columns(2)
-        
-        for i, grade in enumerate(['Grade 1', 'Grade 2']):
-            grade_data = df_filtered[df_filtered['Grade'] == grade]
+    # Get Grade 2 data for baseline and endline
+    baseline_g2 = baseline_df[baseline_df['Grade'] == 'Grade 2'] if not baseline_df.empty else pd.DataFrame()
+    endline_g2 = df_filtered[df_filtered['Grade'] == 'Grade 2']
+    
+    col1_g2, col2_g2 = st.columns(2)
+    
+    # Baseline Grade 2 pie chart
+    with col1_g2:
+        if len(baseline_g2) > 0:
+            above_baseline = len(baseline_g2[baseline_g2['Total cells correct - EGRA Letters'] > grade2_threshold])
+            below_baseline = len(baseline_g2) - above_baseline
             
-            if len(grade_data) > 0:
-                above_threshold = grade_data[grade_data['Total cells correct - EGRA Letters'] > lpm_threshold]
-                at_or_below_threshold = grade_data[grade_data['Total cells correct - EGRA Letters'] <= lpm_threshold]
-                
-                n_above = len(above_threshold)
-                n_below = len(at_or_below_threshold)
-                n_total = len(grade_data)
-                
-                # Create pie chart
-                labels = [f'Above {lpm_threshold}lpm', f'At or Below {lpm_threshold}lpm']
-                values = [n_above, n_below]
-                colors = ['#00cc44', '#ff4444']
-                
-                fig_pie = go.Figure(data=[go.Pie(
-                    labels=labels,
-                    values=values,
-                    marker_colors=colors,
-                    textinfo='label+percent',
-                    textposition='auto'
-                )])
-                
-                fig_pie.update_layout(
-                    title=f'{grade}<br>Total: {n_total:,} children',
-                    showlegend=False,
-                    height=500,
-                    margin=dict(t=80, b=20, l=20, r=20)
-                )
-                
-                if i == 0:
-                    with col1:
-                        st.plotly_chart(fig_pie, use_container_width=True)
-                else:
-                    with col2:
-                        st.plotly_chart(fig_pie, use_container_width=True)
-            else:
-                if i == 0:
-                    with col1:
-                        st.warning(f"No data available for {grade}")
-                else:
-                    with col2:
-                        st.warning(f"No data available for {grade}")
-    else:
-        # Show single pie chart for selected grade
-        grade_data = df_filtered
-        
-        if len(grade_data) > 0:
-            above_threshold = grade_data[grade_data['Total cells correct - EGRA Letters'] > lpm_threshold]
-            at_or_below_threshold = grade_data[grade_data['Total cells correct - EGRA Letters'] <= lpm_threshold]
-            
-            n_above = len(above_threshold)
-            n_below = len(at_or_below_threshold)
-            n_total = len(grade_data)
-            
-            labels = [f'Above {lpm_threshold}lpm', f'At or Below {lpm_threshold}lpm']
-            values = [n_above, n_below]
+            labels = [f'Above {grade2_threshold}lpm', f'At or Below {grade2_threshold}lpm']
+            values = [above_baseline, below_baseline]
             colors = ['#00cc44', '#ff4444']
             
-            fig_pie = go.Figure(data=[go.Pie(
+            fig_pie_baseline = go.Figure(data=[go.Pie(
                 labels=labels,
                 values=values,
                 marker_colors=colors,
@@ -526,16 +856,54 @@ def render_overview_tab(df):
                 textposition='auto'
             )])
             
-            fig_pie.update_layout(
-                title=f'{grade_filter}<br>Total: {n_total:,} children',
+            fig_pie_baseline.update_layout(
+                title=f'Grade 2 Baseline (August)<br>Total: {len(baseline_g2):,} children',
                 showlegend=False,
-                height=500,
+                height=400,
                 margin=dict(t=80, b=20, l=20, r=20)
             )
             
-            st.plotly_chart(fig_pie, use_container_width=True)
+            st.plotly_chart(fig_pie_baseline, use_container_width=True)
         else:
-            st.warning(f"No data available for {grade_filter}")
+            st.warning("No Grade 2 baseline data available")
+    
+    # Endline Grade 2 pie chart
+    with col2_g2:
+        if len(endline_g2) > 0:
+            above_endline = len(endline_g2[endline_g2['Total cells correct - EGRA Letters'] > grade2_threshold])
+            below_endline = len(endline_g2) - above_endline
+            
+            labels = [f'Above {grade2_threshold}lpm', f'At or Below {grade2_threshold}lpm']
+            values = [above_endline, below_endline]
+            colors = ['#00cc44', '#ff4444']
+            
+            fig_pie_endline = go.Figure(data=[go.Pie(
+                labels=labels,
+                values=values,
+                marker_colors=colors,
+                textinfo='label+percent',
+                textposition='auto'
+            )])
+            
+            fig_pie_endline.update_layout(
+                title=f'Grade 2 Endline (Oct)<br>Total: {len(endline_g2):,} children',
+                showlegend=False,
+                height=400,
+                margin=dict(t=80, b=20, l=20, r=20)
+            )
+            
+            st.plotly_chart(fig_pie_endline, use_container_width=True)
+        else:
+            st.warning("No Grade 2 endline data available")
+    
+    # LPM threshold slider for school breakdowns
+    st.divider()
+    col_title_breakdown, col_slider_breakdown = st.columns([3, 1])
+    with col_title_breakdown:
+        st.markdown("**School-Level Breakdown Threshold**")
+    with col_slider_breakdown:
+        lpm_threshold = st.slider("LPM", min_value=10, max_value=50, value=40, step=5, 
+                                  key="school_breakdown_threshold")
     
     # School-Level Breakdown
     with st.expander("📊 School-Level Breakdown by Grade"):
@@ -652,6 +1020,29 @@ def render_overview_tab(df):
                     st.warning("No Grade 1 data available")
             else:
                 st.warning("No Grade 1 data available")
+    
+    st.divider()
+    
+    # Flag breakdown - MOVED TO BOTTOM
+    st.subheader("🚩 Quality Flag Breakdown")
+    col1, col2, col3 = st.columns(3)
+    
+    moving_fast = df_filtered['flag_moving_too_fast'].sum()
+    same_letter = df_filtered['flag_same_letter_groups'].sum()
+    both_flags = df_filtered['Both Flags'].sum()
+    
+    with col1:
+        pct = (moving_fast/len(df_filtered)*100) if len(df_filtered) > 0 else 0
+        st.metric("Moving Too Fast", f"{moving_fast:,}", 
+                 delta=f"{pct:.1f}%", delta_color="off")
+    with col2:
+        pct = (same_letter/len(df_filtered)*100) if len(df_filtered) > 0 else 0
+        st.metric("Same Letter Groups", f"{same_letter:,}", 
+                 delta=f"{pct:.1f}%", delta_color="off")
+    with col3:
+        pct = (both_flags/len(df_filtered)*100) if len(df_filtered) > 0 else 0
+        st.metric("Both Flags", f"{both_flags:,}", 
+                 delta=f"{pct:.1f}%", delta_color="off")
 
 def render_cohort_performance_tab(df):
     """Render cohort performance analysis"""
@@ -721,8 +1112,7 @@ def render_cohort_performance_tab(df):
         diff = highest_cohort['Score'] - lowest_cohort['Score']
         pct_change = (diff / lowest_cohort['Score'] * 100) if lowest_cohort['Score'] > 0 else 0
         
-        st.info(f"💡 **Insight:** Groups with {highest_cohort['Cohort']} sessions score "
-               f"{diff:.1f} letters higher ({pct_change:+.1f}%) than {lowest_cohort['Cohort']} session groups.")
+        st.warning(f"💡 **Warning:** We need to make sure Grade 1's excluded from the programme because they knew more than 30 letter sounds on baseline are not included in the zero session bucket thus skewing results upwards for that group. Awaiting on data from Teampact in order to isolate these kids.")
     
     st.divider()
     
