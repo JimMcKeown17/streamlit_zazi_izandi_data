@@ -1788,6 +1788,91 @@ def render_data_explorer_tab(df):
                 file_name=f'nmb_endline_filtered_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json',
                 mime='application/json',
             )
+        
+        st.divider()
+        
+        # Grouped by School & Grade Table
+        st.subheader("📊 Summary by School & Grade")
+        
+        # Load baseline data for comparison
+        baseline_df = load_baseline_data()
+        
+        # Calculate baseline scores by school and grade
+        baseline_scores = {}
+        if not baseline_df.empty:
+            baseline_grouped = baseline_df.groupby(['Program Name', 'Grade']).agg({
+                'Total cells correct - EGRA Letters': 'median'
+            }).reset_index()
+            for _, row in baseline_grouped.iterrows():
+                key = (row['Program Name'], row['Grade'])
+                baseline_scores[key] = row['Total cells correct - EGRA Letters']
+        
+        # Group filtered data by School (Program Name) and Grade
+        grouped_data = filtered_df.groupby(['Program Name', 'Grade']).agg({
+            'Total cells correct - EGRA Letters': 'median',
+            'session_count_total': 'median',
+            'flag_moving_too_fast': 'sum',
+            'flag_same_letter_groups': 'sum',
+            'Collected By': lambda x: ', '.join(sorted(x.unique())),
+            'cohort_session_range': lambda x: x.mode()[0] if len(x.mode()) > 0 else '',
+            'Language': lambda x: ', '.join(sorted(x.unique())),
+            'response_id': 'count'
+        }).reset_index()
+        
+        # Rename columns
+        grouped_data.columns = [
+            'School Name', 'Grade', 'EGRA Endline (Median)', 'Total Sessions (Median)',
+            'Moving Too Fast (Count)', 'Same Letter Groups (Count)', 
+            'EA Names', 'Most Common Cohort', 'Languages', 'Total Assessments'
+        ]
+        
+        # Add baseline scores
+        grouped_data['EGRA Baseline (Median)'] = grouped_data.apply(
+            lambda row: baseline_scores.get((row['School Name'], row['Grade']), None), 
+            axis=1
+        )
+        
+        # Calculate improvement
+        grouped_data['Improvement'] = grouped_data['EGRA Endline (Median)'] - grouped_data['EGRA Baseline (Median)']
+        
+        # Reorder columns
+        summary_df = grouped_data[[
+            'School Name', 'Grade', 'EGRA Baseline (Median)', 'EGRA Endline (Median)', 
+            'Improvement', 'Total Sessions (Median)', 'Moving Too Fast (Count)', 
+            'Same Letter Groups (Count)', 'EA Names', 'Most Common Cohort', 
+            'Languages', 'Total Assessments'
+        ]]
+        
+        # Sort by School Name and Grade
+        grade_order_map = {'Grade R': 0, 'Grade 1': 1, 'Grade 2': 2}
+        summary_df['Grade_Order'] = summary_df['Grade'].map(grade_order_map)
+        summary_df = summary_df.sort_values(['School Name', 'Grade_Order']).drop('Grade_Order', axis=1)
+        
+        # Display the table
+        st.dataframe(summary_df, use_container_width=True, hide_index=True)
+        
+        # Export buttons for grouped data
+        col_export3, col_export4 = st.columns(2)
+        
+        with col_export3:
+            summary_csv = summary_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Download Summary as CSV",
+                data=summary_csv,
+                file_name=f'nmb_endline_summary_by_school_grade_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
+                mime='text/csv',
+                key='summary_csv_download'
+            )
+        
+        with col_export4:
+            summary_json = summary_df.to_json(orient='records', date_format='iso').encode('utf-8')
+            st.download_button(
+                label="📥 Download Summary as JSON",
+                data=summary_json,
+                file_name=f'nmb_endline_summary_by_school_grade_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json',
+                mime='application/json',
+                key='summary_json_download'
+            )
     else:
         st.warning("No assessments match the selected filters")
 
