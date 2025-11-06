@@ -198,6 +198,10 @@ def render_overview_tab(df):
     else:
         df_filtered = df.copy()
     
+    # Filter to only expected grades
+    expected_grades = ['Grade R', 'Grade 1', 'Grade 2']
+    df_filtered = df_filtered[df_filtered['Grade'].isin(expected_grades)]
+    
     # Overall metrics
     col1, col2, col3, col4 = st.columns(4)
     with col1:
