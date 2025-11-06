@@ -252,6 +252,7 @@ def render_overview_tab(df):
     
     # Baseline vs Endline Comparison - MOVED TO TOP
     st.subheader("📊 Baseline vs Endline Comparison")
+    st.info("The baseline data is from August 2025, while the endline data is from October 2025. The programme itself was run for approximately 8 weeks, with a 2 week school holiday in the middle.")
     
     col_toggle_comparison = st.columns([3, 1])
     with col_toggle_comparison[1]:

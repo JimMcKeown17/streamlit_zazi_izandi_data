@@ -802,7 +802,7 @@ def create_ea_implementation_table(df_sessions, df_excel):
 def display_ea_implementation_analysis(df_sessions):
     """Display EA implementation analysis with Excel data merge"""
     
-    st.subheader("EA Implementation Status & TeamPact Activity")
+    st.subheader("EA Implementation Status & Activity")
     
     # Load Excel data
     df_excel = load_ea_implementation_data()
@@ -1448,7 +1448,7 @@ def display_class_session_analysis(df):
     )
 
 # MAIN APP STARTS HERE
-st.title("TeamPact Education Assistant Analytics")
+st.title("Education Assistant Analytics")
 st.markdown("Session tracking and curriculum analysis")
 
 # Show last updated info
