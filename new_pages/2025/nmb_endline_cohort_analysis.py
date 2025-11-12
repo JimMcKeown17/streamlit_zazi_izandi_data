@@ -1873,6 +1873,251 @@ def render_data_explorer_tab(df):
                 mime='application/json',
                 key='summary_json_download'
             )
+        
+        st.divider()
+        
+        # Baseline-Endline Matching Section
+        st.subheader("🔗 Baseline vs Endline Matching Analysis")
+        st.markdown("*Match baseline and endline assessments to calculate individual learner improvement*")
+        
+        # Load baseline data
+        baseline_df = load_baseline_data()
+        
+        if not baseline_df.empty:
+            # Prepare baseline data
+            baseline_df['Learner Full Name'] = (baseline_df['Learner First Name'].fillna('') + ' ' + 
+                                               baseline_df['Learner Surname'].fillna('')).str.strip()
+            baseline_df['Baseline Score'] = baseline_df['Total cells correct - EGRA Letters']
+            
+            # Prepare endline data (use filtered_df which respects user filters)
+            endline_df = filtered_df.copy()
+            endline_df['Learner Full Name'] = endline_df['Participant Name']
+            endline_df['Endline Score'] = endline_df['Total cells correct - EGRA Letters']
+            
+            # Create matching keys (Name + Grade + School for more accurate matching)
+            baseline_df['Match Key'] = (baseline_df['Learner Full Name'].str.lower().str.strip() + '_' + 
+                                       baseline_df['Grade'].fillna('').str.strip() + '_' + 
+                                       baseline_df['Program Name'].fillna('').str.strip())
+            
+            endline_df['Match Key'] = (endline_df['Learner Full Name'].str.lower().str.strip() + '_' + 
+                                      endline_df['Grade'].fillna('').str.strip() + '_' + 
+                                      endline_df['Program Name'].fillna('').str.strip())
+            
+            # Perform merge
+            matched_df = endline_df.merge(
+                baseline_df[['Match Key', 'Baseline Score', 'Learner EMIS']],
+                on='Match Key',
+                how='inner'
+            )
+            
+            # Calculate improvement
+            matched_df['Improvement'] = matched_df['Endline Score'] - matched_df['Baseline Score']
+            matched_df['Improvement %'] = ((matched_df['Improvement'] / matched_df['Baseline Score']) * 100).round(1)
+            
+            # Replace inf values with NaN (for cases where baseline was 0)
+            matched_df['Improvement %'] = matched_df['Improvement %'].replace([float('inf'), float('-inf')], pd.NA)
+            
+            # Summary metrics
+            st.markdown("##### 📊 Matching Summary")
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("Baseline Records", f"{len(baseline_df):,}")
+            
+            with col2:
+                st.metric("Endline Records", f"{len(endline_df):,}")
+            
+            with col3:
+                match_count = len(matched_df)
+                match_rate = (match_count / len(endline_df) * 100) if len(endline_df) > 0 else 0
+                st.metric("Matched Records", f"{match_count:,}", 
+                         delta=f"{match_rate:.1f}% of endline")
+            
+            with col4:
+                avg_improvement = matched_df['Improvement'].mean()
+                st.metric("Avg Improvement", f"{avg_improvement:+.1f} letters")
+            
+            if match_count > 0:
+                st.divider()
+                
+                # Improvement statistics
+                st.markdown("##### 📈 Improvement Statistics")
+                col1, col2, col3, col4 = st.columns(4)
+                
+                with col1:
+                    median_improvement = matched_df['Improvement'].median()
+                    st.metric("Median Improvement", f"{median_improvement:+.1f} letters")
+                
+                with col2:
+                    improved_count = (matched_df['Improvement'] > 0).sum()
+                    improved_pct = (improved_count / len(matched_df) * 100)
+                    st.metric("Learners Improved", f"{improved_count:,} ({improved_pct:.1f}%)")
+                
+                with col3:
+                    declined_count = (matched_df['Improvement'] < 0).sum()
+                    declined_pct = (declined_count / len(matched_df) * 100)
+                    st.metric("Learners Declined", f"{declined_count:,} ({declined_pct:.1f}%)")
+                
+                with col4:
+                    no_change_count = (matched_df['Improvement'] == 0).sum()
+                    no_change_pct = (no_change_count / len(matched_df) * 100)
+                    st.metric("No Change", f"{no_change_count:,} ({no_change_pct:.1f}%)")
+                
+                st.divider()
+                
+                # Improvement distribution chart
+                st.markdown("##### 📊 Improvement Distribution")
+                
+                fig_improvement = px.histogram(
+                    matched_df, 
+                    x='Improvement',
+                    nbins=50,
+                    title='Distribution of Letter Score Improvement (Endline - Baseline)',
+                    labels={'Improvement': 'Improvement (letters)', 'count': 'Number of Learners'},
+                    color_discrete_sequence=['#3b82f6']
+                )
+                fig_improvement.add_vline(x=0, line_dash="dash", line_color="red", 
+                                         annotation_text="No Change", annotation_position="top")
+                fig_improvement.add_vline(x=matched_df['Improvement'].mean(), line_dash="dash", 
+                                         line_color="green", annotation_text="Mean", annotation_position="top")
+                st.plotly_chart(fig_improvement, use_container_width=True)
+                
+                st.divider()
+                
+                # Improvement by Grade
+                st.markdown("##### 📚 Improvement by Grade")
+                
+                grade_improvement = matched_df.groupby('Grade').agg({
+                    'Improvement': ['mean', 'median', 'count'],
+                    'Baseline Score': 'mean',
+                    'Endline Score': 'mean'
+                }).reset_index()
+                
+                grade_improvement.columns = ['Grade', 'Mean Improvement', 'Median Improvement', 
+                                            'Count', 'Mean Baseline', 'Mean Endline']
+                
+                # Order grades properly
+                grade_order = ['Grade R', 'Grade 1', 'Grade 2']
+                grade_improvement['Grade'] = pd.Categorical(
+                    grade_improvement['Grade'], 
+                    categories=grade_order, 
+                    ordered=True
+                )
+                grade_improvement = grade_improvement.sort_values('Grade')
+                
+                fig_grade_improvement = px.bar(
+                    grade_improvement,
+                    x='Grade',
+                    y='Mean Improvement',
+                    title='Average Improvement by Grade',
+                    labels={'Mean Improvement': 'Mean Improvement (letters)'},
+                    color='Mean Improvement',
+                    color_continuous_scale='RdYlGn',
+                    text='Mean Improvement'
+                )
+                fig_grade_improvement.update_traces(
+                    texttemplate='%{text:.1f}<br>n=%{customdata}',
+                    customdata=grade_improvement['Count'],
+                    textposition='outside'
+                )
+                st.plotly_chart(fig_grade_improvement, use_container_width=True)
+                
+                st.divider()
+                
+                # Matched data table
+                st.markdown("##### 📋 Matched Records Table")
+                
+                # Select and rename columns for export
+                export_columns = [
+                    'Learner Full Name', 'Grade', 'Program Name', 'Language',
+                    'Baseline Score', 'Endline Score', 'Improvement', 'Improvement %',
+                    'session_count_total', 'cohort_session_range',
+                    'flag_moving_too_fast', 'flag_same_letter_groups',
+                    'Collected By', 'Response Date', 'Learner EMIS'
+                ]
+                
+                export_df = matched_df[export_columns].copy()
+                
+                # Rename columns for clarity
+                export_df = export_df.rename(columns={
+                    'session_count_total': 'Total Sessions',
+                    'cohort_session_range': 'Session Cohort',
+                    'flag_moving_too_fast': 'Moving Too Fast Flag',
+                    'flag_same_letter_groups': 'Same Letter Groups Flag'
+                })
+                
+                # Sort by improvement descending
+                export_df = export_df.sort_values('Improvement', ascending=False)
+                
+                # Show preview
+                st.dataframe(export_df.head(100), use_container_width=True, hide_index=True)
+                
+                if len(export_df) > 100:
+                    st.info(f"Showing first 100 of {len(export_df):,} matched records. Download CSV for full data.")
+                
+                st.divider()
+                
+                # Download button for matched data
+                st.markdown("##### 📥 Download Matched Records")
+                
+                col_download1, col_download2 = st.columns(2)
+                
+                with col_download1:
+                    matched_csv = export_df.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        label="📥 Download Matched Records as CSV",
+                        data=matched_csv,
+                        file_name=f'baseline_endline_matched_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
+                        mime='text/csv',
+                        key='matched_records_csv_download'
+                    )
+                
+                with col_download2:
+                    # Also provide summary stats for download
+                    summary_stats = pd.DataFrame({
+                        'Metric': [
+                            'Total Baseline Records',
+                            'Total Endline Records',
+                            'Matched Records',
+                            'Match Rate (%)',
+                            'Mean Improvement (letters)',
+                            'Median Improvement (letters)',
+                            'Learners Improved',
+                            'Learners Declined',
+                            'No Change'
+                        ],
+                        'Value': [
+                            len(baseline_df),
+                            len(endline_df),
+                            match_count,
+                            f"{match_rate:.1f}",
+                            f"{avg_improvement:.2f}",
+                            f"{median_improvement:.2f}",
+                            improved_count,
+                            declined_count,
+                            no_change_count
+                        ]
+                    })
+                    
+                    summary_csv = summary_stats.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        label="📥 Download Summary Statistics as CSV",
+                        data=summary_csv,
+                        file_name=f'baseline_endline_summary_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
+                        mime='text/csv',
+                        key='matched_summary_csv_download'
+                    )
+            else:
+                st.warning("⚠️ No matches found between baseline and endline records. This could be due to:")
+                st.markdown("""
+                - Different name spellings between baseline and endline
+                - Learners assessed at endline but not baseline (or vice versa)
+                - Different grade or school assignments
+                - Active filters limiting the data
+                """)
+        else:
+            st.warning("⚠️ Baseline data could not be loaded. Cannot perform matching analysis.")
+    
     else:
         st.warning("No assessments match the selected filters")
 
