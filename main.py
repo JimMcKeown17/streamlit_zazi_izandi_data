@@ -66,6 +66,7 @@ mentor_visits_page_25 = st.Page("new_pages/2025/mentor_visits_2025.py", icon="�
 ai_assistant_page = st.Page("new_pages/ai_assistant.py", icon="🤖", title="Zazi Bot", url_path="ai_assistant")
 research_page = st.Page("new_pages/Research & Benchmarks.py", icon="🔍", title="Research & Benchmarks", url_path="research")
 year_comparisons_page = st.Page("new_pages/Year_Comparisons.py", icon="🔍", title="Year Comparisons", url_path="year_comparisons")
+data_sources_page = st.Page("new_pages/data_sources.py", icon="📊", title="Data Sources", url_path="data_sources")
 ea_sessions_test_page = st.Page("new_pages/ea_sessions_test.py", icon="🧪", title="EA Sessions Test", url_path="ea_sessions_test")
 
 # Project Management Pages
@@ -85,7 +86,7 @@ pages_2025_public = [ ecd_page_25, baseline_page_25, midline_page_25 ]
 pages_2025_internal = [nmb_assessments_page_25, nmb_endline_cohort_page_25, teampact_sessions_page_25, east_london_sessions_page_25, el_assessments_page_25]
 
 pages_research_public = [research_page]
-pages_research_internal = [ai_assistant_page, year_comparisons_page]
+pages_research_internal = [ai_assistant_page, year_comparisons_page, data_sources_page]
 
 pages_2023 = [results_page_23]
 
