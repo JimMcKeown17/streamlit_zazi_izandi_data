@@ -2428,6 +2428,71 @@ def render_data_explorer_tab(df):
                 """)
         else:
             st.warning("⚠️ Baseline data could not be loaded. Cannot perform matching analysis.")
+        
+        st.divider()
+        
+        # Full dataframe exports at the bottom
+        st.subheader("📥 Export Full Dataframes")
+        st.markdown("*Download complete datasets with all calculated fields*")
+        
+        col_full1, col_full2, col_full3 = st.columns(3)
+        
+        # Export 1: Full Matched Dataframe (if available)
+        with col_full1:
+            if (baseline_already_merged and 'has_baseline_match' in filtered_df.columns and 
+                len(filtered_df[filtered_df['has_baseline_match']]) > 0):
+                # Use already merged data
+                full_matched_export = filtered_df[filtered_df['has_baseline_match']].copy()
+                matched_csv_full = full_matched_export.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="📥 Full Matched Dataset",
+                    data=matched_csv_full,
+                    file_name=f'full_matched_baseline_endline_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
+                    mime='text/csv',
+                    key='full_matched_download',
+                    help=f"Download all {len(full_matched_export):,} matched learner records with baseline, endline, and all calculated fields"
+                )
+            elif not baseline_already_merged and 'matched_df' in locals() and len(matched_df) > 0:
+                # Use freshly matched data
+                matched_csv_full = matched_df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="📥 Full Matched Dataset",
+                    data=matched_csv_full,
+                    file_name=f'full_matched_baseline_endline_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
+                    mime='text/csv',
+                    key='full_matched_download',
+                    help=f"Download all {len(matched_df):,} matched learner records with baseline, endline, and all calculated fields"
+                )
+            else:
+                st.info("No matched data available for export")
+        
+        # Export 2: Full Baseline Dataframe
+        with col_full2:
+            if not baseline_df.empty:
+                baseline_csv_full = baseline_df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="📥 Full Baseline Dataset",
+                    data=baseline_csv_full,
+                    file_name=f'full_baseline_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
+                    mime='text/csv',
+                    key='full_baseline_download',
+                    help=f"Download complete baseline dataset with {len(baseline_df):,} records (after all processing)"
+                )
+            else:
+                st.info("Baseline data not available")
+        
+        # Export 3: Full Endline Dataframe
+        with col_full3:
+            # Use the original df parameter (full endline with all processing)
+            endline_csv_full = df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Full Endline Dataset",
+                data=endline_csv_full,
+                file_name=f'full_endline_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
+                mime='text/csv',
+                key='full_endline_download',
+                help=f"Download complete endline dataset with {len(df):,} records (after all processing and calculations)"
+            )
     
     else:
         st.warning("No assessments match the selected filters")

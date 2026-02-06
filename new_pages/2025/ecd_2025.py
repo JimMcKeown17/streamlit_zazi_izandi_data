@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 from process_survey_cto_updated import process_egra_data
 import os
 from datetime import datetime as dt
@@ -139,7 +140,7 @@ def display_2025_zz_midline_ecd():
                         color='Category',
                         color_discrete_map={
                             f'At or Above Benchmark (≥{benchmark})': '#4CAF50',
-                            f'Below Benchmark (<{benchmark})': '#FF6B6B'
+                            f'Below Benchmark (<{benchmark})': '#F15D22'
                         }
                     )
                     
@@ -169,7 +170,7 @@ def display_2025_zz_midline_ecd():
                         color='Category',
                         color_discrete_map={
                             f'At or Above Benchmark (≥{benchmark})': '#4CAF50',
-                            f'Below Benchmark (<{benchmark})': '#FF6B6B'
+                            f'Below Benchmark (<{benchmark})': '#F15D22'
                         }
                     )
                     
@@ -177,6 +178,94 @@ def display_2025_zz_midline_ecd():
                     
                     endline_percent = (above_benchmark_endline / len(endline_ecd) * 100) if len(endline_ecd) > 0 else 0
                     st.metric("Endline: At Benchmark", f"{endline_percent:.1f}%")
+                else:
+                    st.info("Endline data not available")
+            
+            st.divider()
+            
+            # Zero Letter Learners Comparison
+            st.header("📊 Zero Letter Learners (Baseline vs Endline)")
+            
+            col1_zero, col2_zero = st.columns(2)
+            
+            # Baseline zero learners
+            with col1_zero:
+                if not initial_ecd.empty and 'letters_correct' in initial_ecd.columns:
+                    zero_learners_baseline = len(initial_ecd[initial_ecd['letters_correct'] == 0])
+                    non_zero_learners_baseline = len(initial_ecd) - zero_learners_baseline
+                    
+                    labels = ['Zero Letter Learners', '1+ Letters']
+                    values = [zero_learners_baseline, non_zero_learners_baseline]
+                    colors = ['#FF6B6B', '#4CAF50']  # Match benchmark chart colors
+                    # colors = ['#F15D22', '#4CAF50'] # ZZ Colors
+                    
+                    fig_pie_zero_baseline = go.Figure(data=[go.Pie(
+                        labels=labels,
+                        values=values,
+                        marker_colors=colors,
+                        textinfo='label+percent',
+                        textposition='auto'
+                    )])
+                    
+                    fig_pie_zero_baseline.update_layout(
+                        title=f'Baseline<br>Total: {len(initial_ecd):,} children',
+                        showlegend=False,
+                        height=400,
+                        margin=dict(t=80, b=20, l=20, r=20)
+                    )
+                    
+                    st.plotly_chart(fig_pie_zero_baseline, key='baseline_zero_pie', use_container_width=True)
+                    
+                    # Show percentage
+                    zero_pct = (zero_learners_baseline / len(initial_ecd) * 100) if len(initial_ecd) > 0 else 0
+                    st.metric("Zero Letter Learners", f"{zero_learners_baseline:,} ({zero_pct:.1f}%)")
+                else:
+                    st.info("Baseline data not available")
+            
+            # Endline zero learners
+            with col2_zero:
+                if not endline_ecd.empty and 'Total cells correct - NMB ECD Endline ' in endline_ecd.columns:
+                    zero_learners_endline = len(endline_ecd[endline_ecd['Total cells correct - NMB ECD Endline '] == 0])
+                    non_zero_learners_endline = len(endline_ecd) - zero_learners_endline
+                    
+                    labels = ['Zero Letter Learners', '1+ Letters']
+                    values = [zero_learners_endline, non_zero_learners_endline]
+                    colors = ['#FF6B6B', '#4CAF50']  # Match benchmark chart colors
+                    # colors = ['#F15D22', '#4CAF50'] # ZZ Colors
+                    
+                    fig_pie_zero_endline = go.Figure(data=[go.Pie(
+                        labels=labels,
+                        values=values,
+                        marker_colors=colors,
+                        textinfo='label+percent',
+                        textposition='auto'
+                    )])
+                    
+                    fig_pie_zero_endline.update_layout(
+                        title=f'Endline<br>Total: {len(endline_ecd):,} children',
+                        showlegend=False,
+                        height=400,
+                        margin=dict(t=80, b=20, l=20, r=20)
+                    )
+                    
+                    st.plotly_chart(fig_pie_zero_endline, key='endline_zero_pie', use_container_width=True)
+                    
+                    # Show percentage and improvement
+                    zero_pct_endline = (zero_learners_endline / len(endline_ecd) * 100) if len(endline_ecd) > 0 else 0
+                    st.metric("Zero Letter Learners", f"{zero_learners_endline:,} ({zero_pct_endline:.1f}%)")
+                    
+                    # Calculate improvement if baseline data exists
+                    if not initial_ecd.empty and 'letters_correct' in initial_ecd.columns:
+                        zero_learners_baseline = len(initial_ecd[initial_ecd['letters_correct'] == 0])
+                        zero_pct_baseline = (zero_learners_baseline / len(initial_ecd) * 100) if len(initial_ecd) > 0 else 0
+                        pct_point_change = zero_pct_endline - zero_pct_baseline
+                        
+                        if pct_point_change < 0:
+                            st.success(f"✅ {abs(pct_point_change):.1f} percentage point reduction in zero letter learners!")
+                        elif pct_point_change > 0:
+                            st.warning(f"⚠️ {pct_point_change:.1f} percentage point increase in zero letter learners")
+                        else:
+                            st.info("No change in zero letter learners percentage")
                 else:
                     st.info("Endline data not available")
             

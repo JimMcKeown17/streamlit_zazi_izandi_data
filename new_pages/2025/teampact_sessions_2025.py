@@ -1529,3 +1529,33 @@ with tab4:
 
 with tab5:
     display_selected_schools_analysis(df)
+
+# RAW DATA EXPORT SECTION
+st.divider()
+st.header("Raw Data Export")
+st.markdown(
+    f"Download the complete raw dataset from the database. "
+    f"This export includes **{len(df):,} records** with all available columns "
+    f"for research and analysis purposes."
+)
+
+# Show available columns
+with st.expander("View available columns"):
+    column_list = df.columns.tolist()
+    st.write(f"**{len(column_list)} columns available:**")
+    st.code(", ".join(column_list))
+
+@st.cache_data
+def convert_full_dataset_to_csv(_dataframe):
+    """Cache the CSV conversion to avoid re-generating on every interaction"""
+    return _dataframe.to_csv(index=False)
+
+raw_csv = convert_full_dataset_to_csv(df)
+
+st.download_button(
+    label=f"Download Full Dataset ({len(df):,} records)",
+    data=raw_csv,
+    file_name=f"teampact_sessions_raw_export_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+    mime="text/csv",
+    type="primary"
+)
