@@ -14,7 +14,7 @@ ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
 
-from database_utils import get_database_engine, check_table_exists
+from data_loader import load_assessments_endline_2025
 from data_loader import load_zazi_izandi_2025_tp
 from process_teampact_data import process_teampact_data
 
@@ -50,90 +50,55 @@ def load_baseline_data():
         st.error(traceback.format_exc())
         return pd.DataFrame()
 
-@st.cache_data(ttl=3600)  # Cache for 1 hour
+@st.cache_data
 def load_assessment_data_from_db():
     """
-    Load endline assessment data from Django database
-    Includes cohort assignments, quality flags, and session counts
-    
-    Returns:
-        pandas.DataFrame: Assessment data with all calculated fields
+    Load endline assessment data from frozen parquet file.
+    Includes cohort assignments, quality flags, and session counts.
     """
     try:
-        # Check if table exists
-        if not check_table_exists("teampact_assessment_endline_2025"):
-            st.error("Assessment table not found in database. Please ensure sync has been run.")
-            return pd.DataFrame()
-        
-        engine = get_database_engine()
-        
-        # Load all assessment data with cohort and flag information
-        query = """
-        SELECT 
-            response_id,
-            user_id,
-            survey_id,
-            survey_name,
-            program_name as "Program Name",
-            class_name as "Class Name",
-            collected_by as "Collected By",
-            response_date as "Response Date",
-            first_name as "First Name",
-            last_name as "Last Name",
-            email,
-            gender as "Gender",
-            grade as "Grade",
-            language as "Language",
-            total_correct as "Total cells correct - EGRA Letters",
-            total_incorrect,
-            total_attempted,
-            total_not_attempted,
-            assessment_complete,
-            stop_rule_reached,
-            timer_elapsed,
-            time_elapsed_completion,
-            assessment_type,
-            -- Cohort & session fields
-            session_count_total,
-            session_count_30_days,
-            session_count_90_days,
-            cohort_session_range,
-            -- Quality flags
-            flag_moving_too_fast,
-            flag_same_letter_groups,
-            cohort_calculated_at,
-            -- Timestamps
-            created_at,
-            updated_at,
-            data_refresh_timestamp
-        FROM teampact_assessment_endline_2025
-        WHERE assessment_type = 'endline'
-        ORDER BY response_date DESC
-        """
-        
-        df = pd.read_sql(query, engine)
-        
+        df = load_assessments_endline_2025()
+
+        # Filter to endline only
+        df = df[df['assessment_type'] == 'endline'].copy()
+
+        # Rename columns for compatibility with existing chart code
+        rename_map = {
+            'program_name': 'Program Name',
+            'class_name': 'Class Name',
+            'collected_by': 'Collected By',
+            'response_date': 'Response Date',
+            'first_name': 'First Name',
+            'last_name': 'Last Name',
+            'gender': 'Gender',
+            'grade': 'Grade',
+            'language': 'Language',
+            'total_correct': 'Total cells correct - EGRA Letters',
+        }
+        df = df.rename(columns=rename_map)
+        df = df.sort_values('Response Date', ascending=False)
+
         if df.empty:
-            st.warning("No endline assessment data found in database.")
+            st.warning("No endline assessment data found.")
             return df
-        
+
         # Convert date columns to datetime
         date_columns = ['Response Date', 'cohort_calculated_at', 'created_at', 'updated_at', 'data_refresh_timestamp']
         for col in date_columns:
             if col in df.columns:
                 df[col] = pd.to_datetime(df[col], errors='coerce')
-        
+
         # Create a combined participant name
         df['Participant Name'] = df['First Name'] + ' ' + df['Last Name']
-        
+
         # Create flag indicators for analysis
         df['Has Quality Flags'] = df['flag_moving_too_fast'] | df['flag_same_letter_groups']
         df['Both Flags'] = df['flag_moving_too_fast'] & df['flag_same_letter_groups']
-        
+
         return df
-        
+
     except Exception as e:
-        st.error(f"Error loading assessment data from database: {e}")
+        st.error(f"Error loading assessment data: {e}")
         import traceback
         st.error(traceback.format_exc())
         return pd.DataFrame()

@@ -1471,10 +1471,10 @@ except:
 try:
     # Import database utilities
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-    from database_utils import load_session_data_from_db, get_last_refresh_timestamp, get_data_summary
-    
-    # Load data from database
-    df = load_session_data_from_db()
+    from data_loader import load_sessions_2025
+
+    # Load frozen 2025 data from parquet
+    df = load_sessions_2025()
     
     if df.empty:
         st.warning("No data found in database.")

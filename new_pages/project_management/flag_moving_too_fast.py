@@ -9,7 +9,7 @@ import os
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
-from database_utils import get_database_engine, check_table_exists
+from data_loader import load_sessions_2025
 
 # Letter sequence that EAs should be teaching
 LETTER_SEQUENCE = [
@@ -55,48 +55,38 @@ def detect_grade_from_groups(group_names):
         return 'Unknown'
 
 
-@st.cache_data(ttl=300)  # Cache for 5 minutes
+@st.cache_data
 def fetch_teampact_session_data():
-    """Fetch session data from TeamPact database"""
+    """Load 2025 session data from frozen parquet file"""
     try:
-        if not check_table_exists():
-            st.error("TeamPact sessions table not found. Please ensure data has been synced.")
-            return None
-        
-        engine = get_database_engine()
-        
-        # Query to get session data with letters taught (recent 30 days)
-        query = """
-        SELECT
-            session_id,
-            participant_name,
-            user_name,
-            class_name as group_name,
-            program_name as school_name,
-            session_started_at,
-            letters_taught,
-            num_letters_taught,
-            attended_percentage,
-            participant_total,
-            attended_total,
-            session_text
-        FROM teampact_sessions_complete
-        WHERE letters_taught IS NOT NULL
-        AND letters_taught <> ''
-        AND session_started_at >= NOW() - INTERVAL '30 days'
-        ORDER BY session_started_at DESC
-        """
-        
-        df = pd.read_sql(query, engine)
-        
+        df = load_sessions_2025()
+
+        cols = {
+            'session_id': 'session_id',
+            'participant_name': 'participant_name',
+            'user_name': 'user_name',
+            'class_name': 'group_name',
+            'program_name': 'school_name',
+            'session_started_at': 'session_started_at',
+            'letters_taught': 'letters_taught',
+            'num_letters_taught': 'num_letters_taught',
+            'attended_percentage': 'attended_percentage',
+            'participant_total': 'participant_total',
+            'attended_total': 'attended_total',
+            'session_text': 'session_text',
+        }
+        df = df[list(cols.keys())].rename(columns=cols)
+        df = df[df['letters_taught'].notna() & (df['letters_taught'] != '')]
+        df = df.sort_values('session_started_at', ascending=False)
+
         if df.empty:
-            st.warning("No session data found with letter information for recent 30 days.")
+            st.warning("No session data found with letter information.")
             return None
-            
+
         return df
-        
+
     except Exception as e:
-        st.error(f"Failed to fetch data from database: {e}")
+        st.error(f"Failed to load session data: {e}")
         return None
 
 

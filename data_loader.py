@@ -452,3 +452,29 @@ def load_zazi_izandi_2023():
         sessions_df = pd.read_excel(sessions_path, sheet_name=sheet_name_sessions, engine='openpyxl')
         return endline_df, sessions_df
 
+
+# ---- 2025 Parquet Loaders (frozen data) ----
+
+def _get_parquet_path(filename):
+    """Get absolute path to a parquet file in data/parquet/raw/"""
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", "parquet", "raw", filename)
+
+
+@st.cache_data
+def load_sessions_2025():
+    """Load frozen 2025 session data from parquet file.
+    Returns DataFrame with school_type and mentor columns added."""
+    from database_utils import get_school_type, get_mentor
+    path = _get_parquet_path("2025_sessions.parquet")
+    df = pd.read_parquet(path)
+    df['school_type'] = df['program_name'].apply(get_school_type)
+    df['mentor'] = df['program_name'].apply(get_mentor)
+    return df
+
+
+@st.cache_data
+def load_assessments_endline_2025():
+    """Load frozen 2025 endline assessment data from parquet file."""
+    path = _get_parquet_path("2025_assessment_endline.parquet")
+    return pd.read_parquet(path)
+

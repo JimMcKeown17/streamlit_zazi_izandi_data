@@ -15,7 +15,7 @@ if ROOT_DIR not in sys.path:
 
 # Import data sources
 try:
-    from database_utils import load_session_data_from_db
+    from data_loader import load_sessions_2025
     from data.mentor_schools import mentors_to_schools
 except ImportError as e:
     st.error(f"Import error: {e}")
@@ -398,7 +398,7 @@ def display_session_quality_review():
     with st.spinner("Loading session and letter progress data..."):
         # Load session data
         try:
-            session_data = load_session_data_from_db()
+            session_data = load_sessions_2025()
             if session_data.empty:
                 st.warning("No session data found. Please check the database connection.")
                 return

@@ -15,87 +15,58 @@ ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 if ROOT_DIR not in sys.path:
     sys.path.append(ROOT_DIR)
 
-from database_utils import get_database_engine, check_table_exists
+from data_loader import load_assessments_endline_2025
 
 # Load environment variables
 load_dotenv()
 
-@st.cache_data(ttl=3600)  # Cache for 1 hour
+@st.cache_data
 def load_endline_data_from_db():
     """
-    Load endline assessment data from Django database
-    Returns data in format compatible with the assessment charts
+    Load endline assessment data from frozen parquet file.
+    Returns data in format compatible with the assessment charts.
     """
     try:
-        # Check if table exists
-        if not check_table_exists("teampact_assessment_endline_2025"):
-            st.error("Endline assessment table not found in database. Please ensure sync has been run.")
-            return None, None, None, None
-        
-        engine = get_database_engine()
-        
-        # Load all endline assessment data
-        query = """
-        SELECT 
-            response_id,
-            user_id,
-            survey_id,
-            survey_name,
-            program_name as "Program Name",
-            class_name as "Class Name",
-            collected_by as "Collected By",
-            response_date as "Response Date",
-            first_name as "First Name",
-            last_name as "Last Name",
-            email,
-            gender as "Gender",
-            grade as "Grade",
-            language as "Language",
-            total_correct as "Total cells correct - EGRA Letters",
-            total_incorrect,
-            total_attempted,
-            total_not_attempted,
-            assessment_complete,
-            stop_rule_reached,
-            timer_elapsed,
-            time_elapsed_completion,
-            assessment_type,
-            session_count_total,
-            session_count_30_days,
-            session_count_90_days,
-            cohort_session_range,
-            flag_moving_too_fast,
-            flag_same_letter_groups,
-            cohort_calculated_at,
-            created_at,
-            updated_at,
-            data_refresh_timestamp
-        FROM teampact_assessment_endline_2025
-        WHERE assessment_type = 'endline'
-        ORDER BY response_date DESC
-        """
-        
-        df = pd.read_sql(query, engine)
-        
-        if df.empty:
-            st.warning("No endline assessment data found in database.")
-            return None, None, None, None
-        
+        df = load_assessments_endline_2025()
+
+        # Filter to endline only
+        df = df[df['assessment_type'] == 'endline'].copy()
+
+        # Rename columns for compatibility with existing chart code
+        rename_map = {
+            'program_name': 'Program Name',
+            'class_name': 'Class Name',
+            'collected_by': 'Collected By',
+            'response_date': 'Response Date',
+            'first_name': 'First Name',
+            'last_name': 'Last Name',
+            'gender': 'Gender',
+            'grade': 'Grade',
+            'language': 'Language',
+            'total_correct': 'Total cells correct - EGRA Letters',
+        }
+        df = df.rename(columns=rename_map)
+        df = df.sort_values('Response Date', ascending=False)
+
         # Convert date columns to datetime
         date_columns = ['Response Date', 'cohort_calculated_at', 'created_at', 'updated_at', 'data_refresh_timestamp']
         for col in date_columns:
             if col in df.columns:
                 df[col] = pd.to_datetime(df[col], errors='coerce')
-        
+
+        if df.empty:
+            st.warning("No endline assessment data found.")
+            return None, None, None, None
+
         # Split by language for compatibility with existing chart code
         xhosa_df = df[df['Language'] == 'isiXhosa'].copy()
         english_df = df[df['Language'] == 'English'].copy()
         afrikaans_df = df[df['Language'] == 'Afrikaans'].copy()
-        
+
         return df, xhosa_df, english_df, afrikaans_df
-        
+
     except Exception as e:
-        st.error(f"Error loading endline data from database: {e}")
+        st.error(f"Error loading endline data: {e}")
         st.error(traceback.format_exc())
         return None, None, None, None
 
