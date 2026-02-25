@@ -4,8 +4,6 @@ import plotly.express as px
 from dotenv import load_dotenv
 import os
 import traceback
-import subprocess
-import sys
 from pathlib import Path
 from wordcloud import WordCloud, STOPWORDS
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
@@ -16,80 +14,6 @@ from collections import Counter
 
 # Load environment variables
 load_dotenv()
-
-# Auto-fetch and merge data on page load
-@st.cache_data(ttl=3600)  # Cache for 1 hour to avoid running on every page refresh
-def ensure_data_is_fresh():
-    """
-    Automatically fetch and merge mentor visit data if it doesn't exist or is outdated.
-    Returns True if data is available, False otherwise.
-    """
-    api_dir = Path("api")
-    merged_file = api_dir / "data" / "mentor_visit_tracker" / "merged_data_latest.csv"
-    
-    # Check if merged data exists and is recent (less than 24 hours old)
-    data_is_fresh = False
-    if merged_file.exists():
-        import time
-        file_age_hours = (time.time() - merged_file.stat().st_mtime) / 3600
-        if file_age_hours < 24:
-            data_is_fresh = True
-            return {"success": True, "message": f"Using cached data (updated {file_age_hours:.1f} hours ago)", "fresh": True}
-    
-    # If data doesn't exist or is old, fetch and merge
-    if not data_is_fresh:
-        try:
-            with st.spinner("🔄 Fetching latest mentor visit data from API..."):
-                # Run fetch script
-                fetch_script = api_dir / "fetch_mentor_visit_data.py"
-                if not fetch_script.exists():
-                    return {"success": False, "message": "Fetch script not found at api/fetch_mentor_visit_data.py"}
-                
-                result = subprocess.run(
-                    [sys.executable, "fetch_mentor_visit_data.py"],
-                    cwd=str(api_dir),
-                    capture_output=True,
-                    text=True,
-                    timeout=300  # 5 minute timeout
-                )
-                
-                if result.returncode != 0:
-                    return {"success": False, "message": f"Fetch failed: {result.stderr}"}
-            
-            with st.spinner("🔄 Merging old and new survey data..."):
-                # Run merge script
-                merge_script = api_dir / "merge_mentor_visit_data.py"
-                if not merge_script.exists():
-                    return {"success": False, "message": "Merge script not found at api/merge_mentor_visit_data.py"}
-                
-                result = subprocess.run(
-                    [sys.executable, "merge_mentor_visit_data.py"],
-                    cwd=str(api_dir),
-                    capture_output=True,
-                    text=True,
-                    timeout=60  # 1 minute timeout
-                )
-                
-                if result.returncode != 0:
-                    return {"success": False, "message": f"Merge failed: {result.stderr}"}
-            
-            return {"success": True, "message": "✅ Data fetched and merged successfully!", "fresh": False}
-            
-        except subprocess.TimeoutExpired:
-            return {"success": False, "message": "Operation timed out. Please try again."}
-        except Exception as e:
-            return {"success": False, "message": f"Error: {str(e)}"}
-    
-    return {"success": True, "message": "Data loaded successfully", "fresh": True}
-
-# Run data check at startup
-data_status = ensure_data_is_fresh()
-if not data_status["success"]:
-    st.error(data_status["message"])
-    st.info("💡 Please ensure your TEAMPACT_API_TOKEN environment variable is set correctly.")
-    st.stop()
-elif not data_status.get("fresh", False):
-    st.success(data_status["message"])
 
 # DataQuest Schools Filter List
 selected_schools_list = [
@@ -466,39 +390,37 @@ def analyze_text_sentiment_vader(text_series):
 
 # ============== END QUALITATIVE ANALYSIS HELPER FUNCTIONS ==============
 
+@st.cache_data
 def load_merged_mentor_visits():
-    """Load the merged mentor visits data from the merged CSV file"""
+    """Load frozen 2025 mentor visits data from parquet."""
     try:
-        # Load the merged data
-        df = pd.read_csv('api/data/mentor_visit_tracker/merged_data_latest.csv')
-        
+        parquet_path = Path('data/parquet/2025/2025_mentor_visits.parquet')
+        df = pd.read_parquet(parquet_path)
+
         # Convert date columns to datetime
         date_columns = ['response_start_at', 'response_end_at', 'created_at', 'updated_at']
         for col in date_columns:
             if col in df.columns:
                 df[col] = pd.to_datetime(df[col], errors='coerce')
-        
+
         # Create a user-friendly Response Date column
         df['Response Date'] = df['response_start_at']
-        
+
         # Create unified "Teaching at Right Level" column that combines old and new questions
-        # Old question: "The EA is teaching the correct letters per the group's letter knowledge (and letter trackers)"
-        # New question: "Teaching at the right level"
         old_col = "The EA is teaching the correct letters per the group's letter knowledge (and letter trackers)"
         new_col = "Teaching at the right level"
-        
+
         if old_col in df.columns and new_col in df.columns:
-            # Create unified column - prioritize new column data where available
             df['Teaching at Right Level (Unified)'] = df[new_col].fillna(df[old_col])
         elif old_col in df.columns:
             df['Teaching at Right Level (Unified)'] = df[old_col]
         elif new_col in df.columns:
             df['Teaching at Right Level (Unified)'] = df[new_col]
-        
+
         return df
-        
+
     except Exception as e:
-        st.error(f"Error loading merged data: {str(e)}")
+        st.error(f"Error loading mentor visits data: {str(e)}")
         st.code(traceback.format_exc())
         return pd.DataFrame()
 
