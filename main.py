@@ -67,12 +67,13 @@ mentor_visits_page_25 = st.Page("new_pages/2025/mentor_visits_2025.py", icon="�
 # 2026 Pages
 sessions_page_26 = st.Page("new_pages/2026/sessions_2026.py", icon="📱", title="2026 Sessions", url_path="sessions_26")
 baseline_page_26 = st.Page("new_pages/2026/baseline_2026.py", icon="📖", title="2026 Baseline Assessments", url_path="baseline_26")
-mentor_visits_page_26 = st.Page("new_pages/2026/mentor_visits_2026.py", icon="👁️", title="2026 Mentor Visits", url_path="mentor_visits_26")
 
 # 2026 Project Management Pages
 letter_progress_26 = st.Page("new_pages/2026/letter_progress_2026.py", icon="📚", title="Letter Progress 2026", url_path="letter_progress_26")
+letter_progress_detailed_26 = st.Page("new_pages/2026/letter_progress_detailed_2026.py", icon="📚", title="Letter Progress Detailed 2026", url_path="letter_progress_detailed_26")
 flag_same_letter_groups_page_26 = st.Page("new_pages/2026/flag_same_letter_groups_2026.py", icon="🚩", title="Check: Same Letter Groups 2026", url_path="flag_same_letter_groups_26")
 flag_moving_too_fast_page_26 = st.Page("new_pages/2026/flag_moving_too_fast_2026.py", icon="⚡", title="Check: Moving Too Fast 2026", url_path="flag_moving_too_fast_26")
+mentor_visits_page_26 = st.Page("new_pages/2026/mentor_visits_2026.py", icon="👁️", title="2026 Mentor Visits", url_path="mentor_visits_26")
 
 # Research & Other Pages
 ai_assistant_page = st.Page("new_pages/ai_assistant.py", icon="🤖", title="Zazi Bot", url_path="ai_assistant")
@@ -94,18 +95,28 @@ flag_moving_too_fast_page = st.Page("new_pages/project_management/flag_moving_to
 pages_2024_public = [letter_knowledge_page_24, word_reading_page_24, new_schools_page_24, session_analysis_page_24]
 pages_2024_internal = []
 
-pages_2025_public = [ ecd_page_25, baseline_page_25, midline_page_25 ]
-pages_2025_internal = [nmb_assessments_page_25, nmb_endline_cohort_page_25, nmb_endline_cohort_exclude_page_25, teampact_sessions_page_25, east_london_sessions_page_25, el_assessments_page_25]
+pages_2025_public = [ecd_page_25, baseline_page_25, midline_page_25]
+pages_2025_internal = [
+    nmb_assessments_page_25, nmb_endline_cohort_page_25, nmb_endline_cohort_exclude_page_25,
+    teampact_sessions_page_25, east_london_sessions_page_25, el_assessments_page_25,
+    # 2025 project management pages archived here
+    letter_progress_july_cohort, letter_progress_detailed_july_cohort,
+    mentor_visits_page_25, flag_same_letter_groups_page, flag_moving_too_fast_page,
+]
 
 pages_research_public = [research_page]
 pages_research_internal = [ai_assistant_page, year_comparisons_page, data_sources_page]
 
 pages_2023 = [results_page_23]
 
-pages_2026_internal = [sessions_page_26, baseline_page_26, mentor_visits_page_26]
+pages_2026_internal = [sessions_page_26, baseline_page_26]
 
 pages_project_management = []
-pages_project_management_internal = [letter_progress_july_cohort, letter_progress_detailed_july_cohort, mentor_visits_page_25, flag_same_letter_groups_page, flag_moving_too_fast_page, letter_progress_26, flag_same_letter_groups_page_26, flag_moving_too_fast_page_26]
+pages_project_management_internal = [
+    letter_progress_26, letter_progress_detailed_26,
+    flag_same_letter_groups_page_26, flag_moving_too_fast_page_26,
+    mentor_visits_page_26,
+]
 
 pages_2026 = []
 if st.session_state.user:
