@@ -15,8 +15,8 @@ if 'user' not in st.session_state:
 def login():
     st.sidebar.markdown("---")
     st.sidebar.header("Login")
-    username = st.sidebar.text_input("Username", key="username")
-    password = st.sidebar.text_input("Password", type="password", key="password")
+    username = st.sidebar.text_input("Username")
+    password = st.sidebar.text_input("Password", type="password")
 
     if st.sidebar.button("Login"):
         if username in credentials and credentials[username] == password:

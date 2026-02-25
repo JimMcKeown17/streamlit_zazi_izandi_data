@@ -481,11 +481,14 @@ def load_assessments_endline_2025():
 
 @st.cache_data(ttl=3600)
 def load_sessions_2026():
-    """Load 2026 session data from parquet file (updated nightly by backup_2026_to_parquet).
+    """Load 2026 session data from PostgreSQL (updated nightly by nightly_sync_2026).
     Returns DataFrame with school_type and mentor columns added."""
-    from database_utils import get_school_type, get_mentor
-    path = _get_parquet_path("2026_sessions.parquet")
-    df = pd.read_parquet(path)
+    from database_utils import get_database_engine, get_school_type, get_mentor
+    engine = get_database_engine()
+    df = pd.read_sql(
+        "SELECT * FROM teampact_sessions_complete WHERE EXTRACT(year FROM session_started_at) = 2026 ORDER BY session_started_at DESC",
+        engine
+    )
     df['school_type'] = df['program_name'].apply(get_school_type)
     df['mentor'] = df['program_name'].apply(get_mentor)
     return df
@@ -493,16 +496,18 @@ def load_sessions_2026():
 
 @st.cache_data(ttl=3600)
 def load_assessments_2026():
-    """Load 2026 baseline assessment data from parquet (updated nightly)."""
-    path = _get_parquet_path("2026_assessments.parquet")
-    return pd.read_parquet(path)
+    """Load 2026 baseline assessment data from PostgreSQL (updated nightly)."""
+    from database_utils import get_database_engine
+    engine = get_database_engine()
+    return pd.read_sql("SELECT * FROM assessments_2026 ORDER BY response_date DESC", engine)
 
 
 @st.cache_data(ttl=3600)
 def load_mentor_visits_2026():
-    """Load 2026 mentor visit data from parquet (updated nightly)."""
-    path = _get_parquet_path("2026_mentor_visits.parquet")
-    df = pd.read_parquet(path)
+    """Load 2026 mentor visit data from PostgreSQL (updated nightly)."""
+    from database_utils import get_database_engine
+    engine = get_database_engine()
+    df = pd.read_sql("SELECT * FROM mentor_visits_2026 ORDER BY response_start_at DESC", engine)
     for col in ['response_start_at', 'response_end_at']:
         if col in df.columns:
             df[col] = pd.to_datetime(df[col], errors='coerce')
