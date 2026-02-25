@@ -272,6 +272,72 @@ def render_ecd_charts(df_ecd):
         )
 
 
+# ── Collector Outlier Analysis ────────────────────────────────────────────────
+
+def render_collector_outliers(df):
+    if df.empty or 'letters_total_correct' not in df.columns:
+        return
+
+    grades_present = [g for g in GRADE_ORDER if g in df['grade'].values]
+    if not grades_present:
+        return
+
+    st.divider()
+    st.header("Potential Outlier Assessors")
+    st.caption(
+        "Top 10 and bottom 10 collectors by mean letters correct, per grade. "
+        "Collectors with fewer than 5 assessments are excluded. "
+        "Outliers may indicate data quality issues worth investigating."
+    )
+
+    MIN_ASSESSMENTS = 5
+
+    for grade in grades_present:
+        gdf = df[df['grade'] == grade].dropna(subset=['letters_total_correct', 'collected_by'])
+        if gdf.empty:
+            continue
+
+        collector_stats = (
+            gdf.groupby('collected_by')['letters_total_correct']
+            .agg(mean='mean', count='count')
+            .reset_index()
+        )
+        collector_stats = collector_stats[collector_stats['count'] >= MIN_ASSESSMENTS].copy()
+        collector_stats['mean'] = collector_stats['mean'].round(1)
+        collector_stats = collector_stats.sort_values('mean', ascending=False)
+
+        if collector_stats.empty:
+            continue
+
+        st.subheader(f"{grade}")
+        col_top, col_bot = st.columns(2)
+
+        top10 = collector_stats.head(10)
+        bot10 = collector_stats.tail(10).sort_values('mean', ascending=True)
+
+        with col_top:
+            fig_top = px.bar(
+                top10, x='mean', y='collected_by', orientation='h',
+                title=f"Top 10 — {grade}",
+                labels={'mean': 'Avg Letters Correct', 'collected_by': 'Collector'},
+                text='mean',
+                color_discrete_sequence=['#2ca02c'],
+            )
+            fig_top.update_layout(yaxis={'categoryorder': 'total ascending'}, showlegend=False)
+            st.plotly_chart(fig_top, use_container_width=True)
+
+        with col_bot:
+            fig_bot = px.bar(
+                bot10, x='mean', y='collected_by', orientation='h',
+                title=f"Bottom 10 — {grade}",
+                labels={'mean': 'Avg Letters Correct', 'collected_by': 'Collector'},
+                text='mean',
+                color_discrete_sequence=['#d62728'],
+            )
+            fig_bot.update_layout(yaxis={'categoryorder': 'total ascending'}, showlegend=False)
+            st.plotly_chart(fig_bot, use_container_width=True)
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -327,13 +393,17 @@ def main():
         df_ecd = df_ecd[df_ecd['assessment_type'] == selected_type]
 
     # Tabs
-    tab_nmb, tab_ecd = st.tabs(["NMB Schools (815/816/817)", "ECD Centers (805)"])
+    tab_nmb, tab_ecd = st.tabs(["Primary Schools", "ECDCs"])
 
     with tab_nmb:
         render_nmb_charts(df_nmb)
 
     with tab_ecd:
         render_ecd_charts(df_ecd)
+
+    # Outlier collector analysis (uses unfiltered df_nmb so all grades visible)
+    df_nmb_all = df[df['language'].isin(['isiXhosa', 'English', 'Afrikaans'])].copy()
+    render_collector_outliers(df_nmb_all)
 
 
 main()
