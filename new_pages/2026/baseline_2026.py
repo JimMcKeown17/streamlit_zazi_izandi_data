@@ -45,9 +45,29 @@ def load_assessments_2026():
         return pd.DataFrame()
 
 
+@st.cache_data(ttl=3600)
+def load_letter_cells():
+    """Load all letter cell results joined with assessment grade/language."""
+    try:
+        engine = get_database_engine()
+        query = """
+            SELECT c.response_id, c.cell_id, c.cell_index, c.status,
+                   a.grade, a.language
+            FROM assessment_cells_2026 c
+            JOIN assessments_2026 a ON a.response_id = c.response_id
+            WHERE c.question_type = 'letters'
+              AND a.language IN ('isiXhosa', 'English', 'Afrikaans')
+            ORDER BY c.cell_index
+        """
+        return pd.read_sql(query, engine)
+    except Exception as e:
+        st.error(f"Error loading cell data: {str(e)}")
+        return pd.DataFrame()
+
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-GRADE_ORDER  = ['Grade R', 'Grade 1', 'Grade 2']
+GRADE_ORDER  = ['PreR', 'Grade R', 'Grade 1', 'Grade 2']
 LANG_COLORS  = {
     'isiXhosa':  '#1f77b4',
     'English':   '#ff7f0e',
@@ -272,6 +292,137 @@ def render_ecd_charts(df_ecd):
         )
 
 
+# ── Letter-Level Analysis ─────────────────────────────────────────────────────
+
+def render_letter_analysis(df_nmb):
+    """Show % correct for each letter position in the EGRA grid, by grade."""
+    if df_nmb.empty:
+        return
+
+    st.divider()
+    st.header("Letter-Level Analysis")
+    st.caption(
+        "Percentage of learners who answered each letter correctly, shown in the "
+        "order they appear on the EGRA assessment grid (60 letters). "
+        "'Incomplete' attempts (stop rule) are excluded from the denominator."
+    )
+
+    all_cells = load_letter_cells()
+
+    if all_cells.empty:
+        st.info("No letter cell data available.")
+        return
+
+    # Filter cells to match current df_nmb selection (language, grade filters)
+    filtered_ids = set(df_nmb['response_id'].tolist())
+    cells = all_cells[all_cells['response_id'].isin(filtered_ids)].copy()
+
+    if cells.empty:
+        st.info("No letter cell data available.")
+        return
+
+    # Only count correct vs incorrect (exclude 'incomplete' — not attempted)
+    cells_attempted = cells[cells['status'].isin(['correct', 'incorrect'])].copy()
+
+    if cells_attempted.empty:
+        st.info("No attempted letter data found.")
+        return
+
+    # Build letter labels from the most common cell_id at each position
+    letter_labels = (
+        cells.groupby('cell_index')['cell_id']
+        .agg(lambda x: x.mode().iloc[0] if len(x.mode()) > 0 else '?')
+        .sort_index()
+    )
+
+    # Overall % correct by position
+    overall = (
+        cells_attempted.groupby('cell_index')
+        .agg(correct=('status', lambda s: (s == 'correct').sum()), total=('status', 'count'))
+        .reset_index()
+    )
+    overall['pct_correct'] = (overall['correct'] / overall['total'] * 100).round(1)
+    overall['letter'] = overall['cell_index'].map(letter_labels)
+
+    # By grade
+    by_grade = (
+        cells_attempted.groupby(['grade', 'cell_index'])
+        .agg(correct=('status', lambda s: (s == 'correct').sum()), total=('status', 'count'))
+        .reset_index()
+    )
+    by_grade['pct_correct'] = (by_grade['correct'] / by_grade['total'] * 100).round(1)
+    by_grade['letter'] = by_grade['cell_index'].map(letter_labels)
+
+    # ── Heatmap: grades as rows, letter positions as columns ──────────────
+    grades_present = [g for g in GRADE_ORDER if g in by_grade['grade'].values]
+
+    if grades_present:
+        # Build a matrix: rows = grades, columns = letter positions
+        pivot = by_grade.pivot_table(
+            index='grade', columns='cell_index', values='pct_correct'
+        ).reindex(grades_present)
+
+        col_labels = [letter_labels.get(i, '?') for i in pivot.columns]
+
+        fig_heat = go.Figure(data=go.Heatmap(
+            z=pivot.values,
+            x=col_labels,
+            y=pivot.index.tolist(),
+            colorscale='RdYlGn',
+            zmin=0, zmax=100,
+            text=pivot.values.round(0).astype(int),
+            texttemplate='%{text}%',
+            textfont={'size': 9},
+            colorbar=dict(title='% Correct'),
+        ))
+        fig_heat.update_layout(
+            title="% Correct per Letter Position by Grade",
+            xaxis_title="Letter (assessment order)",
+            yaxis_title="Grade",
+            height=300,
+            xaxis=dict(dtick=1),
+        )
+        st.plotly_chart(fig_heat, use_container_width=True)
+
+    # ── Bar chart: overall % correct per position ─────────────────────────
+    fig_bar = px.bar(
+        overall, x='letter', y='pct_correct',
+        title="Overall % Correct per Letter Position (all grades)",
+        labels={'pct_correct': '% Correct', 'letter': 'Letter'},
+        text='pct_correct',
+        color='pct_correct',
+        color_continuous_scale='RdYlGn',
+        range_color=[0, 100],
+    )
+    fig_bar.update_layout(
+        xaxis=dict(dtick=1),
+        showlegend=False,
+        coloraxis_showscale=False,
+    )
+    fig_bar.update_traces(texttemplate='%{text:.0f}%', textposition='outside', textfont_size=9)
+    st.plotly_chart(fig_bar, use_container_width=True)
+
+    # ── Per-grade line chart ──────────────────────────────────────────────
+    if len(grades_present) > 1:
+        fig_line = px.line(
+            by_grade[by_grade['grade'].isin(grades_present)],
+            x='cell_index', y='pct_correct', color='grade',
+            title="% Correct by Letter Position — Grade Comparison",
+            labels={'pct_correct': '% Correct', 'cell_index': 'Letter Position', 'grade': 'Grade'},
+            category_orders={'grade': GRADE_ORDER},
+        )
+        # Add letter labels on x-axis
+        fig_line.update_layout(
+            xaxis=dict(
+                tickmode='array',
+                tickvals=list(letter_labels.index),
+                ticktext=[letter_labels.get(i, '') for i in letter_labels.index],
+                dtick=1,
+            )
+        )
+        st.plotly_chart(fig_line, use_container_width=True)
+
+
 # ── Collector Outlier Analysis ────────────────────────────────────────────────
 
 def render_collector_outliers(df):
@@ -361,7 +512,7 @@ def main():
 
     # Split NMB vs ECD
     df_nmb = df[df['language'].isin(['isiXhosa', 'English', 'Afrikaans'])].copy()
-    df_ecd = df[df['language'] == 'ECD'].copy()
+    df_ecd = df[(df['language'] == 'ECD') & (df['grade'] != 'null')].copy()
 
     # Sidebar filters
     with st.sidebar:
@@ -371,8 +522,11 @@ def main():
         lang_options = ['All'] + sorted(df_nmb['language'].dropna().unique().tolist())
         selected_lang = st.selectbox("Language (NMB)", lang_options)
 
-        # Grade filter
+        # Grade filter — include all grades present in the data
         grade_options = ['All'] + [g for g in GRADE_ORDER if g in df['grade'].values]
+        # Also include any grades not in GRADE_ORDER (e.g. 'null')
+        extra = sorted(set(df['grade'].dropna().unique()) - set(GRADE_ORDER))
+        grade_options += extra
         selected_grade = st.selectbox("Grade", grade_options)
 
         # Assessment type filter
@@ -400,6 +554,9 @@ def main():
 
     with tab_ecd:
         render_ecd_charts(df_ecd)
+
+    # Letter-level analysis (respects current filters)
+    render_letter_analysis(df_nmb)
 
     # Outlier collector analysis (uses unfiltered df_nmb so all grades visible)
     df_nmb_all = df[df['language'].isin(['isiXhosa', 'English', 'Afrikaans'])].copy()
