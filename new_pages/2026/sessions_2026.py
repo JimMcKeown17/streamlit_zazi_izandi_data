@@ -38,38 +38,6 @@ ecd_list = [
     "Arise and Shine ECD"
 ]
 
-# DataQuest Schools Filter List
-selected_schools_list = [
-    "Aaron Gqadu Primary School",
-    "Ben Sinuka Primary School",
-    "Coega Primary School",
-    "Dumani Primary School",
-    "Ebongweni Public Primary School",
-    "Elufefeni Primary School",
-    "Empumalanga Primary School",
-    "Enkululekweni Primary School",
-    "Esitiyeni Public Primary School",
-    "Fumisukoma Primary School",
-    "Ilinge Primary School",
-    "Isaac Booi Senior Primary School",
-    "James Ntungwana Primary School",
-    "Jarvis Gqamlana Public Primary School",
-    "Joe Slovo Primary School",
-    "Little Flower Primary School",
-    "Magqabi Primary School",
-    "Mjuleni Junior Primary School",
-    "Mngcunube Primary School",
-    "Molefe Senior Primary School",
-    "Noninzi Luzipho Primary School",
-    "Ntlemeza Primary School",
-    "Phindubuye Primary School",
-    "Seyisi Primary School",
-    "Sikhothina Primary School",
-    "Soweto-On-Sea Primary School",
-    "Stephen Nkomo Senior Primary School",
-    "W B Tshume Primary School"
-]
-
 el_schools = [
     "Brownlee Primary School",
     "Bumbanani Primary School",
@@ -236,14 +204,11 @@ def create_school_workload_summary(df):
         return pd.DataFrame()
 
     # Convert school names to lowercase for comparison
-    selected_schools_lower = [school.lower() for school in selected_schools_list]
     el_schools_lower = [school.lower() for school in el_schools]
 
     # Create school categorization function
     def categorize_school(program_name):
-        if program_name.lower() in selected_schools_lower:
-            return 'NMB DataQuest Schools'
-        elif program_name.lower() in el_schools_lower:
+        if program_name.lower() in el_schools_lower:
             return 'East London Schools'
         else:
             return 'NMB Schools'
@@ -545,7 +510,6 @@ def display_session_analysis(df):
             color='school_category',
             title=f"Total Sessions by School ({school_type_filter})",
             color_discrete_map={
-                'NMB DataQuest Schools': '#FF6B6B',  # Red
                 'East London Schools': '#FFD93D',  # Yellow
                 'NMB Schools': '#45B7D1'  # Blue
             },
@@ -567,7 +531,6 @@ def display_session_analysis(df):
             color='school_category',
             title=f"Average Sessions per Day by School ({school_type_filter})",
             color_discrete_map={
-                'NMB DataQuest Schools': '#FF6B6B',  # Red
                 'East London Schools': '#FFD93D',  # Yellow
                 'NMB Schools': '#45B7D1'  # Blue
             },
@@ -701,387 +664,6 @@ def display_session_analysis(df):
         st.warning("No session data available for the activity table.")
 
 
-def load_ea_implementation_data():
-    """Load EA implementation data from Excel file"""
-    try:
-        excel_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
-                                 'data', 'EAs Implemeting (2).xlsx')
-
-        # Load the Excel file
-        df_excel = pd.read_excel(excel_path)
-
-        # Standardize column names to handle any variations
-        df_excel.columns = df_excel.columns.str.strip()
-
-        # Convert all columns to string to avoid Arrow serialization issues
-        for col in df_excel.columns:
-            df_excel[col] = df_excel[col].astype(str)
-
-        # Clean up 'nan' values that result from astype(str) conversion
-        df_excel = df_excel.replace('nan', '')
-
-        return df_excel
-    except Exception as e:
-        st.error(f"Error loading Excel file: {e}")
-        return pd.DataFrame()
-
-def calculate_teampact_sessions(df, user_name):
-    """Calculate session metrics for a specific user"""
-    user_data = df[df['user_name'] == user_name]
-
-    if user_data.empty:
-        return {'sessions_last_10_days': 0, 'sessions_total': 0}
-
-    # Calculate sessions in last 10 weekdays
-    user_data['session_date'] = pd.to_datetime(user_data['session_started_at']).dt.date
-    weekday_data = user_data[pd.to_datetime(user_data['session_started_at']).dt.weekday < 5]
-    unique_weekdays = sorted(weekday_data['session_date'].unique(), reverse=True)
-    past_10_dates = unique_weekdays[:10]
-
-    if past_10_dates:
-        last_10_days_data = weekday_data[weekday_data['session_date'].isin(past_10_dates)]
-        sessions_last_10_days = last_10_days_data['session_id'].nunique()
-    else:
-        sessions_last_10_days = 0
-
-    # Total sessions ever
-    sessions_total = user_data['session_id'].nunique()
-
-    return {
-        'sessions_last_10_days': sessions_last_10_days,
-        'sessions_total': sessions_total
-    }
-
-def create_ea_implementation_table(df_sessions, df_excel):
-    """Create merged table of EA implementation data with TeamPact sessions"""
-
-    if df_excel.empty:
-        return pd.DataFrame()
-
-    # Create the merged table
-    merged_data = []
-
-    for _, excel_row in df_excel.iterrows():
-        name = excel_row.get('Name and Surname', '')
-
-        # Calculate TeamPact session metrics for this user
-        session_metrics = calculate_teampact_sessions(df_sessions, name)
-
-        # Get mentor for this user - first try from sessions data, then from Excel mentor column
-        user_sessions = df_sessions[df_sessions['user_name'] == name]
-        mentor_from_sessions = user_sessions['mentor'].iloc[0] if not user_sessions.empty else ''
-
-        # Try to get mentor from Excel 'Mentor' column, fallback to school-based mentor assignment
-        excel_mentor = str(excel_row.get('Mentor', '')) if pd.notna(excel_row.get('Mentor', '')) else ''
-        if not excel_mentor:
-            # Use school-based mentor assignment as fallback
-            school_name = excel_row.get('School', '')
-            excel_mentor = get_mentor(school_name)
-
-        # Use TeamPact mentor if available, otherwise use Excel mentor
-        final_mentor = mentor_from_sessions if mentor_from_sessions else excel_mentor
-
-        merged_row = {
-            'Name and Surname': str(name) if pd.notna(name) else '',
-            'School': str(excel_row.get('School', '')) if pd.notna(excel_row.get('School', '')) else '',
-            'Training Status': str(excel_row.get('Training Status Flag', '')) if pd.notna(excel_row.get('Training Status Flag', '')) else '',
-            'Grade R': str(excel_row.get('Grade R', '')) if pd.notna(excel_row.get('Grade R', '')) else '',
-            'Grade 1': str(excel_row.get('Grade 1', '')) if pd.notna(excel_row.get('Grade 1', '')) else '',
-            'Grade 2': str(excel_row.get('Grade 2', '')) if pd.notna(excel_row.get('Grade 2', '')) else '',
-            'Reason For Not Having Sessions': str(excel_row.get('Reasons For Not Having Sessions On Teampact', '')) if pd.notna(excel_row.get('Reasons For Not Having Sessions On Teampact', '')) else '',
-            'Reason if NOT Implementation': str(excel_row.get('Reason if NOT Implmementation', '')) if pd.notna(excel_row.get('Reason if NOT Implmementation', '')) else '',
-            'Mentor Confirmed Implementation': str(excel_row.get('Mentor Confirmed Implimentation', '')) if pd.notna(excel_row.get('Mentor Confirmed Implimentation', '')) else '',
-            'Sessions Last 10 Days': int(session_metrics['sessions_last_10_days']),
-            'Total Sessions Ever': int(session_metrics['sessions_total']),
-            'Mentor': str(final_mentor) if pd.notna(final_mentor) else 'Unknown'
-        }
-
-        merged_data.append(merged_row)
-
-    return pd.DataFrame(merged_data)
-
-def display_ea_implementation_analysis(df_sessions):
-    """Display EA implementation analysis with Excel data merge"""
-
-    st.subheader("EA Implementation Status & Activity")
-
-    st.info(
-        "**Note**: This tab uses the 'EAs Implemeting (2).xlsx' tracking file. "
-        "A 2026 version of this file may not be available yet. "
-        "The analysis below will load if the file is present in the data directory."
-    )
-
-    # Load Excel data
-    df_excel = load_ea_implementation_data()
-
-    if df_excel.empty:
-        st.warning(
-            "Could not load EA implementation Excel file. "
-            "This file ('EAs Implemeting (2).xlsx') may not be available yet for 2026."
-        )
-        return
-
-    # Show basic info about the Excel file
-    st.info(f"Loaded {len(df_excel)} EAs from implementation tracking file.")
-
-    # Create mentor filter
-    mentor_options = ["All mentors"] + list(mentors_to_schools.keys())
-    implementation_mentor_filter = st.selectbox(
-        "Filter by Mentor:",
-        options=mentor_options,
-        index=0,
-        key="implementation_mentor_filter"
-    )
-
-    # Create merged table
-    merged_table = create_ea_implementation_table(df_sessions, df_excel)
-
-    if merged_table.empty:
-        st.warning("No data to display.")
-        return
-
-    # Apply mentor filter
-    if implementation_mentor_filter != "All mentors":
-        # Filter based on the mentor column (which combines TeamPact and Excel mentor data)
-        filtered_table = merged_table[merged_table['Mentor'] == implementation_mentor_filter]
-        st.info(f"Showing {len(filtered_table)} EAs for mentor: {implementation_mentor_filter}")
-    else:
-        filtered_table = merged_table
-        st.info(f"Showing all {len(filtered_table)} EAs")
-
-    # Display summary statistics
-    col1, col2, col3, col4 = st.columns(4)
-
-    with col1:
-        total_eas = len(filtered_table)
-        st.metric("Initial EAs", total_eas)
-
-    with col2:
-        active_last_10 = (filtered_table['Sessions Last 10 Days'] > 0).sum()
-        st.metric("EAs Active Last 10 Days", active_last_10)
-
-    with col3:
-        # Calculate average sessions per day across all EAs (total sessions / (EAs * 10 days))
-        total_sessions_last_10 = filtered_table['Sessions Last 10 Days'].sum()
-        avg_sessions_per_day = total_sessions_last_10 / (total_eas * 10) if total_eas > 0 else 0
-        st.metric("Avg Sessions Per Day", f"{avg_sessions_per_day:.2f}")
-
-    with col4:
-        no_sessions = (filtered_table['Total Sessions Ever'] == 0).sum()
-        st.metric("EAs with No Sessions", no_sessions)
-
-    # Display the table
-    st.markdown("### EA Implementation Status Table")
-
-    # Sort by Total Sessions Ever (descending) then by name
-    display_table = filtered_table.sort_values(['Total Sessions Ever', 'Name and Surname'],
-                                             ascending=[False, True])
-
-    # Color code based on session activity
-    def highlight_activity(val):
-        if pd.isna(val) or val == 0:
-            return 'background-color: #ffcccc'  # Light red for no activity
-        elif val <= 5:
-            return 'background-color: #ffffcc'  # Light yellow for low activity
-        else:
-            return 'background-color: #ccffcc'  # Light green for good activity
-
-    # Apply styling to session columns
-    styled_table = display_table.style.applymap(
-        highlight_activity,
-        subset=['Sessions Last 10 Days', 'Total Sessions Ever']
-    )
-
-    st.dataframe(styled_table, width='stretch', height=600)
-
-    # Export option
-    st.markdown("### Export Data")
-    csv = display_table.to_csv(index=False)
-    st.download_button(
-        label="Download EA Implementation Report",
-        data=csv,
-        file_name=f"ea_implementation_report_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
-        mime="text/csv"
-    )
-
-def display_selected_schools_analysis(df):
-    """Display session analysis for DataQuest schools subset"""
-
-    st.header("DataQuest Schools - Session Analysis")
-
-    # Filter data to only include selected schools using lowercase comparison
-    # Convert both the database program names and our list to lowercase for matching
-    selected_schools_lower = [school.lower() for school in selected_schools_list]
-    filtered_df = df[df['program_name'].str.lower().isin(selected_schools_lower)]
-
-    if filtered_df.empty:
-        st.warning("No data found for the DataQuest schools.")
-        st.info("The DataQuest schools list may not match the program names in the database exactly.")
-        return
-
-    st.info(f"Showing data for {len(selected_schools_list)} DataQuest schools ({len(filtered_df):,} records)")
-
-    # Prepare date columns for all data
-    df_all = filtered_df.copy()
-    df_all['session_date'] = pd.to_datetime(df_all['session_started_at']).dt.date
-
-    # SESSION OVERVIEW METRICS - ALL DATA
-    st.subheader("Session Overview Metrics - DataQuest Schools")
-
-    # Primary School metrics (filtered)
-    st.markdown("**Primary Schools**")
-    df_primary_all = df_all[df_all['school_type'] == 'Primary School']
-    col1, col2, col3, col4, col5 = st.columns(5)
-
-    with col1:
-        primary_ea_activity = df_primary_all.groupby('user_name')['session_date'].nunique()
-        primary_eas_3plus = (primary_ea_activity >= 3).sum()
-        st.metric("School EAs Active 3+ Days", primary_eas_3plus)
-
-    with col2:
-        primary_ea_activity = df_primary_all.groupby('user_name')['session_date'].nunique()
-        primary_eas_15plus = (primary_ea_activity >= 15).sum()
-        st.metric("School EAs Active 15+ Days", primary_eas_15plus)
-
-    with col3:
-        primary_sessions = df_primary_all['session_id'].nunique()
-        primary_eas_active = df_primary_all['user_name'].nunique()
-        primary_avg_sessions = primary_sessions / primary_eas_active if primary_eas_active > 0 else 0
-        st.metric("Avg Sessions per School EA", f"{primary_avg_sessions:.1f}")
-
-    with col4:
-        # Count schools where EAs have been active 3+ days
-        primary_ea_activity = df_primary_all.groupby('user_name')['session_date'].nunique()
-        primary_eas_3plus_users = primary_ea_activity[primary_ea_activity >= 3].index
-        primary_schools_3plus = df_primary_all[df_primary_all['user_name'].isin(primary_eas_3plus_users)]['program_name'].nunique()
-        st.metric("Schools Running 3+ Days", primary_schools_3plus)
-
-    with col5:
-        # Count schools where EAs have been active 15+ days
-        primary_ea_activity = df_primary_all.groupby('user_name')['session_date'].nunique()
-        primary_eas_15plus_users = primary_ea_activity[primary_ea_activity >= 15].index
-        primary_schools_15plus = df_primary_all[df_primary_all['user_name'].isin(primary_eas_15plus_users)]['program_name'].nunique()
-        st.metric("Schools Running 15+ Days", primary_schools_15plus)
-
-    st.divider()
-
-    # HISTOGRAM: DAYS WORKED DISTRIBUTION
-    st.subheader("Distribution of Days Worked by EAs - DataQuest Schools")
-
-    # Calculate days worked for each EA
-    ea_days_worked = df_all.groupby('user_name')['session_date'].nunique().reset_index()
-    ea_days_worked.columns = ['EA_Name', 'Days_Worked']
-
-    # Create histogram with bucket size of 1
-    fig_histogram = px.histogram(
-        ea_days_worked,
-        x='Days_Worked',
-        nbins=int(ea_days_worked['Days_Worked'].max()) if not ea_days_worked.empty else 50,
-        title="Number of EAs by Days Worked - DataQuest Schools",
-        labels={'Days_Worked': 'Days Worked', 'count': 'Number of EAs'},
-        color_discrete_sequence=['#1f77b4']
-    )
-
-    # Update layout for better readability
-    fig_histogram.update_layout(
-        xaxis_title="Days Worked",
-        yaxis_title="Number of EAs",
-        bargap=0.1,
-        showlegend=False
-    )
-
-    st.plotly_chart(fig_histogram, width='stretch')
-
-    # Show summary statistics
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Total EAs", len(ea_days_worked))
-    with col2:
-        st.metric("Avg Days per EA", f"{ea_days_worked['Days_Worked'].mean():.1f}")
-    with col3:
-        st.metric("Median Days per EA", f"{ea_days_worked['Days_Worked'].median():.0f}")
-    with col4:
-        st.metric("Max Days Worked", f"{ea_days_worked['Days_Worked'].max():.0f}")
-
-    st.divider()
-
-    # DATAQUEST SCHOOLS BREAKDOWN TABLE
-    st.subheader("EA Activity by DataQuest School")
-
-    # Create table showing each DataQuest school with EA activity metrics
-    school_activity_data = []
-
-    for school in selected_schools_list:
-        # Find matching school in data (case-insensitive)
-        school_data = df_all[df_all['program_name'].str.lower() == school.lower()]
-
-        if not school_data.empty:
-            # Calculate EAs active 3+ days for this school
-            eas_3plus_activity = school_data.groupby('user_name')['session_date'].nunique()
-            eas_3plus = (eas_3plus_activity >= 3).sum()
-
-            # Calculate EAs active 15+ days for this school
-            eas_15plus = (eas_3plus_activity >= 15).sum()
-
-            # Total sessions for this school
-            total_sessions = school_data['session_id'].nunique()
-
-            # Get the actual school name from the data (proper case)
-            actual_school_name = school_data['program_name'].iloc[0]
-        else:
-            # No data for this school
-            eas_3plus = 0
-            eas_15plus = 0
-            total_sessions = 0
-            actual_school_name = school  # Use the name from our list
-
-        school_activity_data.append({
-            'School Name': actual_school_name,
-            'EAs Active 3+ Days': eas_3plus,
-            'EAs Active 15+ Days': eas_15plus,
-            'Total Sessions': total_sessions
-        })
-
-    # Create DataFrame and display
-    school_activity_df = pd.DataFrame(school_activity_data)
-
-    # Sort by Total Sessions (descending)
-    school_activity_df = school_activity_df.sort_values('Total Sessions', ascending=False)
-
-    # Display the table
-    st.dataframe(school_activity_df, width='stretch', hide_index=True)
-
-    # Add summary info
-    total_schools_with_data = (school_activity_df['Total Sessions'] > 0).sum()
-    schools_with_3plus = (school_activity_df['EAs Active 3+ Days'] > 0).sum()
-    schools_with_15plus = (school_activity_df['EAs Active 15+ Days'] > 0).sum()
-    st.info(f"**Summary**: {total_schools_with_data} of {len(selected_schools_list)} DataQuest schools have session data. {schools_with_3plus} schools have EAs active 3+ days. {schools_with_15plus} schools have EAs active 15+ days.")
-
-    st.divider()
-
-    # SESSIONS BY SCHOOL CHART
-    st.subheader("Total Sessions by DataQuest School")
-
-    if not school_activity_df.empty:
-        # Filter to schools with data
-        schools_with_sessions = school_activity_df[school_activity_df['Total Sessions'] > 0]
-
-        if not schools_with_sessions.empty:
-            fig_school_sessions = px.bar(
-                schools_with_sessions.sort_values('Total Sessions', ascending=True),
-                x='School Name',
-                y='Total Sessions',
-                title="Total Sessions by DataQuest School",
-                color='Total Sessions',
-                color_continuous_scale='Blues'
-            )
-            fig_school_sessions.update_layout(
-                xaxis_tickangle=-45,
-                showlegend=False
-            )
-            st.plotly_chart(fig_school_sessions, width='stretch')
-
-    return filtered_df  # Return for potential use in other sections
 
 def display_children_session_analysis(df):
     """Display session analysis from children's perspective"""
@@ -1475,6 +1057,10 @@ try:
         st.info("Data is automatically refreshed nightly via cron job. If you need immediate data, contact your system administrator.")
         st.stop()
 
+    # Filter out training/example submissions
+    if 'participant_name' in df.columns:
+        df = df[df['participant_name'] != 'Buyi Xaba (example)']
+
 except Exception as e:
     st.error(f"Error loading 2026 session data: {e}")
 
@@ -1498,7 +1084,7 @@ except Exception as e:
 # School type and mentor classification are now handled in the database loading function
 
 # CREATE TABS FOR DIFFERENT VIEWS
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["EA Sessions Analysis", "Children's Sessions", "Group Sessions", "EA Implementation Status", "DataQuest Schools"])
+tab1, tab2, tab3 = st.tabs(["EA Sessions Analysis", "Children's Sessions", "Group Sessions"])
 
 with tab1:
     display_session_analysis(df)
@@ -1508,12 +1094,6 @@ with tab2:
 
 with tab3:
     display_class_session_analysis(df)
-
-with tab4:
-    display_ea_implementation_analysis(df)
-
-with tab5:
-    display_selected_schools_analysis(df)
 
 # RAW DATA EXPORT SECTION
 st.divider()
