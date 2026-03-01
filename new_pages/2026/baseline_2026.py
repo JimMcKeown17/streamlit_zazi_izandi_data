@@ -1,7 +1,7 @@
 """
-2026 Baseline Assessments — NMB and ECD
+2026 Baseline Assessments — Primary Schools (NMB)
 Reads live data from the DB during the baseline collection period.
-Covers surveys 815 (isiXhosa), 816 (Afrikaans), 817 (English), 805 (ECD).
+Covers surveys 815 (isiXhosa), 816 (Afrikaans), 817 (English).
 """
 
 import streamlit as st
@@ -10,13 +10,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 from database_utils import get_database_engine
 
-st.set_page_config(page_title="2026 Baseline Assessments", layout="wide")
+st.set_page_config(page_title="2026 Baseline — Primary Schools", layout="wide")
 
 # ── Data Loading ──────────────────────────────────────────────────────────────
 
 @st.cache_data(ttl=3600)
-def load_assessments_2026():
-    """Load 2026 assessment data from database."""
+def load_nmb_assessments():
+    """Load NMB (primary school) assessment data from database."""
     try:
         engine = get_database_engine()
         query = """
@@ -34,6 +34,7 @@ def load_assessments_2026():
                 assessment_complete, stop_rule_reached, timer_elapsed,
                 assessment_type, data_refresh_timestamp
             FROM assessments_2026
+            WHERE language IN ('isiXhosa', 'English', 'Afrikaans')
             ORDER BY response_date DESC
         """
         df = pd.read_sql(query, engine)
@@ -41,7 +42,7 @@ def load_assessments_2026():
         df['data_refresh_timestamp'] = pd.to_datetime(df['data_refresh_timestamp'], errors='coerce')
         return df
     except Exception as e:
-        st.error(f"Error loading 2026 assessment data: {str(e)}")
+        st.error(f"Error loading assessment data: {str(e)}")
         return pd.DataFrame()
 
 
@@ -67,12 +68,11 @@ def load_letter_cells():
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-GRADE_ORDER  = ['PreR', 'Grade R', 'Grade 1', 'Grade 2']
+GRADE_ORDER  = ['Grade R', 'Grade 1', 'Grade 2']
 LANG_COLORS  = {
     'isiXhosa':  '#1f77b4',
     'English':   '#ff7f0e',
     'Afrikaans': '#2ca02c',
-    'ECD':       '#9467bd',
 }
 
 
@@ -80,33 +80,29 @@ def fmt_int(n):
     return f"{int(n):,}" if pd.notna(n) else "—"
 
 
+# ── Charts ───────────────────────────────────────────────────────────────────
+
 def render_summary_metrics(df):
-    total   = len(df)
-    xhosa   = len(df[df['language'] == 'isiXhosa'])
-    english = len(df[df['language'] == 'English'])
+    total     = len(df)
+    xhosa     = len(df[df['language'] == 'isiXhosa'])
+    english   = len(df[df['language'] == 'English'])
     afrikaans = len(df[df['language'] == 'Afrikaans'])
-    ecd     = len(df[df['language'] == 'ECD'])
-    schools = df['program_name'].nunique()
+    schools   = df['program_name'].nunique()
     collectors = df['collected_by'].nunique()
 
-    cols = st.columns(7)
+    cols = st.columns(6)
     cols[0].metric("Total Assessments", fmt_int(total))
     cols[1].metric("isiXhosa", fmt_int(xhosa))
     cols[2].metric("English", fmt_int(english))
     cols[3].metric("Afrikaans", fmt_int(afrikaans))
-    cols[4].metric("ECD", fmt_int(ecd))
-    cols[5].metric("Schools", fmt_int(schools))
-    cols[6].metric("Assessors", fmt_int(collectors))
+    cols[4].metric("Schools", fmt_int(schools))
+    cols[5].metric("Assessors", fmt_int(collectors))
 
 
-# ── NMB Charts ────────────────────────────────────────────────────────────────
-
-def render_nmb_charts(df_nmb):
-    if df_nmb.empty:
-        st.info("No NMB assessment data available yet.")
+def render_nmb_charts(df):
+    if df.empty:
+        st.info("No assessment data available yet.")
         return
-
-    st.subheader("NMB Baseline — Letters, Non-words, Words")
 
     # ── 1. EGRA scores by grade ───────────────────────────────────────────────
     st.markdown("#### Average EGRA Scores by Grade")
@@ -120,7 +116,7 @@ def render_nmb_charts(df_nmb):
 
     grade_data = []
     for grade in GRADE_ORDER:
-        gdf = df_nmb[df_nmb['grade'] == grade]
+        gdf = df[df['grade'] == grade]
         if gdf.empty:
             continue
         for label, col in score_cols.items():
@@ -140,9 +136,9 @@ def render_nmb_charts(df_nmb):
 
     # ── 2. Scores by language and grade ──────────────────────────────────────
     st.markdown("#### Letters Correct by Language & Grade")
-    if 'letters_total_correct' in df_nmb.columns:
+    if 'letters_total_correct' in df.columns:
         lang_grade = (
-            df_nmb.groupby(['language', 'grade'])['letters_total_correct']
+            df.groupby(['language', 'grade'])['letters_total_correct']
             .agg(agg)
             .reset_index()
         )
@@ -158,7 +154,7 @@ def render_nmb_charts(df_nmb):
 
     # ── 3. Assessments per collector ─────────────────────────────────────────
     st.markdown("#### Assessments per Data Collector")
-    collector_counts = df_nmb['collected_by'].value_counts().reset_index()
+    collector_counts = df['collected_by'].value_counts().reset_index()
     collector_counts.columns = ['Collector', 'Assessments']
     fig3 = px.bar(
         collector_counts.head(30), x='Assessments', y='Collector',
@@ -170,9 +166,9 @@ def render_nmb_charts(df_nmb):
 
     # ── 4. Distribution histogram ─────────────────────────────────────────────
     st.markdown("#### Distribution of Letters Correct")
-    if 'letters_total_correct' in df_nmb.columns:
+    if 'letters_total_correct' in df.columns:
         fig4 = px.histogram(
-            df_nmb.dropna(subset=['letters_total_correct']),
+            df.dropna(subset=['letters_total_correct']),
             x='letters_total_correct', color='grade', nbins=30,
             title="Distribution of Letters Correct by Grade",
             labels={'letters_total_correct': 'Letters Correct'},
@@ -183,7 +179,7 @@ def render_nmb_charts(df_nmb):
     # ── 5. School breakdown ───────────────────────────────────────────────────
     with st.expander("School-Level Breakdown"):
         school_summary = (
-            df_nmb.groupby('program_name')
+            df.groupby('program_name')
             .agg(
                 Count=('response_id', 'count'),
                 Letters_Mean=('letters_total_correct', 'mean'),
@@ -204,99 +200,158 @@ def render_nmb_charts(df_nmb):
             'collected_by', 'first_name', 'last_name',
             'letters_total_correct', 'nonwords_total_correct', 'words_total_correct',
         ]
-        cols_present = [c for c in display_cols if c in df_nmb.columns]
-        st.dataframe(df_nmb[cols_present], use_container_width=True)
-        csv = df_nmb.to_csv(index=False)
+        cols_present = [c for c in display_cols if c in df.columns]
+        st.dataframe(df[cols_present], use_container_width=True)
+        csv = df.to_csv(index=False)
         st.download_button(
-            "Download NMB Data CSV",
+            "Download Primary School Data CSV",
             data=csv,
-            file_name="2026_nmb_baseline.csv",
+            file_name="2026_primary_school_baseline.csv",
             mime="text/csv",
         )
 
 
-# ── ECD Charts ────────────────────────────────────────────────────────────────
+# ── Benchmark Achievement & Zero Letter Learners ─────────────────────────────
 
-def render_ecd_charts(df_ecd):
-    if df_ecd.empty:
-        st.info("No ECD baseline data available yet.")
+def render_benchmark_sections(df_baseline, df_endline=None):
+    """
+    Benchmark achievement pie charts and zero-letter-learner pie charts,
+    for Grade R and Grade 1.  Baseline on the left, endline on the right.
+    When endline data is not yet available, the right column shows a placeholder.
+    """
+    if df_baseline.empty:
         return
 
-    st.subheader("ECD Baseline — Letters")
+    st.divider()
 
-    # Summary metrics
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Total ECD Assessments", fmt_int(len(df_ecd)))
-    c2.metric("Schools / Centers", fmt_int(df_ecd['program_name'].nunique()))
-    c3.metric("Avg Letters Correct",
-              round(df_ecd['letters_total_correct'].mean(), 1)
-              if 'letters_total_correct' in df_ecd.columns else "—")
-    c4.metric("Assessors", fmt_int(df_ecd['collected_by'].nunique()))
+    # ── Grade 1: Benchmark Achievement ────────────────────────────────────
+    st.subheader("Grade 1: Baseline vs Endline Benchmark Achievement")
 
-    # ── Letters by grade ──────────────────────────────────────────────────────
-    st.markdown("#### Letters Correct by Grade")
-    if 'letters_total_correct' in df_ecd.columns:
-        grade_agg = (
-            df_ecd.groupby('grade')['letters_total_correct']
-            .agg(['mean', 'median', 'count'])
-            .reset_index()
+    col_slider_g1 = st.columns([3, 1])
+    with col_slider_g1[1]:
+        g1_threshold = st.slider(
+            "Grade 1 Benchmark (LPM)", min_value=20, max_value=40,
+            value=40, step=5, key="g1_benchmark_slider",
         )
-        grade_agg.columns = ['Grade', 'Mean', 'Median', 'Count']
-        grade_agg[['Mean', 'Median']] = grade_agg[['Mean', 'Median']].round(1)
-        fig = px.bar(
-            grade_agg, x='Grade', y='Mean', text='Mean',
-            title="Mean Letters Correct by Grade (ECD)",
-        )
-        st.plotly_chart(fig, use_container_width=True)
 
-    # ── Distribution ──────────────────────────────────────────────────────────
-    st.markdown("#### Distribution of Letters Correct (ECD)")
-    if 'letters_total_correct' in df_ecd.columns:
-        fig2 = px.histogram(
-            df_ecd.dropna(subset=['letters_total_correct']),
-            x='letters_total_correct', nbins=30,
-            title="Distribution of ECD Letters Correct",
-            labels={'letters_total_correct': 'Letters Correct'},
-            color_discrete_sequence=[LANG_COLORS['ECD']],
-        )
-        st.plotly_chart(fig2, use_container_width=True)
+    baseline_g1 = df_baseline[df_baseline['grade'] == 'Grade 1']
+    endline_g1 = df_endline[df_endline['grade'] == 'Grade 1'] if df_endline is not None and not df_endline.empty else pd.DataFrame()
 
-    # ── Center breakdown ──────────────────────────────────────────────────────
-    with st.expander("ECD Center Breakdown"):
-        center_summary = (
-            df_ecd.groupby('program_name')
-            .agg(
-                Count=('response_id', 'count'),
-                Letters_Mean=('letters_total_correct', 'mean'),
-            )
-            .reset_index()
-            .sort_values('Count', ascending=False)
-        )
-        center_summary['Letters_Mean'] = center_summary['Letters_Mean'].round(1)
-        center_summary.columns = ['Center / School', 'Count', 'Avg Letters']
-        st.dataframe(center_summary, use_container_width=True)
+    col_l, col_r = st.columns(2)
+    with col_l:
+        _benchmark_pie(baseline_g1, g1_threshold, 'Grade 1 Baseline (Feb 2026)',
+                        ['#00cc44', '#ff4444'])
+    with col_r:
+        if not endline_g1.empty:
+            _benchmark_pie(endline_g1, g1_threshold, 'Grade 1 Endline',
+                            ['#00cc44', '#ff4444'])
+        else:
+            st.info("Endline data not yet available")
 
-    with st.expander("Raw ECD Data"):
-        display_cols = [
-            'response_date', 'grade', 'gender', 'program_name', 'class_name',
-            'collected_by', 'first_name', 'last_name', 'letters_total_correct',
-        ]
-        cols_present = [c for c in display_cols if c in df_ecd.columns]
-        st.dataframe(df_ecd[cols_present], use_container_width=True)
-        csv = df_ecd.to_csv(index=False)
-        st.download_button(
-            "Download ECD Data CSV",
-            data=csv,
-            file_name="2026_ecd_baseline.csv",
-            mime="text/csv",
+    # ── Grade R: Benchmark Achievement ────────────────────────────────────
+    st.subheader("Grade R: Baseline vs Endline Benchmark Achievement")
+
+    col_slider_gr = st.columns([3, 1])
+    with col_slider_gr[1]:
+        gr_threshold = st.slider(
+            "Grade R Benchmark (LPM)", min_value=0, max_value=40,
+            value=10, step=5, key="gr_benchmark_slider",
         )
+
+    baseline_gr = df_baseline[df_baseline['grade'] == 'Grade R']
+    endline_gr = df_endline[df_endline['grade'] == 'Grade R'] if df_endline is not None and not df_endline.empty else pd.DataFrame()
+
+    col_l, col_r = st.columns(2)
+    with col_l:
+        _benchmark_pie(baseline_gr, gr_threshold, 'Grade R Baseline (Feb 2026)',
+                        ['#22c55e', '#f87171'])
+    with col_r:
+        if not endline_gr.empty:
+            _benchmark_pie(endline_gr, gr_threshold, 'Grade R Endline',
+                            ['#22c55e', '#f87171'])
+        else:
+            st.info("Endline data not yet available")
+
+    # ── Grade R: Zero Letter Learners ─────────────────────────────────────
+    st.subheader("Grade R: Zero Letter Learners (Baseline vs Endline)")
+
+    col_l, col_r = st.columns(2)
+    with col_l:
+        _zero_letter_pie(baseline_gr, 'Grade R Baseline (Feb 2026)')
+    with col_r:
+        if not endline_gr.empty:
+            _zero_letter_pie(endline_gr, 'Grade R Endline')
+        else:
+            st.info("Endline data not yet available")
+
+    # ── Grade 1: Zero Letter Learners ─────────────────────────────────────
+    st.subheader("Grade 1: Zero Letter Learners (Baseline vs Endline)")
+
+    col_l, col_r = st.columns(2)
+    with col_l:
+        _zero_letter_pie(baseline_g1, 'Grade 1 Baseline (Feb 2026)')
+    with col_r:
+        if not endline_g1.empty:
+            _zero_letter_pie(endline_g1, 'Grade 1 Endline')
+        else:
+            st.info("Endline data not yet available")
+
+
+def _benchmark_pie(df_grade, threshold, title, colors):
+    """Render a pie chart showing above/at-or-below a benchmark threshold."""
+    if df_grade.empty or 'letters_total_correct' not in df_grade.columns:
+        st.warning(f"No data for {title}")
+        return
+
+    above = len(df_grade[df_grade['letters_total_correct'] > threshold])
+    below = len(df_grade) - above
+
+    fig = go.Figure(data=[go.Pie(
+        labels=[f'Above {threshold} LPM', f'At or Below {threshold} LPM'],
+        values=[above, below],
+        marker_colors=colors,
+        textinfo='label+percent',
+        textposition='auto',
+    )])
+    fig.update_layout(
+        title=f'{title}<br>Total: {len(df_grade):,} children',
+        showlegend=False,
+        height=400,
+        margin=dict(t=80, b=20, l=20, r=20),
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def _zero_letter_pie(df_grade, title):
+    """Render a pie chart showing zero-letter vs 1+ letter learners."""
+    if df_grade.empty or 'letters_total_correct' not in df_grade.columns:
+        st.warning(f"No data for {title}")
+        return
+
+    zero = len(df_grade[df_grade['letters_total_correct'] == 0])
+    nonzero = len(df_grade) - zero
+
+    fig = go.Figure(data=[go.Pie(
+        labels=['Zero Letter Learners', '1+ Letters'],
+        values=[zero, nonzero],
+        marker_colors=['#ef4444', '#10b981'],
+        textinfo='label+percent',
+        textposition='auto',
+    )])
+    fig.update_layout(
+        title=f'{title}<br>Total: {len(df_grade):,} children',
+        showlegend=False,
+        height=400,
+        margin=dict(t=80, b=20, l=20, r=20),
+    )
+    st.plotly_chart(fig, use_container_width=True)
 
 
 # ── Letter-Level Analysis ─────────────────────────────────────────────────────
 
-def render_letter_analysis(df_nmb):
+def render_letter_analysis(df):
     """Show % correct for each letter position in the EGRA grid, by grade."""
-    if df_nmb.empty:
+    if df.empty:
         return
 
     st.divider()
@@ -313,8 +368,8 @@ def render_letter_analysis(df_nmb):
         st.info("No letter cell data available.")
         return
 
-    # Filter cells to match current df_nmb selection (language, grade filters)
-    filtered_ids = set(df_nmb['response_id'].tolist())
+    # Filter cells to match current selection (language, grade filters)
+    filtered_ids = set(df['response_id'].tolist())
     cells = all_cells[all_cells['response_id'].isin(filtered_ids)].copy()
 
     if cells.empty:
@@ -357,7 +412,6 @@ def render_letter_analysis(df_nmb):
     grades_present = [g for g in GRADE_ORDER if g in by_grade['grade'].values]
 
     if grades_present:
-        # Build a matrix: rows = grades, columns = letter positions
         pivot = by_grade.pivot_table(
             index='grade', columns='cell_index', values='pct_correct'
         ).reindex(grades_present)
@@ -411,7 +465,6 @@ def render_letter_analysis(df_nmb):
             labels={'pct_correct': '% Correct', 'cell_index': 'Letter Position', 'grade': 'Grade'},
             category_orders={'grade': GRADE_ORDER},
         )
-        # Add letter labels on x-axis
         fig_line.update_layout(
             xaxis=dict(
                 tickmode='array',
@@ -437,8 +490,7 @@ def render_collector_outliers(df):
     st.header("Potential Outlier Assessors")
     st.caption(
         "Top 10 and bottom 10 collectors by mean letters correct, per grade. "
-        "Collectors with fewer than 5 assessments are excluded. "
-        "Outliers may indicate data quality issues worth investigating."
+        "Collectors with fewer than 5 assessments are excluded."
     )
 
     MIN_ASSESSMENTS = 5
@@ -492,10 +544,10 @@ def render_collector_outliers(df):
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
-    st.title("2026 Baseline Assessments")
-    st.caption("Live data — synced nightly from TeamPact. Surveys 815, 816, 817 (NMB) and 805 (ECD).")
+    st.title("2026 Baseline — Primary Schools")
+    st.caption("Live data — synced nightly from TeamPact. Surveys 815 (isiXhosa), 816 (Afrikaans), 817 (English).")
 
-    df = load_assessments_2026()
+    df = load_nmb_assessments()
 
     if df.empty:
         st.warning("No assessment data found. Run `sync_assessments_2026` to populate the database.")
@@ -510,57 +562,26 @@ def main():
     render_summary_metrics(df)
     st.divider()
 
-    # Split NMB vs ECD
-    df_nmb = df[df['language'].isin(['isiXhosa', 'English', 'Afrikaans'])].copy()
-    df_ecd = df[(df['language'] == 'ECD') & (df['grade'] != 'null')].copy()
-
     # Sidebar filters
     with st.sidebar:
         st.header("Filters")
 
-        # Language filter (NMB tab)
-        lang_options = ['All'] + sorted(df_nmb['language'].dropna().unique().tolist())
-        selected_lang = st.selectbox("Language (NMB)", lang_options)
+        lang_options = ['All'] + sorted(df['language'].dropna().unique().tolist())
+        selected_lang = st.selectbox("Language", lang_options)
 
-        # Grade filter — include all grades present in the data
         grade_options = ['All'] + [g for g in GRADE_ORDER if g in df['grade'].values]
-        # Also include any grades not in GRADE_ORDER (e.g. 'null')
-        extra = sorted(set(df['grade'].dropna().unique()) - set(GRADE_ORDER))
-        grade_options += extra
         selected_grade = st.selectbox("Grade", grade_options)
-
-        # Assessment type filter
-        types = df['assessment_type'].dropna().unique().tolist()
-        if len(types) > 1:
-            selected_type = st.selectbox("Assessment Type", ['All'] + sorted(types))
-        else:
-            selected_type = 'All'
 
     # Apply filters
     if selected_lang != 'All':
-        df_nmb = df_nmb[df_nmb['language'] == selected_lang]
+        df = df[df['language'] == selected_lang]
     if selected_grade != 'All':
-        df_nmb = df_nmb[df_nmb['grade'] == selected_grade]
-        df_ecd = df_ecd[df_ecd['grade'] == selected_grade]
-    if selected_type != 'All':
-        df_nmb = df_nmb[df_nmb['assessment_type'] == selected_type]
-        df_ecd = df_ecd[df_ecd['assessment_type'] == selected_type]
+        df = df[df['grade'] == selected_grade]
 
-    # Tabs
-    tab_nmb, tab_ecd = st.tabs(["Primary Schools", "ECDCs"])
-
-    with tab_nmb:
-        render_nmb_charts(df_nmb)
-
-    with tab_ecd:
-        render_ecd_charts(df_ecd)
-
-    # Letter-level analysis (respects current filters)
-    render_letter_analysis(df_nmb)
-
-    # Outlier collector analysis (uses unfiltered df_nmb so all grades visible)
-    df_nmb_all = df[df['language'].isin(['isiXhosa', 'English', 'Afrikaans'])].copy()
-    render_collector_outliers(df_nmb_all)
+    render_nmb_charts(df)
+    render_benchmark_sections(df_baseline=df, df_endline=None)
+    render_letter_analysis(df)
+    render_collector_outliers(df)
 
 
 main()

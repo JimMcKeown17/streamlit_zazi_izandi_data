@@ -66,7 +66,8 @@ mentor_visits_page_25 = st.Page("new_pages/2025/mentor_visits_2025.py", icon="�
 
 # 2026 Pages
 sessions_page_26 = st.Page("new_pages/2026/sessions_2026.py", icon="📱", title="2026 Sessions", url_path="sessions_26")
-baseline_page_26 = st.Page("new_pages/2026/baseline_2026.py", icon="📖", title="2026 Baseline Assessments", url_path="baseline_26")
+baseline_page_26 = st.Page("new_pages/2026/baseline_2026.py", icon="📖", title="2026 Baseline — Primary Schools", url_path="baseline_26")
+ecd_baseline_page_26 = st.Page("new_pages/2026/ecd_baseline_2026.py", icon="🏫", title="2026 Baseline — ECD", url_path="ecd_baseline_26")
 
 # 2026 Project Management Pages
 letter_progress_26 = st.Page("new_pages/2026/letter_progress_2026.py", icon="📚", title="Letter Progress 2026", url_path="letter_progress_26")
@@ -109,7 +110,7 @@ pages_research_internal = [ai_assistant_page, year_comparisons_page, data_source
 
 pages_2023 = [results_page_23]
 
-pages_2026_internal = [sessions_page_26, baseline_page_26]
+pages_2026_internal = [sessions_page_26, baseline_page_26, ecd_baseline_page_26]
 
 pages_project_management = []
 pages_project_management_internal = [
