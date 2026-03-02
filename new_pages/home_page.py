@@ -21,14 +21,14 @@ def display_home():
     st.image(logo_path, width=250)
 
     # Summary Stats
-    st.header('2024 SUMMARY STATS')
+    st.subheader('Summary Stats')
     c1, c2, c3 = st.columns(3)
     with c1:
-        st.metric('Community\n Youth Jobs:', '82')
+        st.metric("School's Reached:", '250+')
     with c2:
-        st.metric('Children on\n Programme:', '3490')
+        st.metric('Children Taught:', '25,000+')
     with c3:
-        st.metric('Schools on\n Programme:', '16')
+        st.metric('Youth Jobs:', '500+')
     st.divider()
 
     # Percentage of Grade 1s On Grade Level
