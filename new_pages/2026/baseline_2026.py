@@ -240,11 +240,11 @@ def render_benchmark_sections(df_baseline, df_endline=None):
     col_l, col_r = st.columns(2)
     with col_l:
         _benchmark_pie(baseline_g1, g1_threshold, 'Grade 1 Baseline (Feb 2026)',
-                        ['#00cc44', '#ff4444'])
+                        ['#2ca02c', '#d62728'])
     with col_r:
         if not endline_g1.empty:
             _benchmark_pie(endline_g1, g1_threshold, 'Grade 1 Endline',
-                            ['#00cc44', '#ff4444'])
+                            ['#2ca02c', '#d62728'])
         else:
             st.info("Endline data not yet available")
 
@@ -264,11 +264,11 @@ def render_benchmark_sections(df_baseline, df_endline=None):
     col_l, col_r = st.columns(2)
     with col_l:
         _benchmark_pie(baseline_gr, gr_threshold, 'Grade R Baseline (Feb 2026)',
-                        ['#22c55e', '#f87171'])
+                        ['#2ca02c', '#d62728'])
     with col_r:
         if not endline_gr.empty:
             _benchmark_pie(endline_gr, gr_threshold, 'Grade R Endline',
-                            ['#22c55e', '#f87171'])
+                            ['#2ca02c', '#d62728'])
         else:
             st.info("Endline data not yet available")
 
@@ -334,7 +334,7 @@ def _zero_letter_pie(df_grade, title):
     fig = go.Figure(data=[go.Pie(
         labels=['Zero Letter Learners', '1+ Letters'],
         values=[zero, nonzero],
-        marker_colors=['#ef4444', '#10b981'],
+        marker_colors=['#d62728', '#2ca02c'],
         textinfo='label+percent',
         textposition='auto',
     )])
