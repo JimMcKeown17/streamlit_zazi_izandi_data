@@ -486,7 +486,7 @@ def load_sessions_2026():
     from database_utils import get_database_engine, get_school_type, get_mentor
     engine = get_database_engine()
     df = pd.read_sql(
-        "SELECT * FROM teampact_sessions_complete WHERE EXTRACT(year FROM session_started_at) = 2026 ORDER BY session_started_at DESC",
+        "SELECT * FROM sessions_2026 ORDER BY session_started_at DESC",
         engine
     )
     df['school_type'] = df['program_name'].apply(get_school_type)

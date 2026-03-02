@@ -244,40 +244,41 @@ def display_session_analysis(df):
     df_all = df.copy()
     df_all['session_date'] = pd.to_datetime(df_all['session_started_at']).dt.date
 
-    # UPDATED METRICS - ALL DATA
-    st.subheader("Session Overview Metrics - All Data")
+    # SESSION OVERVIEW METRICS
+    st.subheader("Session Overview Metrics")
+
+    # Calculate recent activity window (past 10 weekdays)
+    all_dates_sorted = sorted(df_all['session_date'].unique(), reverse=True)
+    weekday_dates = [d for d in all_dates_sorted if pd.Timestamp(d).weekday() < 5]
+    past_10_weekdays = weekday_dates[:10]
+    df_recent = df_all[df_all['session_date'].isin(past_10_weekdays)]
 
     # Primary School metrics
     st.markdown("**Primary Schools**")
     df_primary_all = df_all[df_all['school_type'] == 'Primary School']
+    df_primary_recent = df_recent[df_recent['school_type'] == 'Primary School']
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
-        primary_ea_activity = df_primary_all.groupby('user_name')['session_date'].nunique()
-        primary_eas_3plus = (primary_ea_activity >= 3).sum()
-        st.metric("School EAs Active 3+ Days", primary_eas_3plus)
+        primary_sessions = df_primary_all['session_id'].nunique()
+        st.metric("Total Sessions", f"{primary_sessions:,}")
 
     with col2:
-        primary_ea_activity = df_primary_all.groupby('user_name')['session_date'].nunique()
-        primary_eas_15plus = (primary_ea_activity >= 15).sum()
-        st.metric("School EAs Active 15+ Days", primary_eas_15plus)
+        active_schools = df_primary_recent['program_name'].nunique()
+        st.metric("Schools with Active Sessions", active_schools)
 
     with col3:
-        primary_sessions = df_primary_all['session_id'].nunique()
         primary_eas_active = df_primary_all['user_name'].nunique()
         primary_avg_sessions = primary_sessions / primary_eas_active if primary_eas_active > 0 else 0
         st.metric("Avg Sessions per School EA", f"{primary_avg_sessions:.1f}")
 
     with col4:
-        # Count schools where EAs have been active 3+ days
         primary_ea_activity = df_primary_all.groupby('user_name')['session_date'].nunique()
         primary_eas_3plus_users = primary_ea_activity[primary_ea_activity >= 3].index
         primary_schools_3plus = df_primary_all[df_primary_all['user_name'].isin(primary_eas_3plus_users)]['program_name'].nunique()
         st.metric("Schools Running 3+ Days", primary_schools_3plus)
 
     with col5:
-        # Count schools where EAs have been active 15+ days
-        primary_ea_activity = df_primary_all.groupby('user_name')['session_date'].nunique()
         primary_eas_15plus_users = primary_ea_activity[primary_ea_activity >= 15].index
         primary_schools_15plus = df_primary_all[df_primary_all['user_name'].isin(primary_eas_15plus_users)]['program_name'].nunique()
         st.metric("Schools Running 15+ Days", primary_schools_15plus)
@@ -285,34 +286,29 @@ def display_session_analysis(df):
     # ECD metrics
     st.markdown("**Early Childhood Development Centers**")
     df_ecd_all = df_all[df_all['school_type'] == 'ECD']
+    df_ecd_recent = df_recent[df_recent['school_type'] == 'ECD']
     col1, col2, col3, col4, col5 = st.columns(5)
 
     with col1:
-        ecd_ea_activity = df_ecd_all.groupby('user_name')['session_date'].nunique()
-        ecd_eas_3plus = (ecd_ea_activity >= 3).sum()
-        st.metric("ECD EAs Active 3+ Days", ecd_eas_3plus)
+        ecd_sessions = df_ecd_all['session_id'].nunique()
+        st.metric("Total Sessions", f"{ecd_sessions:,}")
 
     with col2:
-        ecd_ea_activity = df_ecd_all.groupby('user_name')['session_date'].nunique()
-        ecd_eas_15plus = (ecd_ea_activity >= 15).sum()
-        st.metric("ECD EAs Active 15+ Days", ecd_eas_15plus)
+        active_ecds = df_ecd_recent['program_name'].nunique()
+        st.metric("ECDs with Active Sessions", active_ecds)
 
     with col3:
-        ecd_sessions = df_ecd_all['session_id'].nunique()
         ecd_eas_active = df_ecd_all['user_name'].nunique()
         ecd_avg_sessions = ecd_sessions / ecd_eas_active if ecd_eas_active > 0 else 0
         st.metric("Avg Sessions per ECD EA", f"{ecd_avg_sessions:.1f}")
 
     with col4:
-        # Count ECDs where EAs have been active 3+ days
         ecd_ea_activity = df_ecd_all.groupby('user_name')['session_date'].nunique()
         ecd_eas_3plus_users = ecd_ea_activity[ecd_ea_activity >= 3].index
         ecd_schools_3plus = df_ecd_all[df_ecd_all['user_name'].isin(ecd_eas_3plus_users)]['program_name'].nunique()
         st.metric("ECDs Running 3+ Days", ecd_schools_3plus)
 
     with col5:
-        # Count ECDs where EAs have been active 15+ days
-        ecd_ea_activity = df_ecd_all.groupby('user_name')['session_date'].nunique()
         ecd_eas_15plus_users = ecd_ea_activity[ecd_ea_activity >= 15].index
         ecd_schools_15plus = df_ecd_all[df_ecd_all['user_name'].isin(ecd_eas_15plus_users)]['program_name'].nunique()
         st.metric("ECDs Running 15+ Days", ecd_schools_15plus)
