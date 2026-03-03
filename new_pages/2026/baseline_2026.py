@@ -550,14 +550,7 @@ def main():
     df = load_nmb_assessments()
 
     if df.empty:
-        # Debug: try loading without cache to surface actual error
-        st.warning("No assessment data found. Attempting uncached load for diagnostics...")
-        try:
-            engine = get_database_engine()
-            test_df = pd.read_sql("SELECT COUNT(*) as cnt FROM assessments_2026", engine)
-            st.info(f"Direct DB query returned: {test_df['cnt'].iloc[0]} total rows in assessments_2026")
-        except Exception as db_err:
-            st.error(f"DB connection error: {db_err}")
+        st.warning("No assessment data found. Run `sync_assessments_2026` to populate the database.")
         st.stop()
 
     # Last refresh info

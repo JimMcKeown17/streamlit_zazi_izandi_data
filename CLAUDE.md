@@ -22,6 +22,8 @@ All project documentation lives in `docs/`:
 
 **Always check `docs/` first** when investigating data sources, API mappings, or database schema questions.
 
+If major changes are made, especially to data sources, update the docs.
+
 ## Commands
 
 ```bash
@@ -49,37 +51,13 @@ Pages are organized by year and purpose:
 - `ai_assistant.py` — "Zazi Bot" using OpenAI API
 - `home_page.py`, `table_of_contents.py` — Navigation pages
 
-### Data Layer (4-phase evolution)
-1. **Static files** (2023-2024): CSV/Excel in `data/`, loaded via `data_loader.py`. Parquet optimized copies in `data/parquet/`.
-2. **API integration** (mid-2025): TeamPact API via `data_utility_functions/teampact_apis.py` and `api/`
-3. **Database** (Oct 2025+): PostgreSQL on Render, updated nightly via cron job (2025 tables)
-4. **Database + two-step API sync** (2026): Django management commands fetch from TeamPact API nightly, resolve group_ids for class/school mapping, store in PostgreSQL
-
-Key data modules:
+### Key Data Modules
 - `data_loader.py` — Primary data loading functions (Excel, CSV, Parquet, database)
 - `database_utils.py` — PostgreSQL connection management (`get_database_engine()`)
 - `process_teampact_data.py` — TeamPact data transformation
 - `grouping_logic.py` — Letter progress calculation logic
 
-### Database Tables (PostgreSQL on Render)
-
-**2026 tables (current):**
-- `assessments_2026` — Baseline assessment data (surveys 815/816/817/805). Grade derived from class_name via group_id lookup.
-- `assessment_cells_2026` — Individual cell-level EGRA results per assessment
-- `sessions_2026` — EA teaching session data (nightly sync)
-- `mentor_visits_2026` — Mentor observation visits (survey 824)
-
-**2025 tables:**
-- `teampact_sessions_complete` — Production session data (nightly updates). Columns: letters_taught, num_letters_taught, session_started_at, user_name, program_name, class_name, session_text
-- `teampact_assessment_endline_2025` — Cohort 2 endline assessments with QA flags
-
-**Legacy:**
-- `api_tasession` — Legacy TA session tracking
-- `teampact_nmb_sessions` — Superseded by teampact_sessions_complete
-
-### AI/Agent Integration
-- `zazi_agents/` — Experimental AI agents (literacy coach, report creator)
-- OpenAI API for the Zazi Bot assistant page
+For database tables, data flow architecture, and environment variables, see `docs/DATA_SOURCES_DOCUMENTATION.md`.
 
 ## Key Patterns
 
@@ -95,8 +73,3 @@ The EA program follows this fixed order (used in `grouping_logic.py` and progres
 ['a', 'e', 'i', 'o', 'u', 'b', 'l', 'm', 'k', 'p', 's', 'h', 'z', 'n', 'd', 'y', 'f', 'w', 'v', 'x', 'g', 't', 'q', 'r', 'c', 'j']
 ```
 
-### Environment Variables (`.env`)
-- `OPENAI_API_KEY` — AI assistant
-- `TEAMPACT_API_TOKEN` — TeamPact API
-- `SENDGRID_API_KEY` — Email
-- `RENDER_DATABASE_URL` / `DATABASE_URL` / `EXTERNAL_DATABASE_URL` — PostgreSQL
