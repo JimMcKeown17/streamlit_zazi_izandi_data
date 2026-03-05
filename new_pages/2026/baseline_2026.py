@@ -9,6 +9,12 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from database_utils import get_database_engine
+from grouping_logic_2026 import (
+    BLENDING_THRESHOLD,
+    MIN_BLENDING_COUNT,
+    assign_groups_2026,
+    build_group_size_summary,
+)
 
 st.set_page_config(page_title="2026 Baseline — Primary Schools", layout="wide")
 
@@ -64,6 +70,11 @@ def load_letter_cells():
     except Exception as e:
         st.error(f"Error loading cell data: {str(e)}")
         return pd.DataFrame()
+
+
+def load_group_assignments_2026(df):
+    """Build 2026 class groups using latest learner responses only."""
+    return assign_groups_2026(df)
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -541,6 +552,146 @@ def render_collector_outliers(df):
             st.plotly_chart(fig_bot, use_container_width=True)
 
 
+def render_grouping_tab(df_all_rows):
+    st.header("Grouping QA (2026)")
+    st.caption(
+        f"Blending groups are created only when more than 4 learners in a class score above "
+        f"{BLENDING_THRESHOLD} letters correct (minimum blending count: {MIN_BLENDING_COUNT}). "
+        "Separate blending groups are only created when the remaining letters track can stay at 5+ learners. "
+        "Grouping uses each learner's latest baseline response and cohorts are defined by class + collector."
+    )
+
+    try:
+        grouped_all = load_group_assignments_2026(df_all_rows)
+    except Exception as error_message:
+        st.error(f"Error creating groups: {str(error_message)}")
+        return
+
+    if grouped_all.empty:
+        st.info("No group assignments available for the current dataset.")
+        return
+
+    school_options = ["All"] + sorted(grouped_all["program_name"].dropna().unique().tolist())
+    selected_school = st.selectbox(
+        "School (for QA display)",
+        school_options,
+        key="grouping_school_display_filter",
+    )
+
+    if selected_school == "All":
+        grouped_display = grouped_all.copy()
+    else:
+        grouped_display = grouped_all[grouped_all["program_name"] == selected_school].copy()
+
+    group_size_summary = build_group_size_summary(grouped_display)
+    out_of_tolerance_group_count = int(
+        (group_size_summary["group_size_status"] == "Outside range (not 5-9)").sum()
+    )
+    below_minimum_group_count = int((group_size_summary["group_size"] < 5).sum())
+    above_maximum_group_count = int((group_size_summary["group_size"] > 9).sum())
+    below_minimum_learner_count = int(
+        group_size_summary[group_size_summary["group_size"] < 5]["group_size"].sum()
+    )
+    allowed_edge_group_count = int(
+        (group_size_summary["group_size_status"] == "Allowed (5 or 9)").sum()
+    )
+    blending_learner_count = int((grouped_display["group_type"] == "Blending").sum())
+
+    metric_columns = st.columns(5)
+    metric_columns[0].metric("Learners", fmt_int(len(grouped_display)))
+    metric_columns[1].metric("Groups", fmt_int(len(group_size_summary)))
+    metric_columns[2].metric("Blending Learners", fmt_int(blending_learner_count))
+    metric_columns[3].metric("Below 5 Groups", fmt_int(below_minimum_group_count))
+    metric_columns[4].metric("Outside 5-9", fmt_int(out_of_tolerance_group_count))
+
+    if out_of_tolerance_group_count > 0:
+        st.error(
+            f"{out_of_tolerance_group_count} group(s) are outside the tolerated 5-9 range "
+            f"({below_minimum_group_count} below 5, {above_maximum_group_count} above 9). "
+            f"Learners in below-5 groups: {below_minimum_learner_count}."
+        )
+    elif allowed_edge_group_count > 0:
+        st.warning(
+            f"{allowed_edge_group_count} group(s) are size 5 or 9. This is acceptable but not ideal."
+        )
+    else:
+        st.success("All displayed groups are in the ideal 6-8 range.")
+
+    class_collector_summary = (
+        group_size_summary[["program_name", "class_name", "collected_by"]]
+        .drop_duplicates()
+        .groupby("program_name")
+        .size()
+        .reset_index(name="class_collector_cohorts")
+    )
+
+    school_group_size_summary = (
+        group_size_summary.groupby("program_name")
+        .agg(
+            groups=("group", "count"),
+            learners=("group_size", "sum"),
+            min_group_size=("group_size", "min"),
+            max_group_size=("group_size", "max"),
+        )
+        .reset_index()
+        .merge(class_collector_summary, on="program_name", how="left")
+        .rename(columns={"class_collector_cohorts": "class_collector_cohorts"})
+        .sort_values(by=["groups", "program_name"], ascending=[False, True])
+    )
+    school_group_size_summary = school_group_size_summary[
+        [
+            "program_name",
+            "class_collector_cohorts",
+            "groups",
+            "learners",
+            "min_group_size",
+            "max_group_size",
+        ]
+    ]
+
+    st.subheader("Group Size Summary by School")
+    st.dataframe(school_group_size_summary, use_container_width=True)
+
+    st.subheader("Class + Collector Group Details")
+    st.dataframe(group_size_summary, use_container_width=True)
+
+    learner_display_columns = [
+        "program_name",
+        "class_name",
+        "collected_by",
+        "group_type",
+        "group",
+        "group_size",
+        "group_size_status",
+        "grade",
+        "language",
+        "participant_id",
+        "first_name",
+        "last_name",
+        "letters_total_correct",
+        "response_date",
+    ]
+    available_learner_columns = [
+        column_name
+        for column_name in learner_display_columns
+        if column_name in grouped_display.columns
+    ]
+    st.subheader("Learner-Level Group Assignments")
+    st.dataframe(
+        grouped_display[available_learner_columns],
+        use_container_width=True,
+    )
+
+    grouping_export_csv = grouped_all.to_csv(index=False)
+    st.download_button(
+        "Download 2026 Group Assignments CSV",
+        data=grouping_export_csv,
+        file_name="2026_baseline_group_assignments.csv",
+        mime="text/csv",
+    )
+    st.caption("CSV export always includes all schools (not limited by sidebar filters).")
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -557,6 +708,8 @@ def main():
     if 'data_refresh_timestamp' in df.columns and df['data_refresh_timestamp'].notna().any():
         last_refresh = df['data_refresh_timestamp'].max()
         st.caption(f"Last synced: {last_refresh.strftime('%Y-%m-%d %H:%M UTC')}")
+
+    df_all_rows = df.copy()
 
     # Overall summary
     render_summary_metrics(df)
@@ -578,10 +731,16 @@ def main():
     if selected_grade != 'All':
         df = df[df['grade'] == selected_grade]
 
-    render_nmb_charts(df)
-    render_benchmark_sections(df_baseline=df, df_endline=None)
-    render_letter_analysis(df)
-    render_collector_outliers(df)
+    tab_overview, tab_grouping = st.tabs(["Baseline Dashboard", "Grouping QA"])
+
+    with tab_overview:
+        render_nmb_charts(df)
+        render_benchmark_sections(df_baseline=df, df_endline=None)
+        render_letter_analysis(df)
+        render_collector_outliers(df)
+
+    with tab_grouping:
+        render_grouping_tab(df_all_rows)
 
 
 main()
