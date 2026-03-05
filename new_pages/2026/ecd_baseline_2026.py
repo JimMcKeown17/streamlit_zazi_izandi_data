@@ -95,17 +95,6 @@ def render_ecd_charts(df):
         )
         st.plotly_chart(fig2, use_container_width=True)
 
-    # ── Assessments per collector ─────────────────────────────────────────────
-    st.markdown("#### Assessments per Data Collector")
-    collector_counts = df['collected_by'].value_counts().reset_index()
-    collector_counts.columns = ['Collector', 'Assessments']
-    fig3 = px.bar(
-        collector_counts.head(30), x='Assessments', y='Collector',
-        orientation='h', title="Assessments per Data Collector (top 30)",
-        text='Assessments',
-    )
-    fig3.update_layout(yaxis={'categoryorder': 'total ascending'})
-    st.plotly_chart(fig3, use_container_width=True)
 
     # ── Center breakdown ──────────────────────────────────────────────────────
     with st.expander("ECD Center Breakdown"):
@@ -195,6 +184,62 @@ def render_collector_outliers(df):
         st.plotly_chart(fig_bot, use_container_width=True)
 
 
+# ── Daily Assessment Volume ──────────────────────────────────────────────────
+
+def render_daily_assessment_histogram(df):
+    """Stacked bar chart showing number of assessments per day, colour-coded by grade."""
+    if df.empty or 'response_date' not in df.columns:
+        return
+
+    st.divider()
+    st.header("Daily Assessment Volume")
+
+    tmp = df.dropna(subset=['response_date']).copy()
+    tmp['date'] = pd.to_datetime(tmp['response_date']).dt.date
+
+    daily = tmp.groupby(['date', 'grade']).size().reset_index(name='count')
+
+    fig = px.bar(
+        daily, x='date', y='count', color='grade',
+        title="Assessments Completed per Day",
+        labels={'date': 'Date', 'count': 'Assessments', 'grade': 'Grade'},
+    )
+    fig.update_layout(xaxis=dict(dtick='D1', tickformat='%b %d'), bargap=0.2)
+    st.plotly_chart(fig, use_container_width=True)
+
+
+# ── Assessments per Class & Collector ────────────────────────────────────────
+
+def render_assessments_per_class_collector(df):
+    """Top 30 and bottom 30 bars by class_name + collected_by."""
+    if df.empty or 'collected_by' not in df.columns or 'class_name' not in df.columns:
+        return
+
+    st.divider()
+    st.header("Assessments per Class & Collector")
+
+    tmp = df.dropna(subset=['collected_by', 'class_name']).copy()
+    tmp['class_collector'] = tmp['class_name'] + ' — ' + tmp['collected_by']
+    counts = tmp['class_collector'].value_counts().reset_index()
+    counts.columns = ['Class & Collector', 'Assessments']
+
+    fig_top = px.bar(
+        counts.head(30), x='Assessments', y='Class & Collector',
+        orientation='h', title="Top 30",
+        text='Assessments', color_discrete_sequence=['#1f77b4'],
+    )
+    fig_top.update_layout(yaxis={'categoryorder': 'total ascending'}, showlegend=False)
+    st.plotly_chart(fig_top, use_container_width=True)
+
+    fig_bot = px.bar(
+        counts.tail(30).sort_values('Assessments'), x='Assessments', y='Class & Collector',
+        orientation='h', title="Bottom 30",
+        text='Assessments', color_discrete_sequence=['#d62728'],
+    )
+    fig_bot.update_layout(yaxis={'categoryorder': 'total ascending'}, showlegend=False)
+    st.plotly_chart(fig_bot, use_container_width=True)
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -213,6 +258,8 @@ def main():
 
     render_ecd_charts(df)
     render_collector_outliers(df)
+    render_daily_assessment_histogram(df)
+    render_assessments_per_class_collector(df)
 
 
 main()
