@@ -70,6 +70,7 @@ def _choose_group_sizes(
 def _assign_track_groups(
     track_df,
     group_type,
+    sort_metric_column="letters_total_correct",
     target_group_size=TARGET_GROUP_SIZE,
     min_group_size=MIN_GROUP_SIZE,
     max_group_size=MAX_GROUP_SIZE,
@@ -77,9 +78,24 @@ def _assign_track_groups(
     if track_df.empty:
         return track_df
 
+    if sort_metric_column not in track_df.columns:
+        track_df[sort_metric_column] = pd.NA
+
+    # Use track-specific sorting metric, then fall back to letters score for stability.
+    track_df["track_sort_metric"] = track_df[sort_metric_column]
+    track_df["track_sort_metric"] = track_df["track_sort_metric"].fillna(
+        track_df["letters_total_correct"]
+    )
+
     sorted_track = track_df.sort_values(
-        by=["letters_total_correct", "last_name", "first_name", "participant_key"],
-        ascending=[True, True, True, True],
+        by=[
+            "track_sort_metric",
+            "letters_total_correct",
+            "last_name",
+            "first_name",
+            "participant_key",
+        ],
+        ascending=[True, True, True, True, True],
     ).reset_index(drop=True)
 
     group_sizes = _choose_group_sizes(
@@ -105,6 +121,7 @@ def _assign_track_groups(
     sorted_track["group_type"] = group_type
     sorted_track["group_number"] = group_numbers
     sorted_track["group"] = group_labels
+    sorted_track = sorted_track.drop(columns=["track_sort_metric"], errors="ignore")
     return sorted_track
 
 
@@ -133,6 +150,7 @@ def _assign_groups_for_class(
         blending_track = _assign_track_groups(
             class_df[class_df["is_blending_eligible"]].copy(),
             group_type="Blending",
+            sort_metric_column="words_total_correct",
             target_group_size=target_group_size,
             min_group_size=min_group_size,
             max_group_size=max_group_size,
@@ -140,6 +158,7 @@ def _assign_groups_for_class(
         letters_track = _assign_track_groups(
             class_df[~class_df["is_blending_eligible"]].copy(),
             group_type="Letters",
+            sort_metric_column="letters_total_correct",
             target_group_size=target_group_size,
             min_group_size=min_group_size,
             max_group_size=max_group_size,
@@ -149,6 +168,7 @@ def _assign_groups_for_class(
         class_grouped = _assign_track_groups(
             class_df.copy(),
             group_type="Letters",
+            sort_metric_column="letters_total_correct",
             target_group_size=target_group_size,
             min_group_size=min_group_size,
             max_group_size=max_group_size,
@@ -184,6 +204,12 @@ def assign_groups_2026(
     grouped_df["letters_total_correct"] = pd.to_numeric(
         grouped_df["letters_total_correct"], errors="coerce"
     )
+    if "words_total_correct" in grouped_df.columns:
+        grouped_df["words_total_correct"] = pd.to_numeric(
+            grouped_df["words_total_correct"], errors="coerce"
+        )
+    else:
+        grouped_df["words_total_correct"] = pd.NA
     grouped_df = grouped_df.dropna(
         subset=["class_name", "collected_by", "letters_total_correct"]
     ).copy()
