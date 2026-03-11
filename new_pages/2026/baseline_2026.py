@@ -4,8 +4,10 @@ Reads live data from the DB during the baseline collection period.
 Covers surveys 815 (isiXhosa), 816 (Afrikaans), 817 (English).
 """
 
+import importlib
 import streamlit as st
 import pandas as pd
+import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from database_utils import get_database_engine
@@ -15,6 +17,11 @@ from grouping_logic_2026 import (
     assign_groups_2026,
     build_group_size_summary,
 )
+
+_cohorts = importlib.import_module("data.2026_cohorts")
+treatment_schools = _cohorts.treatment_schools
+sef_schools = _cohorts.sef_schools
+control_schools = _cohorts.control_schools
 
 st.set_page_config(page_title="2026 Baseline — Primary Schools", layout="wide")
 
@@ -110,7 +117,7 @@ def render_summary_metrics(df):
     cols[5].metric("Assessors", fmt_int(collectors))
 
 
-def render_nmb_charts(df):
+def render_nmb_charts(df, key_prefix=""):
     if df.empty:
         st.info("No assessment data available yet.")
         return
@@ -122,7 +129,7 @@ def render_nmb_charts(df):
         'Non-words': 'nonwords_total_correct',
         'Words': 'words_total_correct',
     }
-    mean_toggle = st.radio("Metric", ["Mean", "Median"], horizontal=True, key="nmb_metric")
+    mean_toggle = st.radio("Metric", ["Mean", "Median"], horizontal=True, key=f"{key_prefix}nmb_metric")
     agg = 'mean' if mean_toggle == "Mean" else 'median'
 
     grade_data = []
@@ -207,12 +214,13 @@ def render_nmb_charts(df):
             data=csv,
             file_name="2026_primary_school_baseline.csv",
             mime="text/csv",
+            key=f"{key_prefix}download_primary_csv",
         )
 
 
 # ── Benchmark Achievement & Zero Letter Learners ─────────────────────────────
 
-def render_benchmark_sections(df_baseline, df_endline=None):
+def render_benchmark_sections(df_baseline, df_endline=None, key_prefix=""):
     """
     Benchmark achievement pie charts and zero-letter-learner pie charts,
     for Grade R and Grade 1.  Baseline on the left, endline on the right.
@@ -230,7 +238,7 @@ def render_benchmark_sections(df_baseline, df_endline=None):
     with col_slider_g1[1]:
         g1_threshold = st.slider(
             "Grade 1 Benchmark (LPM)", min_value=20, max_value=40,
-            value=40, step=5, key="g1_benchmark_slider",
+            value=40, step=5, key=f"{key_prefix}g1_benchmark_slider",
         )
 
     baseline_g1 = df_baseline[df_baseline['grade'] == 'Grade 1']
@@ -254,7 +262,7 @@ def render_benchmark_sections(df_baseline, df_endline=None):
     with col_slider_gr[1]:
         gr_threshold = st.slider(
             "Grade R Benchmark (LPM)", min_value=0, max_value=40,
-            value=10, step=5, key="gr_benchmark_slider",
+            value=10, step=5, key=f"{key_prefix}gr_benchmark_slider",
         )
 
     baseline_gr = df_baseline[df_baseline['grade'] == 'Grade R']
@@ -737,6 +745,93 @@ def render_assessments_per_class_collector(df):
     st.plotly_chart(fig_bot, use_container_width=True)
 
 
+# ── Cohort Filtering ─────────────────────────────────────────────────────────
+
+def filter_df_by_school_list(df, school_list):
+    """Case-insensitive filter: keep rows whose program_name matches a school list entry."""
+    if df.empty or 'program_name' not in df.columns:
+        return df
+    lower_set = {s.lower() for s in school_list}
+    return df[df['program_name'].str.lower().isin(lower_set)]
+
+
+def render_school_assessment_counts(df, school_list=None, tab_label="All Schools"):
+    """Horizontal bar chart of assessment counts per school, with mismatch warnings.
+    If school_list is None, shows all schools present in df."""
+    if df.empty or 'program_name' not in df.columns:
+        return
+
+    st.divider()
+    st.header(f"Assessments per School ({tab_label})")
+
+    db_counts = (
+        df.groupby('program_name')
+        .size()
+        .reset_index(name='count')
+    )
+
+    if school_list is not None:
+        # Left-join so schools with zero assessments still appear
+        list_df = pd.DataFrame({'list_name': school_list})
+        list_df['lower'] = list_df['list_name'].str.lower()
+        db_counts['lower'] = db_counts['program_name'].str.lower()
+
+        merged = list_df.merge(db_counts, on='lower', how='left')
+        merged['count'] = merged['count'].fillna(0).astype(int)
+        merged['display_name'] = merged['program_name'].fillna(merged['list_name'].str.title())
+
+        # Warn about unmatched schools
+        unmatched = merged[merged['program_name'].isna()]['list_name'].tolist()
+        if unmatched:
+            st.warning(
+                f"**{len(unmatched)} school(s) in the {tab_label} list did not match any DB program_name:** "
+                + ", ".join(unmatched)
+            )
+
+        merged['color'] = np.where(merged['count'] == 0, 'No assessments', 'Has assessments')
+        num_schools = len(school_list)
+    else:
+        # No list — just show all schools from the data
+        merged = db_counts.rename(columns={'program_name': 'display_name'})
+        merged['color'] = 'Has assessments'
+        num_schools = len(merged)
+
+    merged = merged.sort_values('count', ascending=True)
+
+    fig = px.bar(
+        merged, x='count', y='display_name', orientation='h',
+        title=f"Assessment Count per School — {tab_label}",
+        labels={'count': 'Assessments', 'display_name': 'School'},
+        text='count',
+        color='color',
+        color_discrete_map={'No assessments': '#d62728', 'Has assessments': '#1f77b4'},
+    )
+    fig.update_layout(
+        yaxis={'categoryorder': 'array', 'categoryarray': merged['display_name'].tolist()},
+        showlegend=True,
+        height=max(400, num_schools * 28),
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+
+def render_cohort_tab(df, school_list, tab_label, key_prefix):
+    """Render a full dashboard for a single cohort (Treatment / SEF / Control)."""
+    filtered = filter_df_by_school_list(df, school_list)
+
+    st.subheader(f"{tab_label} Overview")
+    st.markdown(f"**{len(filtered):,}** assessments across **{filtered['program_name'].nunique() if not filtered.empty else 0}** "
+                f"of **{len(school_list)}** listed schools")
+
+    render_summary_metrics(filtered)
+    render_nmb_charts(filtered, key_prefix=key_prefix)
+    render_benchmark_sections(filtered, key_prefix=key_prefix)
+    render_letter_analysis(filtered)
+    render_collector_outliers(filtered)
+    render_daily_assessment_histogram(filtered)
+    render_assessments_per_class_collector(filtered)
+    render_school_assessment_counts(filtered, school_list, tab_label)
+
+
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main():
@@ -757,6 +852,7 @@ def main():
     df_all_rows = df.copy()
 
     # Overall summary
+    st.subheader("All Schools at a Glance")
     render_summary_metrics(df)
     st.divider()
 
@@ -776,7 +872,9 @@ def main():
     if selected_grade != 'All':
         df = df[df['grade'] == selected_grade]
 
-    tab_overview, tab_grouping = st.tabs(["Baseline Dashboard", "Grouping QA"])
+    tab_overview, tab_treatment, tab_sef, tab_control, tab_grouping = st.tabs([
+        "Baseline Dashboard", "Treatment Schools", "30 SEF", "Control Schools", "Grouping QA"
+    ])
 
     with tab_overview:
         render_nmb_charts(df)
@@ -785,6 +883,16 @@ def main():
         render_collector_outliers(df)
         render_daily_assessment_histogram(df)
         render_assessments_per_class_collector(df)
+        render_school_assessment_counts(df)
+
+    with tab_treatment:
+        render_cohort_tab(df, treatment_schools, "Treatment Schools", "treat_")
+
+    with tab_sef:
+        render_cohort_tab(df, sef_schools, "30 SEF Schools", "sef_")
+
+    with tab_control:
+        render_cohort_tab(df, control_schools, "Control Schools", "ctrl_")
 
     with tab_grouping:
         render_grouping_tab(df_all_rows)
