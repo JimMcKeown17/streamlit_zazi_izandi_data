@@ -2,7 +2,12 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-from data_loader import load_assessments_endline_2025, load_sessions_2025
+from data_loader import (
+    load_assessments_endline_2025,
+    load_sessions_2025,
+    load_zazi_izandi_2025_tp,
+)
+from process_teampact_data import process_teampact_data
 
 
 # Keep this list aligned with teampact_sessions_2025.py
@@ -134,6 +139,31 @@ def load_endline_data_2025() -> pd.DataFrame:
         dataframe["Class Name"],
     )
     return dataframe
+
+
+@st.cache_data(ttl=3600)
+def load_baseline_data_2025() -> pd.DataFrame:
+    try:
+        baseline_xhosa_df, baseline_english_df, baseline_afrikaans_df = load_zazi_izandi_2025_tp()
+        if baseline_xhosa_df is None:
+            return pd.DataFrame()
+
+        baseline_df = process_teampact_data(
+            baseline_xhosa_df,
+            baseline_english_df,
+            baseline_afrikaans_df,
+        )
+        if baseline_df.empty:
+            return baseline_df
+
+        if "Response Date" in baseline_df.columns:
+            baseline_df["Response Date"] = pd.to_datetime(
+                baseline_df["Response Date"],
+                errors="coerce",
+            )
+        return baseline_df
+    except Exception:
+        return pd.DataFrame()
 
 
 @st.cache_data(ttl=3600)
@@ -369,6 +399,70 @@ def explode_letters(content_dataframe: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(token_rows)
 
 
+def render_cohort_performance_reference_chart(
+    endline_dataframe: pd.DataFrame,
+    key_prefix: str,
+) -> None:
+    st.divider()
+    st.markdown("### Cohort Performance Analysis")
+    st.markdown("**Key Question:** Do more sessions lead to better EGRA performance?")
+
+    toggle_col_left, toggle_col_right = st.columns([1, 3])
+    with toggle_col_left:
+        use_mean = st.toggle(
+            "Show Mean (instead of Median)",
+            value=False,
+            key=f"{key_prefix}_cohort_mean_toggle",
+        )
+
+    stat_method = "mean" if use_mean else "median"
+    stat_label = "Mean" if use_mean else "Median"
+
+    cohort_df = endline_dataframe[
+        endline_dataframe["cohort_session_range"].notna()
+        & (endline_dataframe["cohort_session_range"] != "")
+    ].copy()
+    if cohort_df.empty:
+        st.warning("No cohort data available for this filter selection.")
+        return
+
+    cohort_df["cohort_session_range"] = pd.Categorical(
+        cohort_df["cohort_session_range"],
+        categories=COHORT_ORDER,
+        ordered=True,
+    )
+
+    cohort_stats = (
+        cohort_df.groupby("cohort_session_range")
+        .agg(
+            score=("Total cells correct - EGRA Letters", stat_method),
+            count=("response_id", "count"),
+        )
+        .reset_index()
+        .rename(columns={"cohort_session_range": "Cohort"})
+        .sort_values("Cohort")
+    )
+
+    chart = px.bar(
+        cohort_stats,
+        x="Cohort",
+        y="score",
+        title=f"{stat_label} EGRA Scores by Session Cohort",
+        labels={"score": f"{stat_label} Correct Letters", "Cohort": "Session Cohort"},
+        color="score",
+        color_continuous_scale="Viridis",
+    )
+    chart.update_traces(
+        text=[f"{score:.1f}<br>n={count}" for score, count in zip(cohort_stats["score"], cohort_stats["count"])],
+        textposition="outside",
+    )
+    st.plotly_chart(
+        chart,
+        use_container_width=True,
+        key=f"{key_prefix}_cohort_performance_chart",
+    )
+
+
 def render_population_tab(
     endline_dataframe: pd.DataFrame,
     child_dosage_dataframe: pd.DataFrame,
@@ -521,6 +615,7 @@ def render_population_tab(
 
 def render_learning_outcomes_tab(
     endline_dataframe: pd.DataFrame,
+    baseline_dataframe: pd.DataFrame,
     comparator_mode: str,
 ) -> None:
     st.subheader("Learning Outcomes (Letters)")
@@ -570,6 +665,86 @@ def render_learning_outcomes_tab(
             delta=f"{stat_label.lower()} difference",
             delta_color="off",
         )
+
+    if not baseline_dataframe.empty:
+        baseline_compare_df, _ = build_population_comparison(
+            baseline_dataframe,
+            "Program Name",
+            comparator_mode,
+        )
+
+        baseline_population_stat = (
+            baseline_compare_df.groupby("Population", as_index=False)
+            .agg(score=("Total cells correct - EGRA Letters", stat_method))
+            .assign(Period="Baseline")
+        )
+        endline_population_stat = (
+            compare_df.groupby("Population", as_index=False)
+            .agg(score=("Total cells correct - EGRA Letters", stat_method))
+            .assign(Period="Endline")
+        )
+        population_period_df = pd.concat(
+            [baseline_population_stat, endline_population_stat],
+            ignore_index=True,
+        )
+        population_period_df["Population"] = pd.Categorical(
+            population_period_df["Population"],
+            categories=["DataQuest", comparator_label],
+            ordered=True,
+        )
+        population_period_df = population_period_df.sort_values(["Population", "Period"])
+
+        baseline_endline_population_chart = px.bar(
+            population_period_df,
+            x="Population",
+            y="score",
+            color="Period",
+            barmode="group",
+            title=f"{stat_label} Letters: Baseline vs Endline by Cohort",
+            labels={"score": f"{stat_label} Correct Letters"},
+            category_orders={"Period": ["Baseline", "Endline"]},
+            color_discrete_map={"Baseline": "#94a3b8", "Endline": "#2563eb"},
+        )
+        st.plotly_chart(baseline_endline_population_chart, use_container_width=True)
+
+        baseline_grade_stat = (
+            baseline_compare_df.groupby(["Population", "Grade"], as_index=False)
+            .agg(score=("Total cells correct - EGRA Letters", stat_method))
+            .assign(Period="Baseline")
+        )
+        endline_grade_stat = (
+            compare_df.groupby(["Population", "Grade"], as_index=False)
+            .agg(score=("Total cells correct - EGRA Letters", stat_method))
+            .assign(Period="Endline")
+        )
+        grade_period_df = pd.concat([baseline_grade_stat, endline_grade_stat], ignore_index=True)
+        grade_period_df["Grade"] = pd.Categorical(
+            grade_period_df["Grade"],
+            categories=["Grade R", "Grade 1", "Grade 2"],
+            ordered=True,
+        )
+        grade_period_df["Population"] = pd.Categorical(
+            grade_period_df["Population"],
+            categories=["DataQuest", comparator_label],
+            ordered=True,
+        )
+        grade_period_df = grade_period_df.sort_values(["Population", "Grade", "Period"])
+
+        baseline_endline_grade_chart = px.bar(
+            grade_period_df,
+            x="Grade",
+            y="score",
+            color="Period",
+            barmode="group",
+            facet_col="Population",
+            title=f"{stat_label} Letters by Grade: Baseline vs Endline",
+            labels={"score": f"{stat_label} Correct Letters"},
+            category_orders={"Period": ["Baseline", "Endline"]},
+            color_discrete_map={"Baseline": "#94a3b8", "Endline": "#2563eb"},
+        )
+        st.plotly_chart(baseline_endline_grade_chart, use_container_width=True)
+    else:
+        st.warning("Baseline data is unavailable, so baseline-vs-endline charts cannot be displayed.")
 
     grade_stat_df = (
         compare_df.groupby(["Population", "Grade"], as_index=False)
@@ -682,6 +857,7 @@ def render_learning_outcomes_tab(
 
 def render_child_dosage_tab(
     child_dosage_dataframe: pd.DataFrame,
+    endline_dataframe: pd.DataFrame,
     comparator_mode: str,
 ) -> None:
     st.subheader("Learner Dosage (Child Level)")
@@ -736,9 +912,11 @@ def render_child_dosage_tab(
         bins=[-1, 5, 15, 30, 10_000],
         labels=["0-5", "6-15", "16-30", "31+"],
     )
+    bands_df = bands_df[bands_df["Band"].notna()].copy()
     band_summary = (
-        bands_df.groupby(["Population", "Band"], as_index=False)
+        bands_df.groupby(["Population", "Band"], observed=True)
         .agg(learners=("participant_id", "nunique"))
+        .reset_index()
     )
     population_totals = band_summary.groupby("Population", as_index=False).agg(total=("learners", "sum"))
     band_summary = band_summary.merge(population_totals, on="Population", how="left")
@@ -764,9 +942,15 @@ def render_child_dosage_tab(
             f"{dataquest_avg.iloc[0]:.2f} sessions versus {comparator_avg.iloc[0]:.2f} in {comparator_label}."
         )
 
+    render_cohort_performance_reference_chart(
+        endline_dataframe=endline_dataframe,
+        key_prefix="learner_dosage",
+    )
+
 
 def render_group_dosage_tab(
     group_dosage_dataframe: pd.DataFrame,
+    endline_dataframe: pd.DataFrame,
     comparator_mode: str,
 ) -> None:
     st.subheader("Group Dosage (Class Level)")
@@ -845,6 +1029,11 @@ def render_group_dosage_tab(
         .sort_values(["Population", "median_sessions_per_week"], ascending=[True, False])
     )
     st.dataframe(school_table, hide_index=True, use_container_width=True, height=420)
+
+    render_cohort_performance_reference_chart(
+        endline_dataframe=endline_dataframe,
+        key_prefix="group_dosage",
+    )
 
 
 def render_learning_content_tab(
@@ -929,6 +1118,62 @@ def render_learning_content_tab(
     st.dataframe(top_letters, hide_index=True, use_container_width=True)
 
 
+def render_reference_letters_per_month_chart() -> None:
+    st.divider()
+    st.subheader("Letters per Month (Reference Snapshot)")
+
+    reference_df = pd.DataFrame(
+        [
+            {
+                "Group": "NMB DataQuest",
+                "Jan - Jul": 3.5,
+                "Sept-Oct": 4.0,
+                "Percent Difference": 14.0,
+            },
+            {
+                "Group": "BCM Control",
+                "Jan - Jul": 4.3,
+                "Sept-Oct": 3.5,
+                "Percent Difference": -19.0,
+            },
+        ]
+    )
+
+    monthly_levels_df = reference_df.melt(
+        id_vars=["Group", "Percent Difference"],
+        value_vars=["Jan - Jul", "Sept-Oct"],
+        var_name="Period",
+        value_name="Letters per Month",
+    )
+    monthly_levels_chart = px.bar(
+        monthly_levels_df,
+        x="Group",
+        y="Letters per Month",
+        color="Period",
+        barmode="group",
+        title="Grade 1: Letters Learned per Month",
+        color_discrete_map={"Jan - Jul": "#94a3b8", "Sept-Oct": "#2563eb"},
+    )
+    st.plotly_chart(monthly_levels_chart, use_container_width=True)
+
+    percent_diff_df = reference_df[["Group", "Percent Difference"]].copy()
+    percent_diff_df["Direction"] = percent_diff_df["Percent Difference"].apply(
+        lambda value: "Up" if value >= 0 else "Down"
+    )
+    percent_diff_chart = px.bar(
+        percent_diff_df,
+        x="Group",
+        y="Percent Difference",
+        color="Direction",
+        title="Percent Difference (Up vs Down)",
+        labels={"Percent Difference": "Percent Difference (%)"},
+        color_discrete_map={"Up": "#16a34a", "Down": "#dc2626"},
+    )
+    percent_diff_chart.add_hline(y=0, line_dash="dash", line_color="#475569")
+    st.plotly_chart(percent_diff_chart, use_container_width=True)
+    st.dataframe(reference_df, hide_index=True, use_container_width=True)
+
+
 def display_dataquest_schools_2025() -> None:
     st.title("2025 DataQuest Schools")
     st.caption(
@@ -938,6 +1183,7 @@ def display_dataquest_schools_2025() -> None:
 
     with st.spinner("Loading 2025 endline and sessions data..."):
         endline_df = load_endline_data_2025()
+        baseline_df = load_baseline_data_2025()
         sessions_df = load_sessions_data_2025()
         endline_lookup_df = build_endline_child_lookup(endline_df)
         child_dosage_df = build_child_dosage_data(sessions_df, endline_lookup_df)
@@ -975,6 +1221,9 @@ def display_dataquest_schools_2025() -> None:
         only_11_plus = st.toggle("Show only 11+ sessions", value=False)
 
     endline_filtered_df = apply_endline_filters(endline_df, selected_grade, only_11_plus)
+    baseline_filtered_df = baseline_df.copy()
+    if selected_grade != "All Grades" and not baseline_filtered_df.empty:
+        baseline_filtered_df = baseline_filtered_df[baseline_filtered_df["Grade"] == selected_grade].copy()
     child_filtered_df = apply_matched_filters(
         child_dosage_df,
         selected_grade,
@@ -1004,28 +1253,34 @@ def display_dataquest_schools_2025() -> None:
 
     tabs = st.tabs(
         [
-            "Population Checks",
             "Learning Outcomes",
+            "Population Checks",
             "Learner Dosage",
             "Group Dosage",
             "What Was Taught",
         ]
     )
     with tabs[0]:
+        render_learning_outcomes_tab(
+            endline_filtered_df,
+            baseline_filtered_df,
+            comparator_mode,
+        )
+    with tabs[1]:
         render_population_tab(
             endline_filtered_df,
             child_filtered_df,
             group_filtered_df,
             comparator_mode,
         )
-    with tabs[1]:
-        render_learning_outcomes_tab(endline_filtered_df, comparator_mode)
     with tabs[2]:
-        render_child_dosage_tab(child_filtered_df, comparator_mode)
+        render_child_dosage_tab(child_filtered_df, endline_filtered_df, comparator_mode)
     with tabs[3]:
-        render_group_dosage_tab(group_filtered_df, comparator_mode)
+        render_group_dosage_tab(group_filtered_df, endline_filtered_df, comparator_mode)
     with tabs[4]:
         render_learning_content_tab(content_filtered_df, comparator_mode)
+
+    render_reference_letters_per_month_chart()
 
 
 if __name__ == "__main__":
