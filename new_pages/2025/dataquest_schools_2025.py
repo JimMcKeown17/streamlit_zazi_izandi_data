@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
+import numpy as np
 
 from data_loader import (
     load_assessments_endline_2025,
@@ -94,6 +96,67 @@ def build_population_comparison(
 
     combined_df = pd.concat([dataquest_df, comparator_df], ignore_index=True)
     return combined_df, comparator_label
+
+
+@st.cache_data(ttl=3600)
+def build_matched_baseline_endline_data(
+    endline_dataframe: pd.DataFrame,
+    baseline_dataframe: pd.DataFrame,
+) -> pd.DataFrame:
+    if endline_dataframe.empty or baseline_dataframe.empty:
+        return pd.DataFrame()
+
+    baseline_prepared_df = baseline_dataframe.copy()
+    baseline_prepared_df["Learner Full Name"] = (
+        baseline_prepared_df["Learner First Name"].fillna("").astype(str).str.strip()
+        + " "
+        + baseline_prepared_df["Learner Surname"].fillna("").astype(str).str.strip()
+    ).str.strip()
+    baseline_prepared_df["Baseline Score"] = baseline_prepared_df["Total cells correct - EGRA Letters"]
+    if "Response Date" in baseline_prepared_df.columns:
+        baseline_prepared_df["Response Date"] = pd.to_datetime(
+            baseline_prepared_df["Response Date"],
+            errors="coerce",
+        )
+    baseline_prepared_df["Match Key"] = (
+        normalize_series(baseline_prepared_df["Learner Full Name"])
+        + "|"
+        + baseline_prepared_df["Grade"].fillna("").astype(str).str.strip()
+        + "|"
+        + normalize_series(baseline_prepared_df["Program Name"])
+    )
+    baseline_prepared_df = baseline_prepared_df.sort_values(
+        "Response Date",
+        ascending=False,
+        na_position="last",
+    )
+    baseline_prepared_df = baseline_prepared_df.drop_duplicates(subset=["Match Key"], keep="first")
+
+    endline_prepared_df = endline_dataframe.copy()
+    endline_prepared_df["Learner Full Name"] = endline_prepared_df["Participant Name"]
+    endline_prepared_df["Endline Score"] = endline_prepared_df["Total cells correct - EGRA Letters"]
+    endline_prepared_df["Match Key"] = (
+        normalize_series(endline_prepared_df["Learner Full Name"])
+        + "|"
+        + endline_prepared_df["Grade"].fillna("").astype(str).str.strip()
+        + "|"
+        + normalize_series(endline_prepared_df["Program Name"])
+    )
+    endline_prepared_df = endline_prepared_df.sort_values(
+        "Response Date",
+        ascending=False,
+        na_position="last",
+    )
+    endline_prepared_df = endline_prepared_df.drop_duplicates(subset=["Match Key"], keep="first")
+
+    matched_df = endline_prepared_df.merge(
+        baseline_prepared_df[["Match Key", "Baseline Score", "Learner EMIS"]],
+        on="Match Key",
+        how="left",
+    )
+    matched_df["has_baseline_match"] = matched_df["Baseline Score"].notna()
+    matched_df["Improvement"] = matched_df["Endline Score"] - matched_df["Baseline Score"]
+    return matched_df
 
 
 @st.cache_data(ttl=3600)
@@ -399,13 +462,56 @@ def explode_letters(content_dataframe: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(token_rows)
 
 
+def build_safe_linear_trend(
+    x_series: pd.Series,
+    y_series: pd.Series,
+    point_count: int = 100,
+) -> tuple[np.ndarray, np.ndarray] | None:
+    numeric_x_series = pd.to_numeric(x_series, errors="coerce")
+    numeric_y_series = pd.to_numeric(y_series, errors="coerce")
+    valid_mask = np.isfinite(numeric_x_series) & np.isfinite(numeric_y_series)
+
+    valid_x_values = numeric_x_series[valid_mask]
+    valid_y_values = numeric_y_series[valid_mask]
+    if len(valid_x_values) < 2 or valid_x_values.nunique() < 2:
+        return None
+
+    try:
+        slope, intercept = np.polyfit(
+            valid_x_values.to_numpy(),
+            valid_y_values.to_numpy(),
+            1,
+        )
+    except (np.linalg.LinAlgError, ValueError, FloatingPointError):
+        return None
+    if not np.isfinite(slope) or not np.isfinite(intercept):
+        return None
+
+    x_line_values = np.linspace(
+        float(valid_x_values.min()),
+        float(valid_x_values.max()),
+        point_count,
+    )
+    y_line_values = slope * x_line_values + intercept
+    if not np.all(np.isfinite(y_line_values)):
+        return None
+    return x_line_values, y_line_values
+
+
 def render_cohort_performance_reference_chart(
     endline_dataframe: pd.DataFrame,
+    baseline_dataframe: pd.DataFrame,
+    comparator_mode: str,
     key_prefix: str,
 ) -> None:
     st.divider()
     st.markdown("### Cohort Performance Analysis")
     st.markdown("**Key Question:** Do more sessions lead to better EGRA performance?")
+    st.info(
+        "How to interpret this section: `Endline Score` charts show where learners finished, "
+        "`Baseline` charts show where they started, and `Improvement` charts show the change. "
+        "A cohort can improve a lot but still have a lower endline score if it started lower."
+    )
 
     toggle_col_left, toggle_col_right = st.columns([1, 3])
     with toggle_col_left:
@@ -460,6 +566,195 @@ def render_cohort_performance_reference_chart(
         chart,
         use_container_width=True,
         key=f"{key_prefix}_cohort_performance_chart",
+    )
+
+    st.markdown("#### Cohort Improvement (Matched Learners)")
+    st.caption(
+        "Method: Name + grade + school matching between baseline and endline, then "
+        "learner-level improvement is aggregated by endline cohort."
+    )
+
+    matched_df = build_matched_baseline_endline_data(endline_dataframe, baseline_dataframe)
+    if matched_df.empty:
+        st.warning("No matched baseline-endline data is available for improvement charts.")
+        return
+
+    matched_only_df = matched_df[matched_df["has_baseline_match"]].copy()
+    if matched_only_df.empty:
+        st.warning("No matched learners found for the current filters.")
+        return
+
+    compare_endline_df, comparator_label = build_population_comparison(
+        endline_dataframe,
+        "Program Name",
+        comparator_mode,
+    )
+    compare_matched_df, _ = build_population_comparison(
+        matched_only_df,
+        "Program Name",
+        comparator_mode,
+    )
+
+    coverage_df = (
+        compare_endline_df.groupby("Population", as_index=False)
+        .agg(total_endline=("response_id", "count"))
+        .merge(
+            compare_matched_df.groupby("Population", as_index=False).agg(matched=("response_id", "count")),
+            on="Population",
+            how="left",
+        )
+    )
+    coverage_df["matched"] = coverage_df["matched"].fillna(0).astype(int)
+    coverage_df["match_rate_pct"] = (
+        coverage_df["matched"] / coverage_df["total_endline"].clip(lower=1) * 100
+    ).round(1)
+    st.dataframe(coverage_df, hide_index=True, use_container_width=True)
+
+    matched_cohort_df = compare_matched_df[
+        compare_matched_df["cohort_session_range"].notna()
+        & (compare_matched_df["cohort_session_range"] != "")
+    ].copy()
+    if matched_cohort_df.empty:
+        st.warning("No cohort data is available in the matched sample.")
+        return
+
+    cohort_coverage_df = (
+        compare_matched_df.groupby("Population", as_index=False)
+        .agg(matched_total=("response_id", "count"))
+        .merge(
+            matched_cohort_df.groupby("Population", as_index=False).agg(with_cohort=("response_id", "count")),
+            on="Population",
+            how="left",
+        )
+    )
+    cohort_coverage_df["with_cohort"] = cohort_coverage_df["with_cohort"].fillna(0).astype(int)
+    cohort_coverage_df["without_cohort"] = cohort_coverage_df["matched_total"] - cohort_coverage_df["with_cohort"]
+    cohort_coverage_df["cohort_coverage_pct"] = (
+        cohort_coverage_df["with_cohort"] / cohort_coverage_df["matched_total"].clip(lower=1) * 100
+    ).round(1)
+    st.caption("`n` labels on bars use matched learners with a cohort assignment only.")
+    st.dataframe(cohort_coverage_df, hide_index=True, use_container_width=True)
+
+    improvement_by_cohort_df = (
+        matched_cohort_df.groupby(["Population", "cohort_session_range"], as_index=False)
+        .agg(
+            improvement=("Improvement", stat_method),
+            learners=("response_id", "count"),
+        )
+        .rename(columns={"cohort_session_range": "Cohort"})
+    )
+    improvement_by_cohort_df["n_label"] = improvement_by_cohort_df["learners"].apply(lambda value: f"n={value}")
+    improvement_by_cohort_df["Cohort"] = pd.Categorical(
+        improvement_by_cohort_df["Cohort"],
+        categories=COHORT_ORDER,
+        ordered=True,
+    )
+    improvement_by_cohort_df = improvement_by_cohort_df.sort_values(["Cohort", "Population"])
+
+    improvement_chart = px.bar(
+        improvement_by_cohort_df,
+        x="Cohort",
+        y="improvement",
+        color="Population",
+        text="n_label",
+        barmode="group",
+        title=f"{stat_label} Improvement by Cohort (Endline - Baseline)",
+        labels={"improvement": f"{stat_label} Improvement (Letters)"},
+    )
+    improvement_chart.add_hline(y=0, line_dash="dash", line_color="#475569")
+    improvement_chart.update_traces(textposition="outside")
+    st.plotly_chart(
+        improvement_chart,
+        use_container_width=True,
+        key=f"{key_prefix}_cohort_matched_improvement_chart",
+    )
+
+    st.markdown("#### Cohort Baseline (Matched Sample)")
+    st.caption(
+        "Helper chart: baseline cohort medians for the same matched sample used above. "
+        "Use this to check whether higher-dosage cohorts started from lower baseline scores."
+    )
+    baseline_by_cohort_df = (
+        matched_cohort_df.groupby(["Population", "cohort_session_range"], as_index=False)
+        .agg(
+            baseline_score=("Baseline Score", stat_method),
+            learners=("response_id", "count"),
+        )
+        .rename(columns={"cohort_session_range": "Cohort"})
+    )
+    baseline_by_cohort_df["Cohort"] = pd.Categorical(
+        baseline_by_cohort_df["Cohort"],
+        categories=COHORT_ORDER,
+        ordered=True,
+    )
+    baseline_by_cohort_df = baseline_by_cohort_df.sort_values(["Cohort", "Population"])
+    baseline_cohort_chart = px.bar(
+        baseline_by_cohort_df,
+        x="Cohort",
+        y="baseline_score",
+        color="Population",
+        barmode="group",
+        title=f"{stat_label} Baseline Score by Cohort (Matched Sample)",
+        labels={"baseline_score": f"{stat_label} Baseline Correct Letters"},
+    )
+    baseline_cohort_chart.update_traces(
+        text=[f"n={count}" for count in baseline_by_cohort_df["learners"]],
+        textposition="outside",
+    )
+    st.plotly_chart(
+        baseline_cohort_chart,
+        use_container_width=True,
+        key=f"{key_prefix}_cohort_baseline_chart",
+    )
+
+    st.markdown("#### Cohort Improvement (Aggregate Shift)")
+    st.caption(
+        "Method: Uses the same matched cohort sample, but compares baseline and endline "
+        "distribution-level cohort scores (not per-learner deltas)."
+    )
+
+    aggregate_shift_df = (
+        matched_cohort_df.groupby(["Population", "cohort_session_range"], as_index=False)
+        .agg(
+            baseline_score=("Baseline Score", stat_method),
+            endline_score=("Endline Score", stat_method),
+            learners=("response_id", "count"),
+        )
+        .rename(columns={"cohort_session_range": "Cohort"})
+    )
+    aggregate_shift_df["Cohort"] = pd.Categorical(
+        aggregate_shift_df["Cohort"],
+        categories=COHORT_ORDER,
+        ordered=True,
+    )
+    aggregate_shift_df = aggregate_shift_df.sort_values(["Population", "Cohort"])
+
+    aggregate_shift_long_df = aggregate_shift_df.melt(
+        id_vars=["Population", "Cohort", "learners"],
+        value_vars=["baseline_score", "endline_score"],
+        var_name="Period",
+        value_name="Score",
+    )
+    aggregate_shift_long_df["Period"] = aggregate_shift_long_df["Period"].map(
+        {"baseline_score": "Baseline", "endline_score": "Endline"}
+    )
+
+    aggregate_shift_chart = px.bar(
+        aggregate_shift_long_df,
+        x="Cohort",
+        y="Score",
+        color="Period",
+        barmode="group",
+        facet_col="Population",
+        title=f"{stat_label} Baseline vs Endline by Cohort (Matched Sample)",
+        labels={"Score": f"{stat_label} Correct Letters"},
+        category_orders={"Period": ["Baseline", "Endline"]},
+        color_discrete_map={"Baseline": "#94a3b8", "Endline": "#2563eb"},
+    )
+    st.plotly_chart(
+        aggregate_shift_chart,
+        use_container_width=True,
+        key=f"{key_prefix}_cohort_aggregate_shift_chart",
     )
 
 
@@ -858,6 +1153,7 @@ def render_learning_outcomes_tab(
 def render_child_dosage_tab(
     child_dosage_dataframe: pd.DataFrame,
     endline_dataframe: pd.DataFrame,
+    baseline_dataframe: pd.DataFrame,
     comparator_mode: str,
 ) -> None:
     st.subheader("Learner Dosage (Child Level)")
@@ -944,13 +1240,621 @@ def render_child_dosage_tab(
 
     render_cohort_performance_reference_chart(
         endline_dataframe=endline_dataframe,
+        baseline_dataframe=baseline_dataframe,
+        comparator_mode=comparator_mode,
         key_prefix="learner_dosage",
+    )
+
+
+def render_school_grade_improvement_dosage_analysis(
+    endline_dataframe: pd.DataFrame,
+    baseline_dataframe: pd.DataFrame,
+    comparator_mode: str,
+    key_prefix: str,
+) -> None:
+    st.divider()
+    st.markdown("### School + Grade Improvement and Dosage")
+    st.caption(
+        "School-grade unit analysis only (no learner name matching). Improvement is calculated "
+        "as baseline-to-endline score change for each school-grade unit."
+    )
+    st.info(
+        "Interpretation tip: the cohort and dosage charts in this section use school-grade units, "
+        "not individual learners. In the correlation chart, each point is one school-grade unit; "
+        "larger points mean more learners in that unit."
+    )
+    st.info(
+        "Read the charts in sequence: coverage -> cohort improvement -> dosage bands -> correlation. "
+        "If higher-dosage cohorts also show higher improvement and positive correlation, that supports "
+        "a dosage-improvement relationship at school-grade level."
+    )
+
+    if endline_dataframe.empty or baseline_dataframe.empty:
+        st.warning("Baseline or endline data is unavailable for school-grade analysis.")
+        return
+
+    compare_endline_df, _ = build_population_comparison(
+        endline_dataframe,
+        "Program Name",
+        comparator_mode,
+    )
+    compare_baseline_df, _ = build_population_comparison(
+        baseline_dataframe,
+        "Program Name",
+        comparator_mode,
+    )
+
+    compare_endline_df = compare_endline_df[compare_endline_df["Grade"].notna()].copy()
+    compare_baseline_df = compare_baseline_df[compare_baseline_df["Grade"].notna()].copy()
+    if compare_endline_df.empty or compare_baseline_df.empty:
+        st.warning("No school-grade records available after filtering.")
+        return
+
+    endline_score_column_name = (
+        "Total cells correct - EGRA Letters"
+        if "Total cells correct - EGRA Letters" in compare_endline_df.columns
+        else "Endline Score"
+    )
+    baseline_score_column_name = (
+        "Total cells correct - EGRA Letters"
+        if "Total cells correct - EGRA Letters" in compare_baseline_df.columns
+        else "Baseline Score"
+    )
+    required_endline_columns = {
+        "Program Name",
+        "Grade",
+        "session_count_total",
+        "cohort_session_range",
+        endline_score_column_name,
+    }
+    required_baseline_columns = {"Program Name", "Grade", baseline_score_column_name}
+    if not required_endline_columns.issubset(compare_endline_df.columns):
+        st.error(
+            "Endline school-grade analysis is missing required columns: "
+            f"{sorted(required_endline_columns - set(compare_endline_df.columns))}"
+        )
+        return
+    if not required_baseline_columns.issubset(compare_baseline_df.columns):
+        st.error(
+            "Baseline school-grade analysis is missing required columns: "
+            f"{sorted(required_baseline_columns - set(compare_baseline_df.columns))}"
+        )
+        return
+
+    stat_col_left, stat_col_right = st.columns([1, 3])
+    with stat_col_left:
+        use_mean = st.toggle(
+            "Use Mean",
+            value=False,
+            key=f"{key_prefix}_stat_toggle",
+        )
+    stat_method = "mean" if use_mean else "median"
+    stat_label = "Mean" if use_mean else "Median"
+
+    endline_units_df = (
+        compare_endline_df.groupby(["Population", "Program Name", "Grade"], as_index=False)
+        .agg(
+            endline_learners=(endline_score_column_name, "count"),
+            endline_score=(endline_score_column_name, stat_method),
+            dosage_score=("session_count_total", stat_method),
+            cohort_mode=(
+                "cohort_session_range",
+                lambda values: values.mode().iloc[0]
+                if len(values.mode()) > 0
+                else "",
+            ),
+        )
+        .round(2)
+    )
+    baseline_units_df = (
+        compare_baseline_df.groupby(["Population", "Program Name", "Grade"], as_index=False)
+        .agg(
+            baseline_learners=(baseline_score_column_name, "count"),
+            baseline_score=(baseline_score_column_name, stat_method),
+        )
+        .round(2)
+    )
+
+    school_grade_df = endline_units_df.merge(
+        baseline_units_df,
+        on=["Population", "Program Name", "Grade"],
+        how="inner",
+    )
+    if school_grade_df.empty:
+        st.warning("No overlapping school-grade units found between baseline and endline.")
+        return
+    school_grade_df["improvement_score"] = (
+        school_grade_df["endline_score"] - school_grade_df["baseline_score"]
+    ).round(2)
+    school_grade_df["School Grade"] = school_grade_df["Program Name"] + " | " + school_grade_df["Grade"].astype(str)
+
+    coverage_df = (
+        endline_units_df.groupby("Population", as_index=False)
+        .agg(endline_school_grade_units=("Program Name", "count"))
+        .merge(
+            school_grade_df.groupby("Population", as_index=False).agg(
+                overlapping_units=("Program Name", "count")
+            ),
+            on="Population",
+            how="left",
+        )
+    )
+    coverage_df["overlapping_units"] = coverage_df["overlapping_units"].fillna(0).astype(int)
+    coverage_df["unit_overlap_pct"] = (
+        coverage_df["overlapping_units"] / coverage_df["endline_school_grade_units"].clip(lower=1) * 100
+    ).round(1)
+    st.dataframe(coverage_df, hide_index=True, use_container_width=True)
+
+    metric_col1, metric_col2, metric_col3 = st.columns(3)
+    with metric_col1:
+        st.metric("School-Grade Units", f"{len(school_grade_df):,}")
+    with metric_col2:
+        st.metric(
+            f"{stat_label} Improvement (All Units)",
+            f"{school_grade_df['improvement_score'].median():+.1f} letters",
+        )
+    with metric_col3:
+        st.metric(
+            f"{stat_label} Dosage (All Units)",
+            f"{school_grade_df['dosage_score'].median():.1f} sessions",
+        )
+
+    cohort_units_df = school_grade_df[
+        school_grade_df["cohort_mode"].notna()
+        & (school_grade_df["cohort_mode"] != "")
+    ].copy()
+    if not cohort_units_df.empty:
+        cohort_summary_df = (
+            cohort_units_df.groupby(["Population", "cohort_mode"], as_index=False)
+            .agg(
+                improvement=("improvement_score", stat_method),
+                school_grade_units=("School Grade", "count"),
+            )
+            .rename(columns={"cohort_mode": "Cohort"})
+        )
+        cohort_summary_df["Cohort"] = pd.Categorical(
+            cohort_summary_df["Cohort"],
+            categories=COHORT_ORDER,
+            ordered=True,
+        )
+        cohort_summary_df = cohort_summary_df.sort_values(["Cohort", "Population"])
+
+        cohort_chart = px.bar(
+            cohort_summary_df,
+            x="Cohort",
+            y="improvement",
+            color="Population",
+            barmode="group",
+            title=f"{stat_label} School-Grade Improvement by Cohort",
+            labels={"improvement": f"{stat_label} Improvement (Letters)"},
+        )
+        cohort_chart.update_traces(
+            text=[f"units={count}" for count in cohort_summary_df["school_grade_units"]],
+            textposition="outside",
+        )
+        cohort_chart.add_hline(y=0, line_dash="dash", line_color="#475569")
+        st.plotly_chart(
+            cohort_chart,
+            use_container_width=True,
+            key=f"{key_prefix}_cohort_chart",
+        )
+
+    school_grade_df["Dosage Band"] = school_grade_df["dosage_score"].apply(classify_group_session_band)
+    dosage_band_df = (
+        school_grade_df.groupby(["Population", "Dosage Band"], as_index=False)
+        .agg(school_grade_units=("School Grade", "count"))
+    )
+    dosage_band_df["Dosage Band"] = pd.Categorical(
+        dosage_band_df["Dosage Band"],
+        categories=COHORT_ORDER,
+        ordered=True,
+    )
+    dosage_band_df = dosage_band_df.sort_values(["Dosage Band", "Population"])
+
+    dosage_band_chart = px.bar(
+        dosage_band_df,
+        x="Dosage Band",
+        y="school_grade_units",
+        color="Population",
+        barmode="group",
+        title="School-Grade Unit Distribution by Dosage Band",
+        labels={"school_grade_units": "Number of School-Grade Units"},
+    )
+    st.plotly_chart(
+        dosage_band_chart,
+        use_container_width=True,
+        key=f"{key_prefix}_dosage_band_chart",
+    )
+
+    correlation_rows: list[dict] = []
+    for population_name, population_df in school_grade_df.groupby("Population"):
+        correlation_value = (
+            population_df["dosage_score"].corr(population_df["improvement_score"])
+            if population_df["dosage_score"].nunique() > 1
+            and population_df["improvement_score"].nunique() > 1
+            else pd.NA
+        )
+        correlation_rows.append({"Population": population_name, "correlation": correlation_value})
+    correlation_df = pd.DataFrame(correlation_rows)
+    correlation_df["correlation"] = pd.to_numeric(correlation_df["correlation"], errors="coerce").round(3)
+
+    correlation_chart = px.scatter(
+        school_grade_df,
+        x="dosage_score",
+        y="improvement_score",
+        color="Population",
+        size="endline_learners",
+        hover_data=["Program Name", "Grade", "endline_learners", "baseline_learners", "cohort_mode"],
+        title="Correlation View: Improvement vs Dosage (School-Grade Units)",
+        labels={
+            "dosage_score": f"{stat_label} Dosage (Sessions)",
+            "improvement_score": f"{stat_label} Improvement (Letters)",
+            "cohort_mode": "Dominant Cohort",
+        },
+    )
+    regression_input_df = school_grade_df[["dosage_score", "improvement_score"]].dropna().copy()
+    overall_trend = build_safe_linear_trend(
+        regression_input_df["dosage_score"],
+        regression_input_df["improvement_score"],
+    )
+    if overall_trend is not None:
+        x_line_values, y_line_values = overall_trend
+        correlation_chart.add_trace(
+            go.Scatter(
+                x=x_line_values,
+                y=y_line_values,
+                mode="lines",
+                name="Overall Trend",
+                line={"color": "#111827", "width": 2, "dash": "dash"},
+                hovertemplate="Dosage: %{x:.2f}<br>Trend Improvement: %{y:.2f}<extra></extra>",
+            )
+        )
+    correlation_chart.add_hline(y=0, line_dash="dash", line_color="#475569")
+    st.plotly_chart(
+        correlation_chart,
+        use_container_width=True,
+        key=f"{key_prefix}_correlation_chart",
+    )
+    st.dataframe(correlation_df, hide_index=True, use_container_width=True)
+
+    detail_columns = [
+        "Population",
+        "Program Name",
+        "Grade",
+        "baseline_learners",
+        "endline_learners",
+        "baseline_score",
+        "endline_score",
+        "improvement_score",
+        "dosage_score",
+        "cohort_mode",
+    ]
+    detail_df = school_grade_df[detail_columns].rename(
+        columns={
+            "Program Name": "School",
+            "Grade": "Grade",
+            "baseline_learners": "Baseline Learners",
+            "endline_learners": "Endline Learners",
+            "baseline_score": f"Baseline ({stat_label})",
+            "endline_score": f"Endline ({stat_label})",
+            "improvement_score": f"Improvement ({stat_label})",
+            "dosage_score": f"Dosage ({stat_label})",
+            "cohort_mode": "Dominant Cohort",
+        }
+    )
+    detail_df = detail_df.sort_values(["Population", f"Improvement ({stat_label})"], ascending=[True, False])
+    st.dataframe(detail_df, hide_index=True, use_container_width=True, height=420)
+
+
+def render_starting_level_vs_dosage_tab(
+    endline_dataframe: pd.DataFrame,
+    baseline_dataframe: pd.DataFrame,
+    comparator_mode: str,
+) -> None:
+    st.subheader("Starting Level vs Dosage")
+    st.info(
+        "This tab helps test whether lower-starting school-grade units received higher dosage, "
+        "and whether improvement patterns differ by both starting level and dosage."
+    )
+
+    if endline_dataframe.empty or baseline_dataframe.empty:
+        st.warning("Baseline or endline data is unavailable for this analysis.")
+        return
+
+    compare_endline_df, _ = build_population_comparison(
+        endline_dataframe,
+        "Program Name",
+        comparator_mode,
+    )
+    compare_baseline_df, _ = build_population_comparison(
+        baseline_dataframe,
+        "Program Name",
+        comparator_mode,
+    )
+
+    compare_endline_df = compare_endline_df[compare_endline_df["Grade"].notna()].copy()
+    compare_baseline_df = compare_baseline_df[compare_baseline_df["Grade"].notna()].copy()
+    if compare_endline_df.empty or compare_baseline_df.empty:
+        st.warning("No school-grade records available after filters.")
+        return
+
+    endline_score_column_name = (
+        "Total cells correct - EGRA Letters"
+        if "Total cells correct - EGRA Letters" in compare_endline_df.columns
+        else "Endline Score"
+    )
+    baseline_score_column_name = (
+        "Total cells correct - EGRA Letters"
+        if "Total cells correct - EGRA Letters" in compare_baseline_df.columns
+        else "Baseline Score"
+    )
+    required_endline_columns = {
+        "Program Name",
+        "Grade",
+        "session_count_total",
+        endline_score_column_name,
+    }
+    required_baseline_columns = {"Program Name", "Grade", baseline_score_column_name}
+    if not required_endline_columns.issubset(compare_endline_df.columns):
+        st.error(
+            "Endline analysis is missing required columns: "
+            f"{sorted(required_endline_columns - set(compare_endline_df.columns))}"
+        )
+        return
+    if not required_baseline_columns.issubset(compare_baseline_df.columns):
+        st.error(
+            "Baseline analysis is missing required columns: "
+            f"{sorted(required_baseline_columns - set(compare_baseline_df.columns))}"
+        )
+        return
+
+    stat_col_left, stat_col_right = st.columns([1, 3])
+    with stat_col_left:
+        use_mean = st.toggle(
+            "Use Mean",
+            value=False,
+            key="starting_level_stat_toggle",
+        )
+    with stat_col_right:
+        baseline_band_method = st.radio(
+            "Baseline banding method",
+            options=["Quintiles", "Fixed bands"],
+            index=0,
+            horizontal=True,
+            key="starting_level_band_method",
+        )
+    stat_method = "mean" if use_mean else "median"
+    stat_label = "Mean" if use_mean else "Median"
+
+    endline_units_df = (
+        compare_endline_df.groupby(["Population", "Program Name", "Grade"], as_index=False)
+        .agg(
+            endline_learners=(endline_score_column_name, "count"),
+            endline_score=(endline_score_column_name, stat_method),
+            dosage_score=("session_count_total", stat_method),
+        )
+        .round(2)
+    )
+    baseline_units_df = (
+        compare_baseline_df.groupby(["Population", "Program Name", "Grade"], as_index=False)
+        .agg(
+            baseline_learners=(baseline_score_column_name, "count"),
+            baseline_score=(baseline_score_column_name, stat_method),
+        )
+        .round(2)
+    )
+    school_grade_df = endline_units_df.merge(
+        baseline_units_df,
+        on=["Population", "Program Name", "Grade"],
+        how="inner",
+    )
+    if school_grade_df.empty:
+        st.warning("No overlapping school-grade units found between baseline and endline.")
+        return
+    school_grade_df["improvement_score"] = (
+        school_grade_df["endline_score"] - school_grade_df["baseline_score"]
+    ).round(2)
+    school_grade_df["dosage_band"] = school_grade_df["dosage_score"].apply(classify_group_session_band)
+
+    if baseline_band_method == "Quintiles":
+        school_grade_df["baseline_band"] = pd.qcut(
+            school_grade_df["baseline_score"],
+            q=5,
+            duplicates="drop",
+        ).astype(str)
+    else:
+        baseline_band_bins = [-1, 5, 10, 20, 30, 1000]
+        baseline_band_labels = ["0-5", "6-10", "11-20", "21-30", "31+"]
+        school_grade_df["baseline_band"] = pd.cut(
+            school_grade_df["baseline_score"],
+            bins=baseline_band_bins,
+            labels=baseline_band_labels,
+            include_lowest=True,
+        ).astype(str)
+
+    # 1) Baseline distribution by dosage band
+    st.info(
+        "Chart 1 - Baseline by Dosage Band: If lower baseline medians cluster in higher dosage bands, "
+        "that suggests lower-starting units were prioritized for more sessions."
+    )
+    baseline_distribution_chart = px.box(
+        school_grade_df,
+        x="dosage_band",
+        y="baseline_score",
+        color="Population",
+        category_orders={"dosage_band": COHORT_ORDER},
+        title=f"{stat_label} Baseline Score by Dosage Band (School-Grade Units)",
+        labels={
+            "dosage_band": "Dosage Band",
+            "baseline_score": f"{stat_label} Baseline Score",
+        },
+    )
+    st.plotly_chart(
+        baseline_distribution_chart,
+        use_container_width=True,
+        key="starting_level_baseline_distribution_chart",
+    )
+
+    # 2) Interaction heatmap with value toggle
+    heatmap_col_left, heatmap_col_right = st.columns([1, 3])
+    with heatmap_col_left:
+        heatmap_value = st.radio(
+            "Heatmap value",
+            options=["Median improvement", "Unit count"],
+            index=0,
+            key="starting_level_heatmap_value",
+        )
+
+    interaction_df = (
+        school_grade_df.groupby(["Population", "baseline_band", "dosage_band"], as_index=False)
+        .agg(
+            units=("Program Name", "count"),
+            baseline_score=("baseline_score", stat_method),
+            dosage_score=("dosage_score", stat_method),
+            improvement_score=("improvement_score", stat_method),
+        )
+    )
+    st.info(
+        "Chart 2 - Baseline x Dosage Heatmap: Rows are starting-level bands and columns are dosage bands. "
+        "For `Median improvement`, darker cells mean higher gains. For `Unit count`, darker cells mean more units. "
+        "Blank cells mean no units in that combination."
+    )
+    interaction_df["dosage_band"] = pd.Categorical(
+        interaction_df["dosage_band"],
+        categories=COHORT_ORDER,
+        ordered=True,
+    )
+    interaction_df = interaction_df.sort_values(["Population", "baseline_band", "dosage_band"])
+
+    for population_name in sorted(interaction_df["Population"].dropna().unique()):
+        population_interaction_df = interaction_df[interaction_df["Population"] == population_name].copy()
+        if population_interaction_df.empty:
+            continue
+
+        value_column_name = "improvement_score" if heatmap_value == "Median improvement" else "units"
+        value_title = (
+            f"{stat_label} Improvement (Letters)"
+            if heatmap_value == "Median improvement"
+            else "School-Grade Unit Count"
+        )
+        heatmap_matrix_df = population_interaction_df.pivot(
+            index="baseline_band",
+            columns="dosage_band",
+            values=value_column_name,
+        )
+        if heatmap_value == "Unit count":
+            heatmap_matrix_df = heatmap_matrix_df.fillna(0)
+        if heatmap_matrix_df.empty:
+            continue
+
+        heatmap_chart = px.imshow(
+            heatmap_matrix_df,
+            text_auto=".1f" if heatmap_value == "Median improvement" else "d",
+            aspect="auto",
+            title=f"{population_name}: Baseline Band x Dosage Band ({value_title})",
+            labels={
+                "x": "Dosage Band",
+                "y": "Baseline Band",
+                "color": value_title,
+            },
+            color_continuous_scale="Blues",
+        )
+        st.plotly_chart(
+            heatmap_chart,
+            use_container_width=True,
+            key=f"starting_level_heatmap_{population_name}_{heatmap_value.replace(' ', '_')}",
+        )
+
+    # 3) Faceted scatter with per-facet trend lines
+    st.info(
+        "Chart 3 - Improvement vs Dosage Scatter: Each point is a school-grade unit; larger points have more learners. "
+        "A positive dashed trend within a population indicates higher dosage is generally associated with higher improvement."
+    )
+    scatter_chart = px.scatter(
+        school_grade_df,
+        x="dosage_score",
+        y="improvement_score",
+        color="baseline_band",
+        size="endline_learners",
+        facet_col="Population",
+        hover_data=["Program Name", "Grade", "baseline_score", "endline_score", "endline_learners"],
+        title="Improvement vs Dosage by Baseline Band (School-Grade Units)",
+        labels={
+            "dosage_score": f"{stat_label} Dosage (Sessions)",
+            "improvement_score": f"{stat_label} Improvement (Letters)",
+            "baseline_band": "Baseline Band",
+        },
+    )
+
+    population_names = sorted(school_grade_df["Population"].dropna().unique())
+    for population_name in population_names:
+        population_scatter_df = school_grade_df[school_grade_df["Population"] == population_name]
+        population_trend = build_safe_linear_trend(
+            population_scatter_df["dosage_score"],
+            population_scatter_df["improvement_score"],
+        )
+        if population_trend is not None:
+            x_line_values, y_line_values = population_trend
+            facet_col_position = (
+                1
+                if population_name == population_names[0]
+                else 2
+            )
+            scatter_chart.add_trace(
+                go.Scatter(
+                    x=x_line_values,
+                    y=y_line_values,
+                    mode="lines",
+                    name=f"{population_name} Trend",
+                    line={"color": "#111827", "width": 2, "dash": "dash"},
+                    showlegend=False,
+                    hovertemplate="Dosage: %{x:.2f}<br>Trend Improvement: %{y:.2f}<extra></extra>",
+                ),
+                row=1,
+                col=facet_col_position,
+            )
+    scatter_chart.add_hline(y=0, line_dash="dash", line_color="#475569")
+    st.plotly_chart(
+        scatter_chart,
+        use_container_width=True,
+        key="starting_level_scatter_chart",
+    )
+
+    # 4) Summary table with sparse-cell warning
+    st.info(
+        "Table - Baseline x Dosage Summary: Use this as the source-of-truth for cell values and sample sizes. "
+        "Prioritize patterns with larger unit counts and treat sparse cells as directional."
+    )
+    summary_df = interaction_df.rename(
+        columns={
+            "Population": "Population",
+            "baseline_band": "Baseline Band",
+            "dosage_band": "Dosage Band",
+            "units": "School-Grade Units",
+            "baseline_score": f"Baseline ({stat_label})",
+            "dosage_score": f"Dosage ({stat_label})",
+            "improvement_score": f"Improvement ({stat_label})",
+        }
+    )
+    summary_df["Sparse Cell"] = summary_df["School-Grade Units"] < 8
+    st.dataframe(summary_df, hide_index=True, use_container_width=True, height=430)
+    sparse_cell_count = int(summary_df["Sparse Cell"].sum())
+    if sparse_cell_count > 0:
+        st.warning(
+            f"{sparse_cell_count} baseline x dosage cells have fewer than 8 school-grade units. "
+            "Treat those patterns as directional only."
+        )
+    st.info(
+        "Interpretation guide: if lower baseline bands consistently sit in higher dosage bands "
+        "and also show larger improvement medians, that supports the hypothesis that lower-starting "
+        "units received more dosage and improved more."
     )
 
 
 def render_group_dosage_tab(
     group_dosage_dataframe: pd.DataFrame,
     endline_dataframe: pd.DataFrame,
+    baseline_dataframe: pd.DataFrame,
     comparator_mode: str,
 ) -> None:
     st.subheader("Group Dosage (Class Level)")
@@ -1030,8 +1934,17 @@ def render_group_dosage_tab(
     )
     st.dataframe(school_table, hide_index=True, use_container_width=True, height=420)
 
+    render_school_grade_improvement_dosage_analysis(
+        endline_dataframe=endline_dataframe,
+        baseline_dataframe=baseline_dataframe,
+        comparator_mode=comparator_mode,
+        key_prefix="group_dosage_school_grade",
+    )
+
     render_cohort_performance_reference_chart(
         endline_dataframe=endline_dataframe,
+        baseline_dataframe=baseline_dataframe,
+        comparator_mode=comparator_mode,
         key_prefix="group_dosage",
     )
 
@@ -1257,6 +2170,7 @@ def display_dataquest_schools_2025() -> None:
             "Population Checks",
             "Learner Dosage",
             "Group Dosage",
+            "Starting Level vs Dosage",
             "What Was Taught",
         ]
     )
@@ -1274,10 +2188,26 @@ def display_dataquest_schools_2025() -> None:
             comparator_mode,
         )
     with tabs[2]:
-        render_child_dosage_tab(child_filtered_df, endline_filtered_df, comparator_mode)
+        render_child_dosage_tab(
+            child_filtered_df,
+            endline_filtered_df,
+            baseline_filtered_df,
+            comparator_mode,
+        )
     with tabs[3]:
-        render_group_dosage_tab(group_filtered_df, endline_filtered_df, comparator_mode)
+        render_group_dosage_tab(
+            group_filtered_df,
+            endline_filtered_df,
+            baseline_filtered_df,
+            comparator_mode,
+        )
     with tabs[4]:
+        render_starting_level_vs_dosage_tab(
+            endline_filtered_df,
+            baseline_filtered_df,
+            comparator_mode,
+        )
+    with tabs[5]:
         render_learning_content_tab(content_filtered_df, comparator_mode)
 
     render_reference_letters_per_month_chart()
