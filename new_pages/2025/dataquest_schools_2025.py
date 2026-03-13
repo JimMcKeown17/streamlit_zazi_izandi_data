@@ -1121,7 +1121,7 @@ def render_learning_content_tab(
 def render_reference_letters_per_month_chart() -> None:
     st.divider()
     st.subheader("Letters per Month (Reference Snapshot)")
-
+    st.info("This chart uses DataQuest data to show letters learned per month by dividing the baseline results by 6 months (Jan - Jul, we subtract a month for holidays) and then comparing that to the number of letters learned over the two months of the intervention (so improvement in letters / 2)")
     reference_df = pd.DataFrame(
         [
             {
