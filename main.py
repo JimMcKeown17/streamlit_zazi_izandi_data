@@ -61,6 +61,7 @@ nmb_endline_cohort_page_25 = st.Page("new_pages/2025/nmb_endline_cohort_analysis
 nmb_endline_cohort_exclude_page_25 = st.Page("new_pages/2025/nmb_endline_cohort_analysis_exclude.py", icon="📊", title="2025 Endline NMBx (Cohort 2)", url_path="nmb_endline_cohort_exclude_25")
 el_assessments_page_25 = st.Page("new_pages/2025/el_assessments.py", icon="🏫", title="2025 Baseline BCM (Cohort 2)", url_path="el_assessments_25")
 teampact_sessions_page_25 = st.Page("new_pages/2025/teampact_sessions_2025.py", icon="📱", title="2025 Sessions NMB (Cohort 2)", url_path="teampact_sessions_25")
+dataquest_schools_page_25 = st.Page("new_pages/2025/dataquest_schools_2025.py", icon="🏫", title="2025 DataQuest Schools", url_path="dataquest_schools_25")
 east_london_sessions_page_25 = st.Page("new_pages/2025/east_london_sessions.py", icon="📱", title="2025 Sessions BCM (Cohort 2)", url_path="east_london_sessions_25")
 mentor_visits_page_25 = st.Page("new_pages/2025/mentor_visits_2025.py", icon="👁️", title="2025 Mentor Visits (Cohort 2)", url_path="mentor_visits_25")
 
@@ -102,7 +103,7 @@ pages_2025_internal = [
     teampact_sessions_page_25, east_london_sessions_page_25, el_assessments_page_25,
     # 2025 project management pages archived here
     letter_progress_july_cohort, letter_progress_detailed_july_cohort,
-    mentor_visits_page_25, flag_same_letter_groups_page, flag_moving_too_fast_page,
+    mentor_visits_page_25, flag_same_letter_groups_page, flag_moving_too_fast_page,dataquest_schools_page_25
 ]
 
 pages_research_public = [research_page]
