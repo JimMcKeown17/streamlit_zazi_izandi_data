@@ -1492,20 +1492,30 @@ def render_school_grade_improvement_dosage_analysis(
             "cohort_mode": "Dominant Cohort",
         },
     )
-    regression_input_df = school_grade_df[["dosage_score", "improvement_score"]].dropna().copy()
-    overall_trend = build_safe_linear_trend(
-        regression_input_df["dosage_score"],
-        regression_input_df["improvement_score"],
-    )
-    if overall_trend is not None:
-        x_line_values, y_line_values = overall_trend
+    population_line_colors = {
+        "DataQuest": "#1d4ed8",
+        "Non-DataQuest": "#7dd3fc",
+        "Overall": "#111827",
+    }
+    for population_name, population_df in school_grade_df.groupby("Population"):
+        population_trend = build_safe_linear_trend(
+            population_df["dosage_score"],
+            population_df["improvement_score"],
+        )
+        if population_trend is None:
+            continue
+        x_line_values, y_line_values = population_trend
         correlation_chart.add_trace(
             go.Scatter(
                 x=x_line_values,
                 y=y_line_values,
                 mode="lines",
-                name="Overall Trend",
-                line={"color": "#111827", "width": 2, "dash": "dash"},
+                name=f"{population_name} Trend",
+                line={
+                    "color": population_line_colors.get(population_name, "#111827"),
+                    "width": 2,
+                    "dash": "dash",
+                },
                 hovertemplate="Dosage: %{x:.2f}<br>Trend Improvement: %{y:.2f}<extra></extra>",
             )
         )
