@@ -28,6 +28,7 @@ ecd_list = [
     "St Mary Magdelene ECD",
     "Thembalethu Day Care",
     "Msobomvu ECD",
+    "Msobomvu Full Service",
     "Mzamomhle Edu-care",
     "Nceduluntu Edu-care",
     "Ekhaya Pre-School",
@@ -35,7 +36,15 @@ ecd_list = [
     "Koester Day Care",
     "Khusta ECD",
     "Rise and Shine ECD",
-    "Arise and Shine ECD"
+    "Arise and Shine ECD",
+    # Added 2026 — new ECDs/daycares from Teampact
+    "Baby Daycare",
+    "Lukhanyiso Daycare",
+    "Malukhanye ECD",
+    "Qhamani Pre-School",
+    "Sizamokuhle Daycare",
+    "Sume Center",
+    "Vukani Daycare",
 ]
 
 el_schools = [

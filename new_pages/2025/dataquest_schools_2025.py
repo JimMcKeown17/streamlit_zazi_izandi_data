@@ -1,3 +1,5 @@
+from collections import Counter
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -48,6 +50,11 @@ GRADE_OPTIONS = ["All Grades", "Grade R", "Grade 1", "Grade 2"]
 COMPARATOR_NON_DQ = "Non-DataQuest schools"
 COMPARATOR_OVERALL = "Overall (includes DataQuest)"
 COHORT_ORDER = ["0-10", "11-20", "21-30", "31-40", "41+"]
+LETTER_SEQUENCE = [
+    "a", "e", "i", "o", "u", "b", "l", "m", "k", "p",
+    "s", "h", "z", "n", "d", "y", "f", "w", "v", "x",
+    "g", "t", "q", "r", "c", "j",
+]
 
 
 def normalize_series(text_series: pd.Series) -> pd.Series:
@@ -2041,6 +2048,297 @@ def render_learning_content_tab(
     st.dataframe(top_letters, hide_index=True, use_container_width=True)
 
 
+@st.cache_data(ttl=3600)
+def _analyse_quality_flags(dq_sessions: pd.DataFrame) -> pd.DataFrame:
+    """Analyse DataQuest sessions for Moving-Too-Fast and Same-Letter-Groups flags.
+
+    Moving Too Fast: an EA+school+group is flagged when >70% of consecutive session
+    transitions introduce only new letters with no overlap (no review).
+
+    Same Letter Groups: an EA+school is flagged when 3+ groups share the same
+    highest-letter progress index in their most recent session.
+    """
+    df = dq_sessions.copy()
+
+    # Deduplicate to one row per session
+    df_unique = df.sort_values("session_started_at").drop_duplicates(
+        subset=["session_id"], keep="last"
+    )
+    df_unique = df_unique[
+        df_unique["letters_taught"].notna()
+        & (df_unique["letters_taught"].astype(str).str.strip() != "")
+    ].copy()
+    if df_unique.empty:
+        return pd.DataFrame()
+
+    # --- Moving Too Fast (per EA + school + group) ---
+    mtf_flagged_rows: list[dict] = []
+    min_sessions = 3
+
+    for (school, ea, group), grp in df_unique.groupby(
+        ["program_name", "user_name", "class_name"]
+    ):
+        grp = grp.sort_values("session_started_at")
+        if len(grp) < min_sessions:
+            continue
+
+        letters_per_session: list[set[str]] = []
+        for letters_str in grp["letters_taught"]:
+            tokens = {t.strip().lower() for t in str(letters_str).split(",") if t.strip()}
+            letters_per_session.append(tokens)
+
+        no_review = sum(
+            1
+            for i in range(1, len(letters_per_session))
+            if not (letters_per_session[i] & letters_per_session[i - 1])
+        )
+        total_transitions = len(letters_per_session) - 1
+        if total_transitions >= (min_sessions - 1) and no_review / total_transitions > 0.7:
+            mtf_flagged_rows.append({"school": school, "ea": ea, "group": group})
+
+    mtf_by_school = (
+        pd.DataFrame(mtf_flagged_rows)
+        .groupby("school", as_index=False)
+        .agg(moving_too_fast_groups=("group", "count"))
+        if mtf_flagged_rows
+        else pd.DataFrame(columns=["school", "moving_too_fast_groups"])
+    )
+
+    # --- Same Letter Groups (per EA + school) ---
+    # Find highest letter index per group's most recent session
+    latest_idx = df_unique.groupby(
+        ["program_name", "user_name", "class_name"]
+    )["session_started_at"].idxmax()
+    latest_sessions = df_unique.loc[latest_idx].copy()
+
+    def _highest_letter_index(letters_str: str) -> int:
+        tokens = [t.strip().lower() for t in str(letters_str).split(",") if t.strip()]
+        max_idx = -1
+        for token in tokens:
+            if token in LETTER_SEQUENCE:
+                max_idx = max(max_idx, LETTER_SEQUENCE.index(token))
+        return max_idx
+
+    latest_sessions["progress_index"] = latest_sessions["letters_taught"].apply(
+        _highest_letter_index
+    )
+
+    slg_flagged_rows: list[dict] = []
+    for (school, ea), ea_grp in latest_sessions.groupby(["program_name", "user_name"]):
+        counts = Counter(ea_grp["progress_index"])
+        if any(c >= 3 for c in counts.values()):
+            slg_flagged_rows.append({"school": school, "ea": ea})
+
+    slg_by_school = (
+        pd.DataFrame(slg_flagged_rows)
+        .groupby("school", as_index=False)
+        .agg(same_letter_groups_eas=("ea", "count"))
+        if slg_flagged_rows
+        else pd.DataFrame(columns=["school", "same_letter_groups_eas"])
+    )
+
+    # --- Combine per school ---
+    all_schools = pd.DataFrame(
+        {"school": sorted(df_unique["program_name"].unique())}
+    )
+    result = all_schools.merge(mtf_by_school, on="school", how="left").merge(
+        slg_by_school, on="school", how="left"
+    )
+    result["moving_too_fast_groups"] = result["moving_too_fast_groups"].fillna(0).astype(int)
+    result["same_letter_groups_eas"] = result["same_letter_groups_eas"].fillna(0).astype(int)
+
+    # Count total groups and EAs per school for context
+    total_groups = (
+        df_unique.groupby("program_name", as_index=False)
+        .agg(total_groups=("class_name", "nunique"), total_eas=("user_name", "nunique"))
+        .rename(columns={"program_name": "school"})
+    )
+    result = result.merge(total_groups, on="school", how="left")
+    result = result.rename(columns={"school": "School", "total_groups": "Total Groups", "total_eas": "Total EAs"})
+    return result
+
+
+def render_school_dosage_tab(
+    sessions_dataframe: pd.DataFrame,
+    endline_dataframe: pd.DataFrame,
+    comparator_mode: str,
+) -> None:
+    st.subheader("School Dosage")
+    st.info("Charts on this tab are **not affected** by the Grade or 11+ session filters above. They show all sessions across all grades.")
+
+    if sessions_dataframe.empty:
+        st.warning("No session data available.")
+        return
+
+    compare_df, comparator_label = build_population_comparison(
+        sessions_dataframe,
+        "program_name",
+        comparator_mode,
+    )
+
+    school_summary = compare_df.groupby(
+        ["program_name", "Population"], as_index=False
+    ).agg(
+        Total_Sessions=("session_id", "nunique"),
+        first_session=("session_started_at", "min"),
+        last_session=("session_started_at", "max"),
+    )
+    date_range_days = (
+        (school_summary["last_session"] - school_summary["first_session"]).dt.days + 1
+    ).clip(lower=1)
+    school_summary["Avg_Sessions_Per_Day"] = (
+        school_summary["Total_Sessions"] / date_range_days
+    ).round(2)
+
+    # --- DataQuest Only: Total Sessions by School ---
+    dq_only = school_summary[is_dataquest_school(school_summary["program_name"])].copy()
+
+    dq_sorted_total = dq_only.sort_values("Total_Sessions", ascending=True)
+    fig_dq_total = px.bar(
+        dq_sorted_total,
+        x="program_name",
+        y="Total_Sessions",
+        title="Total Sessions by School (DataQuest Only)",
+        labels={"program_name": "School", "Total_Sessions": "Total Sessions"},
+        category_orders={
+            "program_name": dq_sorted_total["program_name"].tolist(),
+        },
+    )
+    fig_dq_total.update_layout(
+        xaxis_tickangle=-45,
+        showlegend=False,
+    )
+    st.plotly_chart(fig_dq_total, use_container_width=True)
+
+    # --- DataQuest Only: Average Sessions per Day by School ---
+    dq_sorted_avg = dq_only.sort_values("Avg_Sessions_Per_Day", ascending=True)
+    fig_dq_avg = px.bar(
+        dq_sorted_avg,
+        x="program_name",
+        y="Avg_Sessions_Per_Day",
+        title="Average Sessions per Day by School (DataQuest Only)",
+        labels={"program_name": "School", "Avg_Sessions_Per_Day": "Avg Sessions Per Day"},
+        category_orders={
+            "program_name": dq_sorted_avg["program_name"].tolist(),
+        },
+    )
+    fig_dq_avg.update_layout(
+        xaxis_tickangle=-45,
+        showlegend=False,
+    )
+    st.plotly_chart(fig_dq_avg, use_container_width=True)
+
+    st.divider()
+
+    # --- Total Sessions by School ---
+    sorted_total = school_summary.sort_values("Total_Sessions", ascending=True)
+    fig_total = px.bar(
+        sorted_total,
+        x="program_name",
+        y="Total_Sessions",
+        color="Population",
+        title="Total Sessions by School",
+        labels={"program_name": "School", "Total_Sessions": "Total Sessions"},
+        category_orders={
+            "program_name": sorted_total["program_name"].tolist(),
+        },
+    )
+    fig_total.update_layout(
+        xaxis_tickangle=-45,
+        showlegend=True,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    st.plotly_chart(fig_total, use_container_width=True)
+
+    # --- Average Sessions per Day by School ---
+    sorted_avg = school_summary.sort_values("Avg_Sessions_Per_Day", ascending=True)
+    fig_avg = px.bar(
+        sorted_avg,
+        x="program_name",
+        y="Avg_Sessions_Per_Day",
+        color="Population",
+        title="Average Sessions per Day by School",
+        labels={"program_name": "School", "Avg_Sessions_Per_Day": "Avg Sessions Per Day"},
+        category_orders={
+            "program_name": sorted_avg["program_name"].tolist(),
+        },
+    )
+    fig_avg.update_layout(
+        xaxis_tickangle=-45,
+        showlegend=True,
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+    )
+    st.plotly_chart(fig_avg, use_container_width=True)
+
+    # --- Quality Flags Summary (DataQuest Only) ---
+    st.divider()
+    st.markdown("### Quality Flag Summary (DataQuest Only)")
+    st.caption(
+        "Analyses session data for DataQuest schools to flag EA groups that may be running "
+        "the programme incorrectly. "
+        "**Moving Too Fast:** >70% of session transitions introduce only new letters with no review. "
+        "**Same Letter Groups:** An EA has 3+ groups at the same letter progress level."
+    )
+
+    dq_sessions = sessions_dataframe[
+        is_dataquest_school(sessions_dataframe["program_name"])
+    ].copy()
+    if dq_sessions.empty:
+        st.info("No DataQuest session data available for quality flag analysis.")
+    else:
+        flag_results = _analyse_quality_flags(dq_sessions)
+        if flag_results.empty:
+            st.success("No flagged groups found across DataQuest schools.")
+        else:
+            # --- Metrics ---
+            schools_with_mtf = int(flag_results.loc[flag_results["moving_too_fast_groups"] > 0, "School"].nunique())
+            schools_with_slg = int(flag_results.loc[flag_results["same_letter_groups_eas"] > 0, "School"].nunique())
+            total_schools = int(flag_results["School"].nunique())
+            total_mtf_groups = int(flag_results["moving_too_fast_groups"].sum())
+            total_slg_eas = int(flag_results["same_letter_groups_eas"].sum())
+
+            m1, m2, m3 = st.columns(3)
+            with m1:
+                st.metric(
+                    "Schools with Moving Too Fast",
+                    f"{schools_with_mtf} / {total_schools}",
+                )
+            with m2:
+                st.metric("Flagged Groups (Moving Too Fast)", f"{total_mtf_groups}")
+            with m3:
+                st.metric("EAs with Same Letter Groups", f"{total_slg_eas}")
+
+            st.dataframe(
+                flag_results.sort_values("moving_too_fast_groups", ascending=False),
+                hide_index=True,
+                use_container_width=True,
+            )
+
+            # --- Bar chart ---
+            chart_df = flag_results.sort_values("moving_too_fast_groups", ascending=True)
+            fig_flags = px.bar(
+                chart_df,
+                x="School",
+                y=["moving_too_fast_groups", "same_letter_groups_eas"],
+                title="Quality Flags by School (DataQuest Only)",
+                labels={"value": "Count", "variable": "Flag Type"},
+                barmode="group",
+                category_orders={"School": chart_df["School"].tolist()},
+            )
+            fig_flags.for_each_trace(
+                lambda t: t.update(
+                    name="Moving Too Fast (groups)"
+                    if "moving" in t.name
+                    else "Same Letter Groups (EAs)"
+                )
+            )
+            fig_flags.update_layout(
+                xaxis_tickangle=-45,
+                legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+            )
+            st.plotly_chart(fig_flags, use_container_width=True)
+
+
 def render_reference_letters_per_month_chart() -> None:
     st.divider()
     st.subheader("Letters per Month (Reference Snapshot)")
@@ -2180,6 +2478,7 @@ def display_dataquest_schools_2025() -> None:
             "Population Checks",
             "Learner Dosage",
             "Group Dosage",
+            "School Dosage",
             "Starting Level vs Dosage",
             "What Was Taught",
         ]
@@ -2212,12 +2511,14 @@ def display_dataquest_schools_2025() -> None:
             comparator_mode,
         )
     with tabs[4]:
+        render_school_dosage_tab(sessions_df, endline_filtered_df, comparator_mode)
+    with tabs[5]:
         render_starting_level_vs_dosage_tab(
             endline_filtered_df,
             baseline_filtered_df,
             comparator_mode,
         )
-    with tabs[5]:
+    with tabs[6]:
         render_learning_content_tab(content_filtered_df, comparator_mode)
 
     render_reference_letters_per_month_chart()
