@@ -566,7 +566,7 @@ def display_session_analysis(df):
 
     with filter_col2:
         # Mentor filter for this section
-        mentor_options = ["All mentors"] + list(mentors_to_schools.keys())
+        mentor_options = ["All mentors"] + sorted(mentors_to_schools.keys())
         ea_mentor_filter = st.selectbox(
             "Filter by Mentor:",
             options=mentor_options,
@@ -608,7 +608,7 @@ def display_session_analysis(df):
             # Create breakdown table
             breakdown_df = pd.DataFrame({
                 'No. of Days Worked': active_days_counts.index,
-                'Counto of EAs': active_days_counts.values,
+                'Count of EAs': active_days_counts.values,
                 'Percentage of EAs': (active_days_counts.values / total_eas * 100).round(1)
             })
 
