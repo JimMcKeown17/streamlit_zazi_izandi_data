@@ -10,7 +10,7 @@ Streamlit-based data analytics platform ("ZZ Data Portal") for the Zazi iZandi l
 
 - **Django Backend:** `/Users/jimmckeown/Development/Zazi_iZandi_Website_2025/`
   - Hosts the Django management commands that sync data from TeamPact API into PostgreSQL
-  - Key sync commands: `sync_assessments_2026`, `sync_teampact_sessions_2026`, `sync_mentor_visits_2026`
+  - Key sync commands: python manage.py sync_teampact_sessions_2026; python manage.py sync_assessments_2026; python manage.py sync_assessment_cells_2026; python manage.py sync_mentor_visits_2026; python manage.py backup_2026_to_parquet; python manage.py backup_assessments_2026_to_parquet; python manage.py backup_mentor_visits_2026_to_parquet; python manage.py compute_school_summaries_2026
   - Django models define the database schema (Assessment2026, AssessmentCell2026, etc.)
   - API reference: `Zazi_iZandi_Website_2025/docs/teampact_api_reference.md`
 

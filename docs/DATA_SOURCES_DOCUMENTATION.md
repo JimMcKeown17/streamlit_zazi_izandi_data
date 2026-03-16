@@ -232,8 +232,8 @@ This document provides a comprehensive overview of all data sources used in the 
 |------|-------------|------------------|-------------|-------|
 | Letter Progress (Cohort 2) | **Database** | Direct SQL query | PostgreSQL | `teampact_sessions_complete` |
 | Letter Progress Detailed (Cohort 2) | **Database** | Direct SQL query | PostgreSQL | `teampact_sessions_complete` |
-| Check: Same Letter Groups | **Database** | Direct SQL query | PostgreSQL | `teampact_sessions_complete` |
-| Check: Moving Too Fast | **Database** | Direct SQL query | PostgreSQL | `teampact_sessions_complete` |
+| Check: Same Letter Groups | **Database** | `load_sessions_2025()` | PostgreSQL | `teampact_sessions_complete`; flags calculated in pandas on render |
+| Check: Moving Too Fast | **Database** | `load_sessions_2025()` | PostgreSQL | `teampact_sessions_complete`; flags calculated in pandas on render |
 | 2025 Mentor Visits (Cohort 2) | Mentor visit CSV | `load_mentor_visits_2025_tp()` | CSV | Observation data |
 
 ---
@@ -347,6 +347,35 @@ api_tasession (TA Visits - Separate System)
 ├── Used by: Early implementation tracking
 └── Updated: Via Django app directly
 ```
+
+---
+
+### Quality Flags: "Moving Too Fast" & "Same Letter Groups"
+
+These two QA flags identify EAs (Education Assistants) who may not be following best practices. The same flag logic is implemented in **three independent locations** — they do not read from each other.
+
+#### Flag Definitions
+
+| Flag | Rule | Purpose |
+|------|------|---------|
+| **Moving Too Fast** | >70% of session-to-session transitions introduce only new letters with zero overlap (review) of the previous session's letters | EA advancing learners too quickly without adequate review |
+| **Same Letter Groups** | 3+ groups under the same EA are at the exact same letter progress index | EA may not be differentiating instruction by group ability level |
+
+#### Where Flags Are Calculated
+
+| Location | Year | Granularity | Trigger | Output | Data Source |
+|----------|------|-------------|---------|--------|-------------|
+| **Streamlit** `new_pages/2026/flag_moving_too_fast_2026.py` | 2026 | Per-TA with drill-down details | Page render (1hr cache) | Rendered UI only | `sessions_2026` parquet |
+| **Streamlit** `new_pages/2026/flag_same_letter_groups_2026.py` | 2026 | Per-TA with drill-down details | Page render (1hr cache) | Rendered UI only | `sessions_2026` parquet |
+| **Streamlit** `new_pages/project_management/flag_moving_too_fast.py` | 2025 | Per-TA with drill-down details | Page render | Rendered UI only | `teampact_sessions_complete` |
+| **Streamlit** `new_pages/project_management/flag_same_letter_groups.py` | 2025 | Per-TA with drill-down details | Page render | Rendered UI only | `teampact_sessions_complete` |
+| **Django** `compute_school_summaries_2026` | 2026 | Per-school aggregate counts | Nightly cron (`nightly_zz_sync_2026`) | `school_summaries_2026` table (`same_letter_group_flagged_eas`, `moving_too_fast_flagged_eas` integer fields) | `sessions_2026` DB table |
+| **Django** `calculate_assessment_cohorts` | 2025 | Per-assessment booleans | Manual run (not in nightly cron) | `teampact_assessment_endline_2025` table (`flag_moving_too_fast`, `flag_same_letter_groups` boolean fields) | `teampact_sessions_complete` DB table |
+
+#### Important Notes
+- The three implementations are **independent duplicates** of the same logic — updating one does not update the others.
+- The 2026 Streamlit flag pages do **not** read the pre-computed flags from `school_summaries_2026` — they recalculate from raw session data on every page render.
+- The 2025 per-assessment boolean flags (`calculate_assessment_cohorts`) were used for cohort outcome analysis (correlating flag status with student assessment scores).
 
 ---
 
