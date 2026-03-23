@@ -5,7 +5,8 @@ st.set_page_config(layout="wide", page_title="ZZ Data Portal", page_icon="bar-ch
 
 # --- Credentials ---
 credentials = {
-    'zazi': 'izandi'
+    'zazi': 'izandi',
+    'funder': 'impact!'
 }
 
 # --- Login/Logout Logic ---
