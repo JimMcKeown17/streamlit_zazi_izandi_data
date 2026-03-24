@@ -89,6 +89,16 @@ def display_research():
                     - Midway through Grade R, EC children (not on our programme) know 2.7 letters and averaged 5.2 letters per minute (2023 Masi EGRA; sample size 440).
 
                     """)
+        with st.expander("FUNS 2025"):
+            st.write("""
+                    - In Grade 1, only 31% of learners achieved the Home Language Reading Benchmark in South Africa.
+                    - In Grades 2 and 3, just over 30% of learners met their respective Home Language Reading Benchmarks.
+                    - By the end of grade 3, there are still 15% of learners who cannot read a single word.
+                    - Learners assessed in English were most likely to reach benchmarks, as were learners in the Western Cape and Gauteng compared to other provinces.
+                    - Children in quintile 5 schools are roughly twice as likely to reach reading benchmarks than children in no-fee schools (quintile 1-3).
+                    - Gender gaps are also exceptionally large in favour of girls – in some languages girls are twice as likely to reach the benchmarks than boys.
+
+                    """)
     st.markdown("---")
 
     # FURTHER STATS
