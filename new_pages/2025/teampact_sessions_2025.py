@@ -353,46 +353,6 @@ def display_session_analysis(df):
     
     st.divider()
     
-    # HISTOGRAM: DAYS WORKED DISTRIBUTION
-    st.subheader("Distribution of Days Worked by EAs")
-    
-    # Calculate days worked for each EA
-    ea_days_worked = df_all.groupby('user_name')['session_date'].nunique().reset_index()
-    ea_days_worked.columns = ['EA_Name', 'Days_Worked']
-    
-    # Create histogram with bucket size of 1
-    fig_histogram = px.histogram(
-        ea_days_worked,
-        x='Days_Worked',
-        nbins=int(ea_days_worked['Days_Worked'].max()) if not ea_days_worked.empty else 50,
-        title="Number of EAs by Days Worked",
-        labels={'Days_Worked': 'Days Worked', 'count': 'Number of EAs'},
-        color_discrete_sequence=['#1f77b4']
-    )
-    
-    # Update layout for better readability
-    fig_histogram.update_layout(
-        xaxis_title="Days Worked",
-        yaxis_title="Number of EAs",
-        bargap=0.1,
-        showlegend=False
-    )
-    
-    st.plotly_chart(fig_histogram, width='stretch')
-    
-    # Show summary statistics
-    col1, col2, col3, col4 = st.columns(4)
-    with col1:
-        st.metric("Total EAs", len(ea_days_worked))
-    with col2:
-        st.metric("Avg Days per EA", f"{ea_days_worked['Days_Worked'].mean():.1f}")
-    with col3:
-        st.metric("Median Days per EA", f"{ea_days_worked['Days_Worked'].median():.0f}")
-    with col4:
-        st.metric("Max Days Worked", f"{ea_days_worked['Days_Worked'].max():.0f}")
-    
-    st.divider()
-
     # UNIQUE EAs BY SCHOOLS & ECDs - ALL DATA
     st.subheader("Active EAs by Schools & ECDs")
     
@@ -410,6 +370,100 @@ def display_session_analysis(df):
             labels={'Active_EAs': 'Number of Active EAs', 'Date': 'Date'}
         )
         st.plotly_chart(fig_school_type_eas, width='stretch')
+    
+    st.divider()
+
+    # Shared school type filter for EA day-based charts
+    st.subheader("EA Days Active Buckets")
+    ea_days_school_type_label = st.selectbox(
+        "School Type:",
+        options=["Primary Schools", "ECDCs"],
+        index=0,
+        key="ea_days_active_school_type_filter"
+    )
+    selected_days_school_type = "Primary School" if ea_days_school_type_label == "Primary Schools" else "ECD"
+    selected_days_df = df_all[df_all['school_type'] == selected_days_school_type]
+
+    # Calculate days worked for each EA for selected school type
+    ea_days_worked = selected_days_df.groupby('user_name')['session_date'].nunique().reset_index()
+    ea_days_worked.columns = ['EA_Name', 'Days_Worked']
+
+    if ea_days_worked.empty:
+        st.warning(f"No EA activity data available for {ea_days_school_type_label}.")
+    else:
+        # Bucket EAs by number of active days
+        bucket_order = ['0 - 10 days', '11 - 20 days', '21 - 30 days', '31 - 40 days', '41+ days']
+
+        def categorize_days_active(days_active):
+            if days_active <= 10:
+                return '0 - 10 days'
+            if days_active <= 20:
+                return '11 - 20 days'
+            if days_active <= 30:
+                return '21 - 30 days'
+            if days_active <= 40:
+                return '31 - 40 days'
+            return '41+ days'
+
+        ea_days_worked['Days_Active_Bucket'] = ea_days_worked['Days_Worked'].apply(categorize_days_active)
+
+        bucket_counts = (
+            ea_days_worked['Days_Active_Bucket']
+            .value_counts()
+            .reindex(bucket_order, fill_value=0)
+        )
+        bucket_df = pd.DataFrame({
+            'Days Active Bucket': bucket_counts.index,
+            'Number of EAs': bucket_counts.values
+        })
+
+        fig_bucket = px.bar(
+            bucket_df,
+            x='Days Active Bucket',
+            y='Number of EAs',
+            title=f"Number of EAs by Days Active ({ea_days_school_type_label})",
+            labels={'Days Active Bucket': 'Days Active', 'Number of EAs': 'Number of EAs'},
+            color='Days Active Bucket',
+            category_orders={'Days Active Bucket': bucket_order}
+        )
+        fig_bucket.update_layout(showlegend=False)
+        st.plotly_chart(fig_bucket, width='stretch')
+
+        # HISTOGRAM: DAYS WORKED DISTRIBUTION
+        st.subheader("Distribution of Days Worked by EAs")
+
+        # Create histogram with bucket size of 1
+        fig_histogram = px.histogram(
+            ea_days_worked,
+            x='Days_Worked',
+            nbins=int(ea_days_worked['Days_Worked'].max()) if not ea_days_worked.empty else 50,
+            title=f"Number of EAs by Days Worked ({ea_days_school_type_label})",
+            labels={'Days_Worked': 'Days Worked', 'count': 'Number of EAs'},
+            color_discrete_sequence=['#1f77b4']
+        )
+
+        # Update layout for better readability
+        fig_histogram.update_layout(
+            xaxis_title="Days Worked",
+            yaxis_title="Number of EAs",
+            bargap=0.1,
+            showlegend=False
+        )
+
+        st.plotly_chart(fig_histogram, width='stretch')
+
+        # Show summary statistics
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Total EAs", len(ea_days_worked))
+        with col2:
+            st.metric("Avg Days per EA", f"{ea_days_worked['Days_Worked'].mean():.1f}")
+        with col3:
+            st.metric("Median Days per EA", f"{ea_days_worked['Days_Worked'].median():.0f}")
+        with col4:
+            st.metric("Max Days Worked", f"{ea_days_worked['Days_Worked'].max():.0f}")
+    
+    st.divider()
     
     # SESSIONS BY SCHOOLS & ECDs - ALL DATA
     st.subheader("Total Sessions by Schools & ECDs")
@@ -1083,8 +1137,17 @@ def display_children_session_analysis(df):
         st.error("The 'participant_id' column is not available in the dataset.")
         return
     
+    # Exclude East London schools for NMB sessions analysis
+    el_schools_lower = [school.lower() for school in el_schools]
+    df_children = df[
+        ~df['program_name'].fillna('').str.lower().isin(el_schools_lower)
+    ].copy()
+
+    if df_children.empty:
+        st.warning("No data available after excluding East London schools.")
+        return
+    
     # Prepare date columns
-    df_children = df.copy()
     df_children['session_date'] = pd.to_datetime(df_children['session_started_at']).dt.date
     df_children['session_week'] = pd.to_datetime(df_children['session_started_at']).dt.to_period('W')
     
@@ -1479,6 +1542,19 @@ try:
     if df.empty:
         st.warning("No data found in database.")
         st.info("💡 Data is automatically refreshed nightly via cron job. If you need immediate data, contact your system administrator.")
+        st.stop()
+
+    # NMB page should exclude East London schools from all tabs
+    el_schools_lower = [school.lower() for school in el_schools]
+    original_row_count = len(df)
+    df = df[
+        ~df['program_name'].fillna('').str.lower().isin(el_schools_lower)
+    ].copy()
+    excluded_row_count = original_row_count - len(df)
+    st.caption(f"📍 NMB filter applied: excluded {excluded_row_count:,} East London session records")
+
+    if df.empty:
+        st.warning("No NMB data found after excluding East London schools.")
         st.stop()
 
 except Exception as e:
