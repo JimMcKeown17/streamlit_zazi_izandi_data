@@ -931,8 +931,8 @@ def display_ea_implementation_analysis(df_sessions):
             return 'background-color: #ccffcc'  # Light green for good activity
     
     # Apply styling to session columns
-    styled_table = display_table.style.applymap(
-        highlight_activity, 
+    styled_table = display_table.style.map(
+        highlight_activity,
         subset=['Sessions Last 10 Days', 'Total Sessions Ever']
     )
     

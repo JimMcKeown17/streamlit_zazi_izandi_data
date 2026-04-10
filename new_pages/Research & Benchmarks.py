@@ -178,7 +178,7 @@ def display_research():
             letters = ['a', 'e', 'i', 'o', 'u', 'b', 'l', 'm', 'k', 'p', 's', 'h', 'z', 'n',
                     'd', 'y', 'f', 'w', 'v', 'x', 'g', 't', 'q', 'r', 'c', 'j']
 
-            letter_counts = midline[letters].applymap(lambda x: 1 if pd.notna(x) else 0).sum()
+            letter_counts = midline[letters].map(lambda x: 1 if pd.notna(x) else 0).sum()
 
             letter_df = pd.DataFrame({'Letter': letter_counts.index, 'Count': letter_counts.values})
 
