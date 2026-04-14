@@ -11,6 +11,7 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from database_utils import get_database_engine
+from data_privacy import is_authenticated, mask_dataframe
 from grouping_logic_2026 import (
     BLENDING_THRESHOLD,
     MIN_BLENDING_COUNT,
@@ -23,12 +24,24 @@ treatment_schools = _cohorts.treatment_schools
 sef_schools = _cohorts.sef_schools
 control_schools = _cohorts.control_schools
 
+SCHOOL_COHORT_MAP = {
+    **{school.strip().lower(): "Treatment Schools" for school in treatment_schools},
+    **{school.strip().lower(): "30 SEF Schools" for school in sef_schools},
+    **{school.strip().lower(): "Control Schools" for school in control_schools},
+}
+
 st.set_page_config(page_title="2026 Baseline — Primary Schools", layout="wide")
+
+def normalize_school_key(value):
+    if pd.isna(value):
+        return ""
+    return str(value).strip().lower()
+
 
 # ── Data Loading ──────────────────────────────────────────────────────────────
 
 @st.cache_data(ttl=3600)
-def load_nmb_assessments():
+def _load_nmb_assessments_raw():
     """Load NMB (primary school) assessment data from database."""
     try:
         engine = get_database_engine()
@@ -53,10 +66,15 @@ def load_nmb_assessments():
         df = pd.read_sql(query, engine)
         df['response_date'] = pd.to_datetime(df['response_date'], errors='coerce')
         df['data_refresh_timestamp'] = pd.to_datetime(df['data_refresh_timestamp'], errors='coerce')
+        df['school_cohort'] = df['program_name'].map(normalize_school_key).map(SCHOOL_COHORT_MAP).fillna('Other Schools')
         return df
     except Exception as e:
         st.error(f"Error loading assessment data: {str(e)}")
         return pd.DataFrame()
+
+
+def load_nmb_assessments():
+    return mask_dataframe(_load_nmb_assessments_raw(), dataset_key="assessments_2026")
 
 
 @st.cache_data(ttl=3600)
@@ -747,12 +765,11 @@ def render_assessments_per_class_collector(df):
 
 # ── Cohort Filtering ─────────────────────────────────────────────────────────
 
-def filter_df_by_school_list(df, school_list):
-    """Case-insensitive filter: keep rows whose program_name matches a school list entry."""
-    if df.empty or 'program_name' not in df.columns:
+def filter_df_by_cohort(df, cohort_label):
+    """Filter rows using a non-sensitive cohort label that survives masking."""
+    if df.empty or 'school_cohort' not in df.columns:
         return df
-    lower_set = {s.lower() for s in school_list}
-    return df[df['program_name'].str.lower().isin(lower_set)]
+    return df[df['school_cohort'] == cohort_label]
 
 
 def render_school_assessment_counts(df, school_list=None, tab_label="All Schools"):
@@ -770,7 +787,7 @@ def render_school_assessment_counts(df, school_list=None, tab_label="All Schools
         .reset_index(name='count')
     )
 
-    if school_list is not None:
+    if school_list is not None and is_authenticated():
         # Left-join so schools with zero assessments still appear
         list_df = pd.DataFrame({'list_name': school_list})
         list_df['lower'] = list_df['list_name'].str.lower()
@@ -795,6 +812,8 @@ def render_school_assessment_counts(df, school_list=None, tab_label="All Schools
         merged = db_counts.rename(columns={'program_name': 'display_name'})
         merged['color'] = 'Has assessments'
         num_schools = len(merged)
+        if school_list is not None and not is_authenticated():
+            st.info("Public view shows masked schools with submitted assessments only.")
 
     merged = merged.sort_values('count', ascending=True)
 
@@ -814,9 +833,9 @@ def render_school_assessment_counts(df, school_list=None, tab_label="All Schools
     st.plotly_chart(fig, use_container_width=True)
 
 
-def render_cohort_tab(df, school_list, tab_label, key_prefix):
+def render_cohort_tab(df, cohort_label, school_list, tab_label, key_prefix):
     """Render a full dashboard for a single cohort (Treatment / SEF / Control)."""
-    filtered = filter_df_by_school_list(df, school_list)
+    filtered = filter_df_by_cohort(df, cohort_label)
 
     st.subheader(f"{tab_label} Overview")
     st.markdown(f"**{len(filtered):,}** assessments across **{filtered['program_name'].nunique() if not filtered.empty else 0}** "
@@ -886,13 +905,13 @@ def main():
         render_school_assessment_counts(df)
 
     with tab_treatment:
-        render_cohort_tab(df, treatment_schools, "Treatment Schools", "treat_")
+        render_cohort_tab(df, "Treatment Schools", treatment_schools, "Treatment Schools", "treat_")
 
     with tab_sef:
-        render_cohort_tab(df, sef_schools, "30 SEF Schools", "sef_")
+        render_cohort_tab(df, "30 SEF Schools", sef_schools, "30 SEF Schools", "sef_")
 
     with tab_control:
-        render_cohort_tab(df, control_schools, "Control Schools", "ctrl_")
+        render_cohort_tab(df, "Control Schools", control_schools, "Control Schools", "ctrl_")
 
     with tab_grouping:
         render_grouping_tab(df_all_rows)

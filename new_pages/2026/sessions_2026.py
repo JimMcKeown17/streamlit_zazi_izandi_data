@@ -10,7 +10,7 @@ import plotly.graph_objects as go
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 
 from data.mentor_schools import mentors_to_schools
-from data_loader import load_sessions_2026
+from data_loader import load_sessions_2026_analysis
 
 # ECD Classification
 ecd_list = [
@@ -129,7 +129,9 @@ def create_session_views(df):
     if 'attended_percentage' in daily_sessions.columns:
         agg_dict['attended_percentage'] = 'mean'
 
-    daily_summary = daily_sessions.groupby(['user_name', 'session_date']).agg(agg_dict).round(1)
+    daily_summary = daily_sessions.groupby(['user_name', 'session_date']).agg(agg_dict)
+    numeric_summary_columns = daily_summary.select_dtypes(include='number').columns
+    daily_summary[numeric_summary_columns] = daily_summary[numeric_summary_columns].round(1)
 
     # Rename columns based on what we have
     col_names = ['Sessions_Count']
@@ -231,7 +233,7 @@ def create_school_workload_summary(df):
         'session_id': 'nunique',  # Total unique sessions
         'user_name': 'nunique',  # Number of EAs
         'session_started_at': ['min', 'max']  # Date range
-    }).round(1)
+    })
 
     # Flatten column names
     school_summary.columns = ['Total_Sessions', 'Num_EAs', 'First_Session', 'Last_Session']
@@ -683,7 +685,10 @@ def display_children_session_analysis(df):
     # Prepare date columns
     df_children = df.copy()
     df_children['session_date'] = pd.to_datetime(df_children['session_started_at']).dt.date
-    df_children['session_week'] = pd.to_datetime(df_children['session_started_at']).dt.to_period('W')
+    session_start_datetime = pd.to_datetime(df_children['session_started_at'])
+    if pd.api.types.is_datetime64tz_dtype(session_start_datetime):
+        session_start_datetime = session_start_datetime.dt.tz_localize(None)
+    df_children['session_week'] = session_start_datetime.dt.to_period('W')
 
     # Calculate sessions per child
     child_sessions = df_children.groupby('participant_id').agg({
@@ -1049,13 +1054,8 @@ def display_class_session_analysis(df):
 st.title("2026 Sessions Analysis")
 st.caption("Data updated nightly from TeamPact.")
 
-# Load the 2026 data from parquet
-@st.cache_data(ttl=3600)
-def load_data():
-    return load_sessions_2026()
-
 try:
-    df = load_data()
+    df = load_sessions_2026_analysis()
 
     if df.empty:
         st.warning("No data found for 2026.")
@@ -1116,16 +1116,25 @@ with st.expander("View available columns"):
     st.code(", ".join(column_list))
 
 @st.cache_data
-def convert_full_dataset_to_csv(_dataframe):
-    """Cache the CSV conversion to avoid re-generating on every interaction"""
-    return _dataframe.to_csv(index=False)
+def convert_full_dataset_to_csv(dataframe_for_export):
+    """Cache CSV conversion and only compute after explicit request."""
+    return dataframe_for_export.to_csv(index=False)
 
-raw_csv = convert_full_dataset_to_csv(df)
+if "sessions_2026_export_prepared" not in st.session_state:
+    st.session_state["sessions_2026_export_prepared"] = False
 
-st.download_button(
-    label=f"Download Full 2026 Dataset ({len(df):,} records)",
-    data=raw_csv,
-    file_name=f"teampact_sessions_2026_raw_export_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
-    mime="text/csv",
-    type="primary"
-)
+if st.button("Prepare full dataset export"):
+    st.session_state["sessions_2026_export_prepared"] = True
+
+if st.session_state["sessions_2026_export_prepared"]:
+    with st.spinner("Preparing export file..."):
+        raw_csv = convert_full_dataset_to_csv(df)
+    st.download_button(
+        label=f"Download Full 2026 Dataset ({len(df):,} records)",
+        data=raw_csv,
+        file_name=f"teampact_sessions_2026_raw_export_{datetime.now().strftime('%Y%m%d_%H%M')}.csv",
+        mime="text/csv",
+        type="primary"
+    )
+else:
+    st.caption("Prepare the file first to avoid memory spikes during normal page use.")

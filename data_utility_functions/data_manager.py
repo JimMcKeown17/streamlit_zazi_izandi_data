@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
-from data_utility_functions.data_loader import load_zazi_izandi_2024, load_zazi_izandi_new_schools_2024, load_zazi_izandi_2023
+from data_loader import load_zazi_izandi_2024, load_zazi_izandi_new_schools_2024, load_zazi_izandi_2023
+from data_privacy import is_authenticated
 from zz_data_processing import (
     process_zz_data_midline, 
     process_zz_data_endline, 
@@ -55,6 +56,10 @@ class DataManager:
             st.session_state.data_loaded_2024 = False
             st.session_state.data_loaded_2024_new_schools = False
             st.session_state.data_loaded_2023 = False
+            st.session_state.data_auth_state = is_authenticated()
+        elif st.session_state.get('data_auth_state') != is_authenticated():
+            self.clear_cache(show_message=False)
+            st.session_state.data_auth_state = is_authenticated()
     
     def get_2024_data(self):
         """
@@ -171,7 +176,7 @@ class DataManager:
             # Mark as loaded
             st.session_state.data_loaded_2023 = True
     
-    def clear_cache(self):
+    def clear_cache(self, show_message=True):
         """Clear all cached data from session state."""
         keys_to_clear = [key for key in st.session_state.keys() if key.startswith('data_loaded_') or key.endswith('_2024') or key.endswith('_2023') or key.endswith('_new_schools')]
         for key in keys_to_clear:
@@ -180,7 +185,8 @@ class DataManager:
         # Clear Streamlit's cache as well
         st.cache_data.clear()
         
-        st.success("Data cache cleared successfully!")
+        if show_message:
+            st.success("Data cache cleared successfully!")
 
 # Global instance
 data_manager = DataManager() 

@@ -3,8 +3,7 @@ import plotly.express as px
 import pandas as pd
 from zz_data_processing import process_zz_data_midline, process_zz_data_endline, grade1_df
 from zz_data_process_23 import process_zz_data_23
-from data_loader import load_zazi_izandi_2024, load_zazi_izandi_2023, load_zazi_izandi_new_schools_2024
-from process_survey_cto_updated import process_egra_data
+from data_loader import load_zazi_izandi_2024, load_zazi_izandi_2023, load_zazi_izandi_new_schools_2024, load_zazi_izandi_2025
 import os
 
 
@@ -44,16 +43,11 @@ def display_year_comparisons():
         # 2024 New Schools data
         new_schools_df = load_zazi_izandi_new_schools_2024()
         
-        # 2025 data (from CSV files)
-        root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-        children_path = os.path.join(root_dir, "data", "EGRA form [Eastern Cape]-assessment_repeat - June 4.csv")
-        ta_path = os.path.join(root_dir, "data", "EGRA form [Eastern Cape] - June 4.csv")
-        
         try:
-            data_2025, _ = process_egra_data(children_file=children_path, ta_file=ta_path)
+            data_2025, _ = load_zazi_izandi_2025()
             data_2025['submission_date'] = pd.to_datetime(data_2025['date'])
-        except:
-            data_2025 = pd.DataFrame()  # Empty if files don't exist
+        except Exception:
+            data_2025 = pd.DataFrame()
         
         return data_2023, baseline_2024, midline_2024, endline_2024, new_schools_df, data_2025
 

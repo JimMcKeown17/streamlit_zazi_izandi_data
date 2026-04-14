@@ -7,13 +7,14 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 from database_utils import get_database_engine
+from data_privacy import mask_dataframe
 
 st.set_page_config(page_title="2026 ECD Baseline", layout="wide")
 
 # ── Data Loading ──────────────────────────────────────────────────────────────
 
 @st.cache_data(ttl=3600)
-def load_ecd_assessments():
+def _load_ecd_assessments_raw():
     """Load ECD assessment data from database, excluding null grades."""
     try:
         engine = get_database_engine()
@@ -38,6 +39,10 @@ def load_ecd_assessments():
     except Exception as e:
         st.error(f"Error loading ECD assessment data: {str(e)}")
         return pd.DataFrame()
+
+
+def load_ecd_assessments():
+    return mask_dataframe(_load_ecd_assessments_raw(), dataset_key="assessments_2026_ecd")
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

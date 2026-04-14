@@ -1,7 +1,7 @@
 import plotly.express as px
 import pandas as pd
 from zz_data_processing import process_zz_data_midline, process_zz_data_endline, grade1_df, gradeR_df
-from data_loader import load_zazi_izandi_2024
+from data_loader import load_zazi_izandi_2024, load_2024_session_tracker_monthly
 import os
 import streamlit as st
 
@@ -19,7 +19,7 @@ st.markdown('---')
 
 # Some quick data cleaning/organizing
 def display_session_analysis():
-    df = pd.read_excel("data/Zazi iZandi Session Tracker 18102024.xlsx", sheet_name="Sessions")
+    df = load_2024_session_tracker_monthly()
     months = ['Feb', 'Mar', 'Apr', 'May', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov']
 
     # Prepare the list of 'Total Sessions' and 'Sessions per Day' columns

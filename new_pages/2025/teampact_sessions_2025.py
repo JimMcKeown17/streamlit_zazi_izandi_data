@@ -5,6 +5,7 @@ import os
 from datetime import datetime, timedelta    
 import plotly.express as px
 import plotly.graph_objects as go
+from data_privacy import mask_dataframe
 
 # Add the project root to the path so we can import modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -128,6 +129,15 @@ def get_mentor(program_name):
             return mentor
     return 'Unknown'
 
+
+def get_school_category(programme_area, is_dataquest_school):
+    """Classify schools without depending on raw school-name comparisons."""
+    if bool(is_dataquest_school):
+        return 'NMB DataQuest Schools'
+    if programme_area == 'BCM':
+        return 'East London Schools'
+    return 'NMB Schools'
+
 def create_session_views(df):
     """Transform participant-level data into session-level views focusing on education assistant activity"""
     
@@ -234,22 +244,11 @@ def create_school_workload_summary(df):
     if df.empty:
         return pd.DataFrame()
     
-    # Convert school names to lowercase for comparison
-    selected_schools_lower = [school.lower() for school in selected_schools_list]
-    el_schools_lower = [school.lower() for school in el_schools]
-    
-    # Create school categorization function
-    def categorize_school(program_name):
-        if program_name.lower() in selected_schools_lower:
-            return 'NMB DataQuest Schools'
-        elif program_name.lower() in el_schools_lower:
-            return 'East London Schools'
-        else:
-            return 'NMB Schools'
-    
-    # Add school category to dataframe
     df_with_category = df.copy()
-    df_with_category['school_category'] = df_with_category['program_name'].apply(categorize_school)
+    df_with_category['school_category'] = df_with_category.apply(
+        lambda row: get_school_category(row.get('programme_area'), row.get('is_dataquest_school')),
+        axis=1,
+    )
     
     # Group by school and calculate metrics
     school_summary = df_with_category.groupby(['program_name', 'school_category']).agg({
@@ -651,7 +650,7 @@ def display_session_analysis(df):
     
     with filter_col2:
         # Mentor filter for this section
-        mentor_options = ["All mentors"] + list(mentors_to_schools.keys())
+        mentor_options = ["All mentors"] + sorted(ea_filtered_df['mentor'].dropna().unique().tolist())
         ea_mentor_filter = st.selectbox(
             "Filter by Mentor:",
             options=mentor_options,
@@ -851,7 +850,8 @@ def create_ea_implementation_table(df_sessions, df_excel):
         
         merged_data.append(merged_row)
     
-    return pd.DataFrame(merged_data)
+    merged_df = pd.DataFrame(merged_data)
+    return mask_dataframe(merged_df, dataset_key="ea_implementation_2025")
 
 def display_ea_implementation_analysis(df_sessions):
     """Display EA implementation analysis with Excel data merge"""
@@ -869,7 +869,7 @@ def display_ea_implementation_analysis(df_sessions):
     st.info(f"Loaded {len(df_excel)} EAs from implementation tracking file.")
     
     # Create mentor filter
-    mentor_options = ["All mentors"] + list(mentors_to_schools.keys())
+    mentor_options = ["All mentors"] + sorted(merged_table['Mentor'].dropna().unique().tolist())
     implementation_mentor_filter = st.selectbox(
         "Filter by Mentor:",
         options=mentor_options,
@@ -953,17 +953,16 @@ def display_selected_schools_analysis(df):
     
     st.header("DataQuest Schools - Session Analysis")
     
-    # Filter data to only include selected schools using lowercase comparison
-    # Convert both the database program names and our list to lowercase for matching
-    selected_schools_lower = [school.lower() for school in selected_schools_list]
-    filtered_df = df[df['program_name'].str.lower().isin(selected_schools_lower)]
+    filtered_df = df[df['is_dataquest_school']].copy()
     
     if filtered_df.empty:
         st.warning("No data found for the DataQuest schools.")
-        st.info("The DataQuest schools list may not match the program names in the database exactly.")
         return
     
-    st.info(f"Showing data for {len(selected_schools_list)} DataQuest schools ({len(filtered_df):,} records)")
+    st.info(
+        f"Showing data for {filtered_df['program_name'].nunique():,} DataQuest schools "
+        f"({len(filtered_df):,} records)"
+    )
     
     # Prepare date columns for all data
     df_all = filtered_df.copy()
@@ -1052,41 +1051,16 @@ def display_selected_schools_analysis(df):
     # DATAQUEST SCHOOLS BREAKDOWN TABLE
     st.subheader("EA Activity by DataQuest School")
     
-    # Create table showing each DataQuest school with EA activity metrics
     school_activity_data = []
-    
-    for school in selected_schools_list:
-        # Find matching school in data (case-insensitive)
-        school_data = df_all[df_all['program_name'].str.lower() == school.lower()]
-        
-        if not school_data.empty:
-            # Calculate EAs active 3+ days for this school
-            eas_3plus_activity = school_data.groupby('user_name')['session_date'].nunique()
-            eas_3plus = (eas_3plus_activity >= 3).sum()
-            
-            # Calculate EAs active 15+ days for this school
-            eas_15plus = (eas_3plus_activity >= 15).sum()
-            
-            # Total sessions for this school
-            total_sessions = school_data['session_id'].nunique()
-            
-            # Get the actual school name from the data (proper case)
-            actual_school_name = school_data['program_name'].iloc[0]
-        else:
-            # No data for this school
-            eas_3plus = 0
-            eas_15plus = 0
-            total_sessions = 0
-            actual_school_name = school  # Use the name from our list
-        
+    for school_name, school_data in df_all.groupby('program_name'):
+        ea_activity = school_data.groupby('user_name')['session_date'].nunique()
         school_activity_data.append({
-            'School Name': actual_school_name,
-            'EAs Active 3+ Days': eas_3plus,
-            'EAs Active 15+ Days': eas_15plus,
-            'Total Sessions': total_sessions
+            'School Name': school_name,
+            'EAs Active 3+ Days': (ea_activity >= 3).sum(),
+            'EAs Active 15+ Days': (ea_activity >= 15).sum(),
+            'Total Sessions': school_data['session_id'].nunique(),
         })
-    
-    # Create DataFrame and display
+
     school_activity_df = pd.DataFrame(school_activity_data)
     
     # Sort by Total Sessions (descending)
@@ -1099,7 +1073,11 @@ def display_selected_schools_analysis(df):
     total_schools_with_data = (school_activity_df['Total Sessions'] > 0).sum()
     schools_with_3plus = (school_activity_df['EAs Active 3+ Days'] > 0).sum()
     schools_with_15plus = (school_activity_df['EAs Active 15+ Days'] > 0).sum()
-    st.info(f"📊 **Summary**: {total_schools_with_data} of {len(selected_schools_list)} DataQuest schools have session data. {schools_with_3plus} schools have EAs active 3+ days. {schools_with_15plus} schools have EAs active 15+ days.")
+    st.info(
+        f"📊 **Summary**: {total_schools_with_data} DataQuest schools have session data. "
+        f"{schools_with_3plus} schools have EAs active 3+ days. "
+        f"{schools_with_15plus} schools have EAs active 15+ days."
+    )
     
     st.divider()
     
@@ -1137,11 +1115,7 @@ def display_children_session_analysis(df):
         st.error("The 'participant_id' column is not available in the dataset.")
         return
     
-    # Exclude East London schools for NMB sessions analysis
-    el_schools_lower = [school.lower() for school in el_schools]
-    df_children = df[
-        ~df['program_name'].fillna('').str.lower().isin(el_schools_lower)
-    ].copy()
+    df_children = df[df['programme_area'] != 'BCM'].copy()
 
     if df_children.empty:
         st.warning("No data available after excluding East London schools.")
@@ -1378,14 +1352,9 @@ def display_class_session_analysis(df):
     
     st.header("Group-Level Session Analysis - NMB Schools")
     
-    # Filter to NMB schools only (exclude East London schools and ECDs)
-    el_schools_lower = [school.lower() for school in el_schools]
-    ecd_list_lower = [school.lower() for school in ecd_list]
-    
-    # Keep only schools that are NOT in el_schools and NOT in ecd_list
     nmb_df = df[
-        ~df['program_name'].str.lower().isin(el_schools_lower) & 
-        ~df['program_name'].str.lower().isin(ecd_list_lower)
+        (df['programme_area'] != 'BCM') &
+        (df['school_type'] != 'ECD')
     ]
     
     if nmb_df.empty:
@@ -1544,12 +1513,8 @@ try:
         st.info("💡 Data is automatically refreshed nightly via cron job. If you need immediate data, contact your system administrator.")
         st.stop()
 
-    # NMB page should exclude East London schools from all tabs
-    el_schools_lower = [school.lower() for school in el_schools]
     original_row_count = len(df)
-    df = df[
-        ~df['program_name'].fillna('').str.lower().isin(el_schools_lower)
-    ].copy()
+    df = df[df['programme_area'] != 'BCM'].copy()
     excluded_row_count = original_row_count - len(df)
     st.caption(f"📍 NMB filter applied: excluded {excluded_row_count:,} East London session records")
 

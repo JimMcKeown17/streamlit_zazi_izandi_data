@@ -203,16 +203,16 @@ def display_el_schools_analysis(df):
     
     st.header("East London Schools - Session Analysis")
     
-    # Filter data to only include East London schools using lowercase comparison
-    el_schools_lower = [school.lower() for school in el_schools]
-    filtered_df = df[df['program_name'].str.lower().isin(el_schools_lower)]
+    filtered_df = df[df['programme_area'] == 'BCM'].copy()
     
     if filtered_df.empty:
         st.warning("No data found for the East London schools.")
-        st.info("The East London schools list may not match the program names in the database exactly.")
         return
     
-    st.info(f"Showing data for {len(el_schools)} East London schools ({len(filtered_df):,} records)")
+    st.info(
+        f"Showing data for {filtered_df['program_name'].nunique():,} East London schools "
+        f"({len(filtered_df):,} records)"
+    )
     
     # Prepare date columns for all data
     df_all = filtered_df.copy()
@@ -301,36 +301,15 @@ def display_el_schools_analysis(df):
     # EAST LONDON SCHOOLS BREAKDOWN TABLE
     st.subheader("EA Activity by East London School - All Data")
     
-    # Create table showing each East London school with EA activity metrics
     school_activity_data = []
-    
-    for school in el_schools:
-        # Find matching school in data (case-insensitive)
-        school_data = df_all[df_all['program_name'].str.lower() == school.lower()]
-        
-        if not school_data.empty:
-            # Calculate EAs active 1+ days for this school
-            eas_1plus = school_data['user_name'].nunique()
-            
-            # Calculate EAs active 3+ days for this school
-            ea_activity = school_data.groupby('user_name')['session_date'].nunique()
-            eas_3plus = (ea_activity >= 3).sum()
-            
-            # Get the actual school name from the data (proper case)
-            actual_school_name = school_data['program_name'].iloc[0]
-        else:
-            # No data for this school
-            eas_1plus = 0
-            eas_3plus = 0
-            actual_school_name = school  # Use the name from our list
-        
+    for school_name, school_data in df_all.groupby('program_name'):
+        ea_activity = school_data.groupby('user_name')['session_date'].nunique()
         school_activity_data.append({
-            'School Name': actual_school_name,
-            'EAs Active 1+ Days': eas_1plus,
-            'EAs Active 3+ Days': eas_3plus
+            'School Name': school_name,
+            'EAs Active 1+ Days': school_data['user_name'].nunique(),
+            'EAs Active 3+ Days': (ea_activity >= 3).sum(),
         })
-    
-    # Create DataFrame and display
+
     school_activity_df = pd.DataFrame(school_activity_data)
     
     # Sort by EAs Active 3+ Days (descending), then by EAs Active 1+ Days (descending)
@@ -342,7 +321,10 @@ def display_el_schools_analysis(df):
     # Add summary info
     total_schools_with_data = (school_activity_df['EAs Active 1+ Days'] > 0).sum()
     schools_with_3plus = (school_activity_df['EAs Active 3+ Days'] > 0).sum()
-    st.info(f"📊 **Summary**: {total_schools_with_data} of {len(el_schools)} East London schools have EA activity. {schools_with_3plus} schools have EAs active 3+ days.")
+    st.info(
+        f"📊 **Summary**: {total_schools_with_data} East London schools have EA activity. "
+        f"{schools_with_3plus} schools have EAs active 3+ days."
+    )
     
     st.divider()
 
@@ -610,9 +592,7 @@ def display_el_class_session_analysis(df):
     
     st.header("Group-Level Session Analysis - East London Schools")
     
-    # Filter to East London schools
-    el_schools_lower = [school.lower() for school in el_schools]
-    filtered_df = df[df['program_name'].str.lower().isin(el_schools_lower)]
+    filtered_df = df[df['programme_area'] == 'BCM'].copy()
     
     if filtered_df.empty:
         st.warning("No data found for East London schools.")
@@ -807,4 +787,3 @@ with tab1:
 
 with tab2:
     display_el_class_session_analysis(df)
-

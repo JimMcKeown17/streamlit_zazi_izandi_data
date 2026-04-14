@@ -205,44 +205,25 @@ Key sections:
 if 'user' in st.session_state and st.session_state.user:
     st.info("🔒 Additional Internal Pages")
     st.markdown("""
-    ### 📋 2025 Baseline NMB (Cohort 2)
-    **Internal Access** - Baseline assessment results for Nelson Mandela Bay Cohort 2 (July 2025 start).
-    
-    **Tabs:**
-    - **Baseline - July** - Initial assessment results and literacy levels for the July cohort
-    - **Endline - Oct** (if available) - End-of-program assessment results
-    
-    ### 🔄 2025 Endline NMB (Cohort 2)
-    **Internal Access** - Comprehensive endline analysis for Nelson Mandela Bay Cohort 2 with cohort-based performance tracking and quality flag analysis. Combines assessment data with session attendance data.
-    
-    **Tabs:**
-    - 📊 **Overview** - High-level summary of endline assessment results
-    - 🎯 **Cohort Performance** - Analysis of performance by session attendance cohorts (0-30, 30-60, 60-90, 90+ sessions)
-    - 🚩 **Quality Flag Impact** - Analysis of data quality flags and their impact on results
-    - 🔬 **Cross-Analysis** - Multi-dimensional analysis combining cohort, grade, and other factors
-    - 🏫 **School & EA Insights** - School-level and education assistant performance breakdown
-    - 📈 **Data Explorer** - Interactive data exploration tools
-    
-    ### 📱 2025 Sessions NMB (Cohort 2)
-    **Internal Access** - Comprehensive session tracking and analysis for Nelson Mandela Bay Cohort 2 showing education assistant activity, implementation quality, and school-level session patterns.
-    
-    **Tabs:**
-    - **EA Sessions Analysis** - Education assistant session counts, frequency, and activity patterns
-    - **Children's Sessions** - Analysis of session participation from children's perspective including sessions received per child, average weekly sessions, and participation distribution
-    - **Group Sessions** - Analysis of group-level session patterns and attendance (NMB schools only)
-    - **EA Implementation Status** - Current implementation status by EA including session counts and last session date
-    - **DataQuest Schools** - Session analysis for DataQuest partner schools
-    
-    ### 📱 2025 Sessions East London (Cohort 2)
-    **Internal Access** - Dedicated session tracking and analysis page for East London schools showing EA activity, school-level performance, and implementation patterns specific to the East London region.
-    
-    **Tabs:**
-    - **EA Sessions Analysis** - Education assistant session counts, frequency, and activity patterns for East London schools
-    - **Group Session Analysis** - Analysis of group-level session patterns and attendance for East London schools
-    
-    ### 📋 2025 Baseline BCM (Cohort 2)
-    **Internal Access** - Baseline assessment results for East London Cohort 2 schools showing initial literacy levels across the East London implementation area.
+    ### 📋 2025 Cohort 2 Operations
+    Internal operational pages remain available after login for cohort-quality review, implementation monitoring, and mentor-visit workflows.
     """)
+
+st.markdown("---")
+
+# 2026 Results Section
+st.header("📘 2026 Results")
+
+st.markdown("""
+### 📋 2026 Baseline — Primary Schools
+**Public Access** - Live baseline assessment summaries for 2026 primary-school learners across languages and grades.
+
+### 📋 2026 Baseline — ECD
+**Public Access** - Live baseline summaries for 2026 ECD assessments.
+
+### 📱 2026 Sessions
+**Public Access** - Session activity summaries for 2026 implementation with names masked when logged out.
+""")
 
 st.markdown("---")
 
@@ -281,6 +262,12 @@ st.header("🔍 Research & Benchmarks")
 st.markdown("""
 ### 📚 Research & Benchmarks
 **Public Access** - Contextual research and literacy benchmarks comparing Zazi iZandi results to South African national averages and international literacy standards.
+
+### 📋 Year Comparisons
+**Public Access** - Cross-year comparison of literacy outcomes across programme years with masked identifiers when logged out.
+
+### 📊 Data Sources
+**Public Access** - Documentation of the app's core data sources and loader paths.
 """)
 
 if 'user' in st.session_state and st.session_state.user:
@@ -288,9 +275,6 @@ if 'user' in st.session_state and st.session_state.user:
     st.markdown("""
     ### 🤖 Zazi Bot
     **Internal Access** - AI-powered assistant for analyzing program data, answering questions about implementation, and providing insights based on the data portal contents. Cannot yet access 2025 data, waiting for all results.
-    
-    ### 📋 Year Comparisons
-    **Internal Access** - Cross-year analysis comparing program results across 2023, 2024, and 2025 cohorts to identify trends and measure sustained impact.
     """)
 
 st.markdown("---")
@@ -299,8 +283,8 @@ st.markdown("---")
 st.header("ℹ️ Navigation Tips")
 st.markdown("""
 - **Data Source Icons**: Each page is tagged with 📱 (EA Sessions), 📋 (EGRA Assessments), 👁️ (Mentor Visits), or 🔄 (Multiple Sources)
-- **Public Pages** are accessible without login and showcase key program results
-- **Internal Pages** (marked with 🔒) require login and provide detailed operational data and quality monitoring tools
+- **Public Pages** are accessible without login and use masked names for children, schools, mentors, and teaching staff
+- **Internal Pages** (marked with 🔒) require login and provide AI tools plus detailed operational workflows
 - Pages with **Tabs** allow you to switch between different views or data subsets within the same page
 - Use the **sidebar** to navigate between pages
 - Most pages include **data export** options to download analysis results
@@ -311,5 +295,4 @@ st.markdown("---")
 
 # Login prompt if not logged in
 if 'user' not in st.session_state or not st.session_state.user:
-    st.warning("🔒 Log in to access additional internal pages and detailed operational tools.")
-
+    st.warning("🔒 Log in to access AI pages and internal operational tools.")

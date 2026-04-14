@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import openai
 import json
 from collections import Counter
+from data_privacy import mask_dataframe
 
 # Load environment variables
 load_dotenv()
@@ -391,7 +392,7 @@ def analyze_text_sentiment_vader(text_series):
 # ============== END QUALITATIVE ANALYSIS HELPER FUNCTIONS ==============
 
 @st.cache_data
-def load_merged_mentor_visits():
+def _load_merged_mentor_visits_raw():
     """Load frozen 2025 mentor visits data from parquet."""
     try:
         parquet_path = Path('data/parquet/2025/2025_mentor_visits.parquet')
@@ -423,6 +424,10 @@ def load_merged_mentor_visits():
         st.error(f"Error loading mentor visits data: {str(e)}")
         st.code(traceback.format_exc())
         return pd.DataFrame()
+
+
+def load_merged_mentor_visits():
+    return mask_dataframe(_load_merged_mentor_visits_raw(), dataset_key="mentor_visits_2025")
 
 def display_mentor_visits_dashboard_content(filtered_df):
     """Display the main quantitative dashboard content (called from tabs)."""

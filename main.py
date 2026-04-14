@@ -98,21 +98,30 @@ flag_moving_too_fast_page = st.Page("new_pages/project_management/flag_moving_to
 pages_2024_public = [letter_knowledge_page_24, word_reading_page_24, new_schools_page_24, session_analysis_page_24]
 pages_2024_internal = []
 
-pages_2025_public = [ecd_page_25, baseline_page_25, midline_page_25]
+pages_2025_public = [
+    ecd_page_25,
+    baseline_page_25,
+    midline_page_25,
+    nmb_assessments_page_25,
+    nmb_endline_cohort_page_25,
+    teampact_sessions_page_25,
+    east_london_sessions_page_25,
+    el_assessments_page_25,
+]
 pages_2025_internal = [
-    nmb_assessments_page_25, nmb_endline_cohort_page_25, nmb_endline_cohort_exclude_page_25,
-    teampact_sessions_page_25, east_london_sessions_page_25, el_assessments_page_25,
+    nmb_endline_cohort_exclude_page_25,
     # 2025 project management pages archived here
     letter_progress_july_cohort, letter_progress_detailed_july_cohort,
     mentor_visits_page_25, flag_same_letter_groups_page, flag_moving_too_fast_page,dataquest_schools_page_25
 ]
 
-pages_research_public = [research_page]
-pages_research_internal = [ai_assistant_page, year_comparisons_page, data_sources_page]
+pages_research_public = [research_page, year_comparisons_page, data_sources_page]
+pages_research_internal = [ai_assistant_page]
 
 pages_2023 = [results_page_23]
 
-pages_2026_internal = [sessions_page_26, baseline_page_26, ecd_baseline_page_26]
+pages_2026_public = [baseline_page_26, ecd_baseline_page_26]
+pages_2026_internal = [sessions_page_26]
 
 pages_project_management = []
 pages_project_management_internal = [
@@ -121,7 +130,7 @@ pages_project_management_internal = [
     mentor_visits_page_26,
 ]
 
-pages_2026 = []
+pages_2026 = pages_2026_public
 if st.session_state.user:
     pages_2026 += pages_2026_internal
 
@@ -155,6 +164,7 @@ if st.session_state.user:
 else:
     pages = {
         "Home": [home_page, table_of_contents_page],
+        "2026 Results": pages_2026,
         "2025 Results": pages_2025,
         "2024 Results": pages_2024,
         "2023 Results": pages_2023,
@@ -165,6 +175,6 @@ else:
 pg = st.navigation(pages)
 
 if not st.session_state.user:
-     st.warning("Please log in to access internal content.")
+     st.warning("Please log in to access AI tools and internal operational pages.")
 
 pg.run()
