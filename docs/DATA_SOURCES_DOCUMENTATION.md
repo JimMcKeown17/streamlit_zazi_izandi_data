@@ -1,6 +1,6 @@
 # Data Sources Documentation
 
-**Last Updated:** March 3, 2026
+**Last Updated:** May 26, 2026
 
 This document provides a comprehensive overview of all data sources used in the Zazi iZandi Data Portal, organized by page and data loading method.
 
@@ -37,13 +37,14 @@ This document provides a comprehensive overview of all data sources used in the 
   - Some test files
 
 #### 3. **assessments_2026** ✅ (Current Production — 2026)
-- **Purpose**: 2026 EGRA baseline assessment data synced from TeamPact API
+- **Purpose**: 2026 EGRA baseline and primary-school midline assessment data synced from TeamPact API
 - **Data Type**: Letter knowledge, nonword reading, word reading scores per learner
-- **Survey IDs**: 815 (isiXhosa), 816 (Afrikaans), 817 (English), 805 (ECD)
+- **Survey IDs**: 815/816/817 (primary baseline), 880/881/882 (primary midline), 805 (ECD baseline)
 - **Update Frequency**: Nightly via Django management command (`sync_assessments_2026`)
-- **Key Mapping**: NMB surveys require a two-step API process — survey responses provide `group_id`, then `GET /groups/{id}` resolves `class_name` and `program_name`. Grade is derived from `class_name` via substring matching.
+- **Key Mapping**: Primary surveys require a two-step API process — survey responses provide `group_id`, then `GET /groups/{id}` resolves `class_name` and `program_name`. Grade is derived from `class_name`; primary midline rows can fall back to the learner's baseline grade when the midline group name is a letter-group label.
 - **Used By Pages**:
   - 2026 Baseline Primary Schools
+  - 2026 Midline Primary School
   - 2026 ECD Baseline
 - **Detailed mapping docs**: [`docs/TEAMPACT_API_ASSESSMENT_MAPPING_2026.md`](docs/TEAMPACT_API_ASSESSMENT_MAPPING_2026.md)
 
@@ -100,7 +101,7 @@ This document provides a comprehensive overview of all data sources used in the 
 
 | Function | Table | Data Type | Update Method |
 |----------|-------|-----------|---------------|
-| `load_assessments_2026()` | assessments_2026 | 2026 baseline assessments | Nightly via `sync_assessments_2026` |
+| `load_assessments_2026()` | assessments_2026 | 2026 baseline/midline assessments | Nightly via `sync_assessments_2026` |
 | `load_sessions_2026()` | sessions_2026 | 2026 session data | Nightly via `nightly_sync_2026` |
 | `load_mentor_visits_2026()` | mentor_visits_2026 | 2026 mentor visits | Nightly via `sync_mentor_visits_2026` |
 | `load_session_data_from_db()` | teampact_sessions_complete | Session data | Nightly cron job |
@@ -177,12 +178,13 @@ This document provides a comprehensive overview of all data sources used in the 
 | Page | Data Source | Loading Function | Source Type | Notes |
 |------|-------------|------------------|-------------|-------|
 | 2026 Baseline Primary Schools | **Database** | `load_assessments_2026()` / direct SQL | PostgreSQL (`assessments_2026`) | Surveys 815/816/817; grade derived from class_name via group API; includes Grouping QA tab with 2026-specific grouping logic and CSV export including group assignments |
+| 2026 Midline Primary School | **Database** | Direct SQL on `assessments_2026` + `midline_primary_helpers_2026.py` | PostgreSQL | Compares baseline surveys 815/816/817 with midline surveys 880/881/882 using latest learner rows per `participant_id` and phase |
 | 2026 ECD Baseline | **Database** | Direct SQL on `assessments_2026` | PostgreSQL | Survey 805; grade from free-text answer |
 | 2026 Sessions | **Database** | `load_sessions_2026()` | PostgreSQL (`sessions_2026`) | Auto-updated nightly |
 | 2026 Letter Progress | **Database** | Direct SQL on `sessions_2026` | PostgreSQL | Grade derived from class_name |
 | 2026 Mentor Visits | **Database** | `load_mentor_visits_2026()` | PostgreSQL (`mentor_visits_2026`) | Survey 824 |
 
-**Key 2026 mapping detail:** NMB assessment surveys (815/816/817) do NOT include class_name or program_name in the API response. These are resolved via a second API call (`GET /groups/{group_id}`). See [`docs/TEAMPACT_API_ASSESSMENT_MAPPING_2026.md`](docs/TEAMPACT_API_ASSESSMENT_MAPPING_2026.md) for full details.
+**Key 2026 mapping detail:** Primary assessment surveys (815/816/817 and 880/881/882) do NOT include class_name or program_name in the API response. These are resolved via a second API call (`GET /groups/{group_id}`). See [`docs/TEAMPACT_API_ASSESSMENT_MAPPING_2026.md`](docs/TEAMPACT_API_ASSESSMENT_MAPPING_2026.md) for full details.
 
 ---
 
@@ -273,7 +275,7 @@ This document provides a comprehensive overview of all data sources used in the 
 
 ### Current Best Practices
 
-1. **Assessment Data (2026 Baseline)**
+1. **Assessment Data (2026 Baseline/Midline)**
    - ✅ Use database (`assessments_2026` / `assessment_cells_2026`)
    - ✅ Auto-synced nightly via `sync_assessments_2026`
    - ✅ Grade, class_name, program_name resolved via group_id lookup at sync time
@@ -313,9 +315,10 @@ This document provides a comprehensive overview of all data sources used in the 
 ```
 assessments_2026 (2026 Assessment Data)
 ├── Used by: 2026 Baseline Primary Schools page
+├── Used by: 2026 Midline Primary School page
 ├── Used by: 2026 ECD Baseline page
 ├── Mapping: group_id → GET /groups/{id} → class_name + program_name
-├── Grade: Derived from class_name (NMB) or free-text answer (ECD)
+├── Grade: Derived from class_name (primary) or free-text answer (ECD); primary midline can fall back to baseline grade by participant_id
 └── Updated: Nightly via sync_assessments_2026
 
 assessment_cells_2026 (2026 Cell-Level Results)
@@ -439,7 +442,7 @@ These two QA flags identify EAs (Education Assistants) who may not be following 
 - [x] Nightly auto-update implemented (2025)
 - [x] Endline assessment data moved to database (2025)
 - [x] 2023/2024 data converted to Parquet format (10.7x faster loading)
-- [x] 2026 assessment data synced via `sync_assessments_2026` with group_id resolution
+- [x] 2026 assessment data synced via `sync_assessments_2026` with group_id resolution and baseline/midline `assessment_type` tagging
 - [x] 2026 session data synced via `nightly_sync_2026`
 - [x] 2026 mentor visit data synced via `sync_mentor_visits_2026`
 
@@ -455,4 +458,3 @@ These two QA flags identify EAs (Education Assistants) who may not be following 
 
 **Related Documentation:**
 - [`docs/TEAMPACT_API_ASSESSMENT_MAPPING_2026.md`](TEAMPACT_API_ASSESSMENT_MAPPING_2026.md) — Detailed 2026 API field mapping
-

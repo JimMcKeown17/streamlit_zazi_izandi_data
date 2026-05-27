@@ -7,7 +7,7 @@ st.caption("Comprehensive overview of all data sources in the Zazi iZandi Data P
 st.markdown("---")
 
 # Last Updated
-st.info("**Last Updated:** November 13, 2025")
+st.info("**Last Updated:** May 26, 2026")
 
 # Introduction
 with st.expander("📖 About This Documentation", expanded=False):
@@ -37,6 +37,34 @@ db_tables = [
         "Purpose": "Endline EGRA assessments, cohort analysis",
         "Update Method": "Django management",
         "Used By": "Endline analysis, Cohort analysis"
+    },
+    {
+        "Table Name": "assessments_2026",
+        "Status": "✅ Production",
+        "Purpose": "2026 baseline and primary midline EGRA assessments",
+        "Update Method": "Nightly sync_assessments_2026",
+        "Used By": "2026 baseline, 2026 midline, ECD baseline"
+    },
+    {
+        "Table Name": "assessment_cells_2026",
+        "Status": "✅ Production",
+        "Purpose": "2026 cell-level EGRA results",
+        "Update Method": "Nightly sync_assessment_cells_2026",
+        "Used By": "Letter-level analysis"
+    },
+    {
+        "Table Name": "sessions_2026",
+        "Status": "✅ Production",
+        "Purpose": "2026 session attendance and letter progress",
+        "Update Method": "Nightly sync_teampact_sessions_2026",
+        "Used By": "2026 sessions, letter progress"
+    },
+    {
+        "Table Name": "mentor_visits_2026",
+        "Status": "✅ Production",
+        "Purpose": "2026 mentor visit observations",
+        "Update Method": "Nightly sync_mentor_visits_2026",
+        "Used By": "2026 mentor visits"
     },
     {
         "Table Name": "teampact_nmb_sessions",
@@ -97,6 +125,24 @@ with tab1:
             "Table": "api_tasession",
             "Data Type": "TA mentor visits",
             "Update Method": "Django app"
+        },
+        {
+            "Function": "load_assessments_2026()",
+            "Table": "assessments_2026",
+            "Data Type": "2026 baseline/midline assessments",
+            "Update Method": "Nightly via sync_assessments_2026"
+        },
+        {
+            "Function": "load_sessions_2026()",
+            "Table": "sessions_2026",
+            "Data Type": "2026 session data",
+            "Update Method": "Nightly via sync_teampact_sessions_2026"
+        },
+        {
+            "Function": "load_mentor_visits_2026()",
+            "Table": "mentor_visits_2026",
+            "Data Type": "2026 mentor visits",
+            "Update Method": "Nightly via sync_mentor_visits_2026"
         }
     ]
     st.dataframe(pd.DataFrame(db_sources), use_container_width=True, hide_index=True)
@@ -170,7 +216,7 @@ st.markdown("---")
 # Page-by-Page Data Sources
 st.header("📄 Page-by-Page Data Sources")
 
-page_tabs = st.tabs(["2023", "2024", "2025 Public", "2025 Internal", "Research", "Project Mgmt"])
+page_tabs = st.tabs(["2023", "2024", "2025 Public", "2025 Internal", "2026", "Research", "Project Mgmt"])
 
 with page_tabs[0]:  # 2023
     st.subheader("2023 Results Pages")
@@ -211,7 +257,18 @@ with page_tabs[3]:  # 2025 Internal
     st.dataframe(pd.DataFrame(pages_2025_int), use_container_width=True, hide_index=True)
     st.info("💡 Most 2025 Cohort 2 pages use the database with nightly auto-updates")
 
-with page_tabs[4]:  # Research
+with page_tabs[4]:  # 2026
+    st.subheader("2026 Results Pages")
+    pages_2026 = [
+        {"Page": "2026 Baseline Primary Schools", "Data Source": "assessments_2026", "Function": "Direct SQL / load_assessments_2026()", "Type": "📊 Database", "Notes": "Surveys 815/816/817; baseline only"},
+        {"Page": "2026 Midline Primary School", "Data Source": "assessments_2026", "Function": "Direct SQL + midline_primary_helpers_2026.py", "Type": "📊 Database", "Notes": "Compares baseline 815/816/817 with midline 880/881/882"},
+        {"Page": "2026 ECD Baseline", "Data Source": "assessments_2026", "Function": "Direct SQL", "Type": "📊 Database", "Notes": "Survey 805; ECD midline not included yet"},
+        {"Page": "2026 Sessions", "Data Source": "sessions_2026", "Function": "load_sessions_2026()", "Type": "📊 Database", "Notes": "Auto-updated nightly"},
+        {"Page": "2026 Mentor Visits", "Data Source": "mentor_visits_2026", "Function": "load_mentor_visits_2026()", "Type": "📊 Database", "Notes": "Survey 824"}
+    ]
+    st.dataframe(pd.DataFrame(pages_2026), use_container_width=True, hide_index=True)
+
+with page_tabs[5]:  # Research
     st.subheader("Research & Benchmarks Pages")
     pages_research = [
         {"Page": "Research & Benchmarks", "Data Source": "2024 assessments", "Function": "load_zazi_izandi_2024()", "Type": "📁 Parquet/Excel"},
@@ -220,7 +277,7 @@ with page_tabs[4]:  # Research
     ]
     st.dataframe(pd.DataFrame(pages_research), use_container_width=True, hide_index=True)
 
-with page_tabs[5]:  # Project Management
+with page_tabs[6]:  # Project Management
     st.subheader("Project Management Pages (Internal Only)")
     pages_pm = [
         {"Page": "Letter Progress (Cohort 2)", "Data Source": "teampact_sessions_complete", "Function": "Direct SQL query", "Type": "📊 Database"},
@@ -291,6 +348,8 @@ with practice_col1:
     st.markdown("""
     - **Sessions Data (2025 Cohort 2)**: Database (`teampact_sessions_complete`)
     - **Endline Data (2025 Cohort 2)**: Database (`teampact_assessment_endline_2025`)
+    - **2026 Baseline/Midline Assessments**: Database (`assessments_2026`, `assessment_cells_2026`)
+    - **2026 Sessions and Mentor Visits**: Database (`sessions_2026`, `mentor_visits_2026`)
     - **Historical Data (2023-2024)**: Parquet files with Excel fallback
     - **Assessment Data (Cohort 1 & 2 Baseline)**: CSV exports
     """)
@@ -321,6 +380,16 @@ teampact_assessment_endline_2025 (Assessment Data)
 ├── Used by: Cohort analysis pages
 └── Updated: Via Django management command
 
+assessments_2026 + assessment_cells_2026 (Assessment Data)
+├── Used by: 2026 baseline primary page
+├── Used by: 2026 midline primary page
+├── Used by: 2026 ECD baseline page
+└── Updated: Nightly via sync_assessments_2026 + sync_assessment_cells_2026
+
+sessions_2026 + mentor_visits_2026 (Operations Data)
+├── Used by: 2026 sessions and project management pages
+└── Updated: Nightly via Django management commands
+
 api_tasession (TA Visits - Separate System)
 ├── Used by: Early implementation tracking
 └── Updated: Via Django app directly
@@ -334,13 +403,13 @@ st.header("📈 Summary Statistics")
 stat_col1, stat_col2, stat_col3, stat_col4 = st.columns(4)
 
 with stat_col1:
-    st.metric("Database Tables", "5", help="Active production database tables")
+    st.metric("Database Tables", "7", help="Active production database tables")
 
 with stat_col2:
-    st.metric("Data Loading Functions", "12", help="Total unique data loading functions")
+    st.metric("Data Loading Functions", "15", help="Total unique data loading functions")
 
 with stat_col3:
-    st.metric("Pages Using Database", "8", help="2025 Cohort 2 + Project Management pages")
+    st.metric("Pages Using Database", "13", help="2025 Cohort 2, 2026, and project management pages")
 
 with stat_col4:
     st.metric("Pages Using CSV/Excel", "11", help="2023, 2024, and 2025 Cohort 1 pages")
@@ -358,6 +427,7 @@ with migration_col1:
     - Sessions → Database
     - Nightly auto-updates
     - Endline → Database
+    - 2026 baseline/midline → Database
     - Parquet optimization
     """)
 
@@ -373,7 +443,6 @@ with migration_col2:
 with migration_col3:
     st.info("**📋 Future**")
     st.markdown("""
-    - Baseline → Database?
     - Mentor visits → Database?
     - Full API retirement?
     - Automated backups
@@ -412,4 +481,3 @@ with st.expander("📁 File Locations Reference"):
 # Footer
 st.markdown("---")
 st.caption("**Document Maintained By:** Data Team | **Review Frequency:** Quarterly or when major changes occur")
-

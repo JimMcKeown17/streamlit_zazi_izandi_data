@@ -1,6 +1,6 @@
 # TeamPact API Assessment Data Mapping — 2026
 
-**Last Updated:** March 3, 2026
+**Last Updated:** May 26, 2026
 
 This document describes how 2026 assessment data flows from the TeamPact API into the `assessments_2026` database table, with particular focus on how **Grade**, **Programme Name (program_name)**, and **Class Name (class_name)** are resolved.
 
@@ -30,15 +30,18 @@ The sync involves **two API calls** that are combined:
 | **816** | Afrikaans | Baseline Full Assessment - Afrikaans 2026 |
 | **817** | English | Baseline Full Assessment - English 2026 |
 | **805** | ECD | ZZ ECD Baseline 2026 |
+| **880** | English | English Midline Full Assessment - 2026 |
+| **881** | Afrikaans | Afrikaans Midline Full Assessment - 2026 |
+| **882** | isiXhosa | IsiXhosa Midline Full Assessment - 2026 |
 | **824** | N/A | Mentor Visits 2026 (separate sync) |
 
 ---
 
 ## Two Different Mapping Paths
 
-### Path A: NMB Surveys (815, 816, 817) — Requires Group Lookup
+### Path A: Primary School Surveys (815, 816, 817, 880, 881, 882) — Requires Group Lookup
 
-NMB survey responses do **NOT** include `class_name` or `program_name` directly. They provide:
+Primary school survey responses do **NOT** include `class_name` or `program_name` directly. They provide:
 
 | API Response Field | Contains | Example |
 |-------------------|----------|---------|
@@ -51,7 +54,7 @@ NMB survey responses do **NOT** include `class_name` or `program_name` directly.
 
 **To get class_name and program_name**, the sync script:
 
-1. Collects all unique `group_id` values from all NMB responses
+1. Collects all unique `group_id` values from all primary assessment responses
 2. Parses each `group_id` from its JSON string format (e.g., `"[59979]"` → `59979`)
 3. Calls `GET /groups/{group_id}` for each unique group ID
 4. Builds a lookup cache: `{group_id: {name, program_name}}`
@@ -80,19 +83,20 @@ GET /groups/59979 response:
 
 #### Grade Derivation Logic
 
-Grade is **NOT** a direct API field for NMB surveys. It is extracted from `class_name` using this logic (in `extract_grade_from_class_name()`):
+Grade is **NOT** a direct API field for primary surveys. It is extracted from `class_name` using this logic (in `extract_grade_from_class_name()`):
 
 ```python
 if 'Grade R' in class_name:   → 'Grade R'
 if 'Grade 1' in class_name:   → 'Grade 1'
 if 'Grade 2' in class_name:   → 'Grade 2'
-# Fallback: check first character
-first_char = class_name.strip()[0].upper()
-'R' → 'Grade R'
-'1' → 'Grade 1'
-'2' → 'Grade 2'
+# Fallback: check first token only when it is a grade-like code
+'R', 'RA', 'R1' → 'Grade R'
+'1', '1A' → 'Grade 1'
+'2', '2B' → 'Grade 2'
 # Otherwise → '' (empty string)
 ```
+
+For primary midline surveys, some `group_id` values resolve to letter-group names such as `"Lisenathi September-Letters-Group 5"` or `"Rukaya Weavel-Letters-Group 3(2B)"` rather than a grade class. The sync does **not** infer grade from these assessor-name labels; it falls back to the learner's latest baseline grade using `participant_id`.
 
 #### Participant Name Splitting
 
@@ -103,7 +107,7 @@ first_name = "Aqhama"     # first token
 last_name  = "Diniso"     # remainder after first space
 ```
 
-Gender is **not available** from NMB survey responses — stored as empty string.
+Gender is **not available** from primary survey responses — stored as empty string.
 
 ---
 
@@ -135,18 +139,21 @@ However, learner identity (name, grade, gender) is in **free-text answers**, not
 ## Sync Process (3 Phases)
 
 ```
-Phase 1: Fetch all NMB survey responses
-  └─ GET /surveys/815/responses?page=1..N  (all pages)
+Phase 1: Fetch all primary survey responses
+  └─ GET /surveys/815/responses?page=1..N  (primary baseline)
   └─ GET /surveys/816/responses?page=1..N
   └─ GET /surveys/817/responses?page=1..N
+  └─ GET /surveys/880/responses?page=1..N  (primary midline)
+  └─ GET /surveys/881/responses?page=1..N
+  └─ GET /surveys/882/responses?page=1..N
 
 Phase 2: Build group cache
-  └─ Collect unique group_ids from all NMB responses
+  └─ Collect unique group_ids from all primary responses
   └─ GET /groups/{id} for each unique group_id
   └─ Cache: {group_id → {class_name, program_name}}
 
 Phase 3: Flatten & save
-  └─ For each NMB response:
+  └─ For each primary response:
       └─ Look up class_name + program_name from group cache
       └─ Derive grade from class_name
       └─ Split participant_name → first_name + last_name
@@ -159,11 +166,11 @@ Phase 3: Flatten & save
 
 ## Database Schema: assessments_2026
 
-| Column | Type | Source (NMB) | Source (ECD) |
+| Column | Type | Source (Primary) | Source (ECD) |
 |--------|------|-------------|-------------|
 | `response_id` | String | `response.response_id` | `response.response_id` |
 | `survey_id` | Integer | `response.survey_id` | `response.survey_id` |
-| `survey_name` | String | Hardcoded per survey ID | `"ZZ ECD Baseline 2026"` |
+| `survey_name` | String | Survey config per survey ID | `"ZZ ECD Baseline 2026"` |
 | `participant_id` | String | `response.participant_id` | Empty string |
 | `first_name` | String | Split from `participant_name` | Answer Q28183 |
 | `last_name` | String | Split from `participant_name` | Answer Q28184 |
@@ -193,7 +200,7 @@ Phase 3: Flatten & save
 | `assessment_complete` | String | EGRA `assessment_completed` | EGRA `assessment_completed` |
 | `stop_rule_reached` | String | EGRA `stop_rule` | EGRA `stop_rule` |
 | `timer_elapsed` | String | EGRA `timer_elapsed` | EGRA `timer_elapsed` |
-| `assessment_type` | String | CLI arg (default: `"baseline"`) | CLI arg (default: `"baseline"`) |
+| `assessment_type` | String | Survey config (`"baseline"` for 815/816/817, `"midline"` for 880/881/882) unless overridden by CLI | Survey config (`"baseline"`) unless overridden by CLI |
 | `data_refresh_timestamp` | DateTime | Set to `timezone.now()` at sync | Set to `timezone.now()` at sync |
 
 ---
@@ -215,7 +222,7 @@ Individual letter/word/nonword cell results, one row per cell per response.
 
 ## EGRA Sub-Test Detection
 
-NMB surveys (815/816/817) can have up to 3 EGRA sub-tests per response. The sync determines which sub-test an answer belongs to using:
+Primary surveys (815/816/817/880/881/882) can have up to 3 EGRA sub-tests per response. The sync determines which sub-test an answer belongs to using:
 
 1. **Question label** (if available): `"letter"` → letters, `"non"/"nonsense"` → nonwords, else → words
 2. **Cell count fallback**: If no label, 60 cells → letters (first match only)

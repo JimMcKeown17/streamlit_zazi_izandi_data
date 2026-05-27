@@ -29,7 +29,9 @@ def _load_ecd_assessments_raw():
                 assessment_complete, stop_rule_reached, timer_elapsed,
                 assessment_type, data_refresh_timestamp
             FROM assessments_2026
-            WHERE language = 'ECD' AND grade != 'null'
+            WHERE language = 'ECD'
+              AND assessment_type = 'baseline'
+              AND grade != 'null'
             ORDER BY response_date DESC
         """
         df = pd.read_sql(query, engine)

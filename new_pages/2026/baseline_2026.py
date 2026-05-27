@@ -61,6 +61,7 @@ def _load_nmb_assessments_raw():
                 assessment_type, data_refresh_timestamp
             FROM assessments_2026
             WHERE language IN ('isiXhosa', 'English', 'Afrikaans')
+              AND assessment_type = 'baseline'
             ORDER BY response_date DESC
         """
         df = pd.read_sql(query, engine)
@@ -89,6 +90,7 @@ def load_letter_cells():
             JOIN assessments_2026 a ON a.response_id = c.response_id
             WHERE c.question_type = 'letters'
               AND a.language IN ('isiXhosa', 'English', 'Afrikaans')
+              AND a.assessment_type = 'baseline'
             ORDER BY c.cell_index
         """
         return pd.read_sql(query, engine)
