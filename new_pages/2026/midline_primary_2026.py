@@ -1123,14 +1123,8 @@ def render_blending_tab(df_lang, matched_all, key_prefix="blending"):
     # Single matched spine for every analytic section. blending already carries cohort = baseline_cohort.
     blending = helpers.blending_matched_learners(matched_all)
 
-    # This tab spans Grade 1 & 2, so it gets its OWN grade control defaulting to all grades.
-    st.caption("This tab uses its own grade control and defaults to all grades so nothing is hidden.")
-    grade_values = [grade for grade in GRADE_ORDER if grade in blending["grade"].dropna().unique()] if not blending.empty else []
-    grade_choice = st.selectbox("Grade", ["All grades"] + grade_values, index=0, key=f"{key_prefix}_grade")
-    if grade_choice != "All grades" and not blending.empty:
-        blending = blending[blending["grade"] == grade_choice]
-
-    # Data-quality captions (these use df_lang, not the matched spine, and render regardless).
+    # Data-quality captions are computed across ALL grades (from df_lang and the full spine) BEFORE the
+    # tab's grade filter, so the numerator and denominator share the same scope (an all-grades footnote).
     unrecognized = helpers.count_unrecognized_midline_tracks(df_lang)
     if unrecognized:
         st.caption(
@@ -1145,9 +1139,16 @@ def render_blending_tab(df_lang, matched_all, key_prefix="blending"):
         midline_blending_learners = midline["participant_id"].nunique()
     unmatched_blending = max(0, midline_blending_learners - len(blending))
     st.caption(
-        f"Of {fmt_int(midline_blending_learners)} distinct midline-blending learners, "
-        f"{fmt_int(unmatched_blending)} have no matched baseline and are excluded from the gain analysis below."
+        f"Across all grades, of {fmt_int(midline_blending_learners)} distinct midline-blending learners, "
+        f"{fmt_int(unmatched_blending)} have no matched baseline and are excluded from the gain analysis."
     )
+
+    # This tab spans Grade 1 & 2, so it gets its OWN grade control defaulting to all grades.
+    st.caption("This tab uses its own grade control and defaults to all grades so nothing is hidden.")
+    grade_values = [grade for grade in GRADE_ORDER if grade in blending["grade"].dropna().unique()] if not blending.empty else []
+    grade_choice = st.selectbox("Grade", ["All grades"] + grade_values, index=0, key=f"{key_prefix}_grade")
+    if grade_choice != "All grades" and not blending.empty:
+        blending = blending[blending["grade"] == grade_choice]
 
     # Single shared precondition before any section renders.
     if blending.empty:
