@@ -647,6 +647,31 @@ def render_treatment_vs_control_section(df_lang, matched_all, key_prefix="treatm
         fig_gain.update_traces(texttemplate="%{text:.1f}", textposition="outside")
         st.plotly_chart(fig_gain, use_container_width=True, key=f"{key_prefix}_gain_by_grade")
 
+    # Words version of the gain-by-grade comparison (control = children not in treatment/SEF).
+    word_gain = helpers.build_cohort_score_summary(cmp, "words_total_correct")
+    if not word_gain.empty:
+        fig_word_gain = px.bar(
+            word_gain,
+            x="grade",
+            y="score_change",
+            color="cohort",
+            barmode="group",
+            text="score_change",
+            category_orders={"grade": GRADE_ORDER, "cohort": ["treatment", "control"]},
+            color_discrete_map=COHORT_COLORS,
+            hover_data=["matched_learners", "baseline_score", "midline_score"],
+            title="Average Word Gain by Grade: Treatment vs Control",
+            labels={
+                "score_change": "Avg word gain",
+                "grade": "Grade",
+                "cohort": "Cohort",
+                "baseline_score": "Baseline words",
+                "midline_score": "Midline words",
+            },
+        )
+        fig_word_gain.update_traces(texttemplate="%{text:.1f}", textposition="outside")
+        st.plotly_chart(fig_word_gain, use_container_width=True, key=f"{key_prefix}_word_gain_by_grade")
+
     grade_options = [grade for grade in GRADE_ORDER if grade in cmp["grade"].dropna().unique()]
     if grade_options:
         col_grade, col_threshold = st.columns([1, 1])
@@ -705,6 +730,20 @@ def render_treatment_vs_control_section(df_lang, matched_all, key_prefix="treatm
     )
     fig_dist.add_vline(x=0, line_dash="dash", line_color="#6b7280")
     st.plotly_chart(fig_dist, use_container_width=True, key=f"{key_prefix}_dist")
+
+    fig_word_dist = px.histogram(
+        cmp,
+        x="words_change",
+        color="baseline_cohort",
+        barmode="overlay",
+        nbins=30,
+        opacity=0.6,
+        color_discrete_map=COHORT_COLORS,
+        title="Distribution of Word Gains: Treatment vs Control",
+        labels={"words_change": "Midline - Baseline words correct", "baseline_cohort": "Cohort"},
+    )
+    fig_word_dist.add_vline(x=0, line_dash="dash", line_color="#6b7280")
+    st.plotly_chart(fig_word_dist, use_container_width=True, key=f"{key_prefix}_word_dist")
 
 
 def render_outstanding_section(df_lang, key_prefix="treatment_out"):
