@@ -788,57 +788,61 @@ def render_outstanding_section(df_lang, key_prefix="treatment_out"):
 
 # ── Blending tab ────────────────────────────────────────────────────────────
 
-def render_blending_tab(df_lang, matched_all, key_prefix="blending"):
-    st.header("Blending Groups")
-    st.caption(
-        "Matched baseline→midline learners who were in a Blending group at midline (the success "
-        "path: learners who moved from Letters into Blending count; learners who left Blending by "
-        "midline do not). Cohort is anchored to each learner's baseline school, like the rest of "
-        "the page. Headline metric is word reading — these learners have moved past letters."
+def _render_blending_score_baseline_midline(summary, cohort_order, label, expander_title, key_prefix, key_suffix):
+    """Shared baseline-vs-midline grouped-bar + expander-table block for a cohort score summary.
+
+    Used by both the Word-gain (label="Words") and Letters (label="Letters") sections, which are
+    otherwise identical melt→px.bar→expander-table blocks differing only by the score label and
+    keys. ``summary`` is a build_cohort_score_summary output already filtered to ``cohort_order``.
+    Distinct ``key_suffix`` values keep element IDs unique. Renders the overall chart and table;
+    the Word-gain by-grade facet chart is rendered by its own section.
+    """
+    overall = (
+        summary.groupby("cohort", dropna=False)
+        .agg(baseline_score=("baseline_score", "mean"), midline_score=("midline_score", "mean"))
+        .reset_index()
     )
+    overall_long = overall.melt(
+        id_vars=["cohort"],
+        value_vars=["baseline_score", "midline_score"],
+        var_name="Phase",
+        value_name=label,
+    )
+    overall_long["Phase"] = overall_long["Phase"].map({"baseline_score": "Baseline", "midline_score": "Midline"})
+    fig = px.bar(
+        overall_long,
+        x="cohort",
+        y=label,
+        color="Phase",
+        barmode="group",
+        text=label,
+        category_orders={"cohort": cohort_order, "Phase": ["Baseline", "Midline"]},
+        color_discrete_map={"Baseline": "#9aa4b2", "Midline": "#1f5cc4"},
+        title=f"Mean {label} Correct: Baseline vs Midline, by Cohort",
+        labels={"cohort": "Cohort", label: f"Mean {label.lower()} correct"},
+    )
+    fig.update_traces(texttemplate="%{text:.1f}", textposition="outside")
+    fig.update_layout(legend_title_text="")
+    st.plotly_chart(fig, use_container_width=True, key=f"{key_prefix}_{key_suffix}_chart")
 
-    # Single matched spine for every analytic section. blending already carries cohort = baseline_cohort.
-    blending = helpers.blending_matched_learners(matched_all)
-
-    # This tab spans Grade 1 & 2, so it gets its OWN grade control defaulting to all grades.
-    st.caption("This tab uses its own grade control and defaults to all grades so nothing is hidden.")
-    grade_values = [grade for grade in GRADE_ORDER if grade in blending["grade"].dropna().unique()] if not blending.empty else []
-    grade_choice = st.selectbox("Grade", ["All grades"] + grade_values, index=0, key=f"{key_prefix}_grade")
-    if grade_choice != "All grades" and not blending.empty:
-        blending = blending[blending["grade"] == grade_choice]
-
-    # Data-quality captions.
-    unrecognized = helpers.count_unrecognized_midline_tracks(df_lang)
-    if unrecognized:
-        st.caption(
-            f"⚠️ {fmt_int(unrecognized)} latest-midline rows had an unrecognized group track "
-            "(class name not matching the \"{EA}-{Letters|Blending}-Group {N}\" convention) and are excluded."
+    with st.expander(expander_title):
+        st.dataframe(
+            summary.rename(
+                columns={
+                    "cohort": "Cohort",
+                    "grade": "Grade",
+                    "matched_learners": "Matched Learners",
+                    "baseline_score": f"Baseline {label}",
+                    "midline_score": f"Midline {label}",
+                    "score_change": f"{label} Change",
+                }
+            ).sort_values(["Cohort", "Grade"]),
+            use_container_width=True,
+            key=f"{key_prefix}_{key_suffix}_table",
         )
 
-    latest_lang = helpers.latest_assessment_per_phase(df_lang)
-    midline_blending_learners = 0
-    if not latest_lang.empty and "group_track" in latest_lang.columns:
-        midline = latest_lang[(latest_lang["assessment_type"] == "midline") & (latest_lang["group_track"] == "Blending")]
-        midline_blending_learners = midline["participant_id"].nunique()
-    unmatched_blending = max(0, midline_blending_learners - len(blending))
-    st.caption(
-        f"Of {fmt_int(midline_blending_learners)} distinct midline-blending learners, "
-        f"{fmt_int(unmatched_blending)} have no matched baseline and are excluded from the gain analysis below."
-    )
 
-    if blending.empty:
-        st.info("No matched blending learners for the current filters.")
-        return
-
-    # Cohort split = Treatment vs SEF; include Control only if it actually has rows.
-    cohort_order = [cohort for cohort in ("treatment", "sef") if (blending["cohort"] == cohort).any()]
-    if (blending["cohort"] == "control").any():
-        cohort_order.append("control")
-        st.caption("A small number of control learners appear in blending groups and are shown alongside; the control sample is negligible.")
-
-    st.divider()
-
-    # 1. Summary ──────────────────────────────────────────────────────────────
+def _render_blending_summary(blending, cohort_order, key_prefix):
     st.subheader("Summary")
     groups_by_cohort = blending.groupby("cohort")["midline_class_name"].nunique()
     learners_by_cohort = blending.groupby("cohort")["participant_id"].nunique()
@@ -851,85 +855,49 @@ def render_blending_tab(df_lang, matched_all, key_prefix="blending"):
             st.metric("Matched learners", fmt_int(learners_by_cohort.get(cohort, 0)))
             st.metric("Avg word gain", fmt_float(word_gain_by_cohort.get(cohort, pd.NA)))
 
-    st.divider()
 
-    # 2. Word reading gain (headline) ───────────────────────────────────────────
+def _render_blending_word_gain(blending, cohort_order, key_prefix):
     st.subheader("Word Reading Gain (headline)")
     st.caption("Did blending work? Mean words read correct at baseline vs midline for matched blending learners.")
     word_summary = helpers.build_cohort_score_summary(blending, "words_total_correct")
     word_summary = word_summary[word_summary["cohort"].isin(cohort_order)] if not word_summary.empty else word_summary
     if word_summary.empty:
         st.info("No word-reading data available for the current filters.")
-    else:
-        overall = (
-            word_summary.groupby("cohort", dropna=False)
-            .agg(baseline_score=("baseline_score", "mean"), midline_score=("midline_score", "mean"))
-            .reset_index()
-        )
-        overall_long = overall.melt(
-            id_vars=["cohort"],
-            value_vars=["baseline_score", "midline_score"],
-            var_name="Phase",
-            value_name="Words",
-        )
-        overall_long["Phase"] = overall_long["Phase"].map({"baseline_score": "Baseline", "midline_score": "Midline"})
-        fig_words = px.bar(
-            overall_long,
-            x="cohort",
-            y="Words",
-            color="Phase",
-            barmode="group",
-            text="Words",
-            category_orders={"cohort": cohort_order, "Phase": ["Baseline", "Midline"]},
-            color_discrete_map={"Baseline": "#9aa4b2", "Midline": "#1f5cc4"},
-            title="Mean Words Correct: Baseline vs Midline, by Cohort",
-            labels={"cohort": "Cohort", "Words": "Mean words correct"},
-        )
-        fig_words.update_traces(texttemplate="%{text:.1f}", textposition="outside")
-        fig_words.update_layout(legend_title_text="")
-        st.plotly_chart(fig_words, use_container_width=True, key=f"{key_prefix}_words_chart")
+        return
 
-        grade_long = word_summary.melt(
-            id_vars=["cohort", "grade"],
-            value_vars=["baseline_score", "midline_score"],
-            var_name="Phase",
-            value_name="Words",
-        ).dropna(subset=["Words"])
-        grade_long["Phase"] = grade_long["Phase"].map({"baseline_score": "Baseline", "midline_score": "Midline"})
-        fig_words_grade = px.bar(
-            grade_long,
-            x="grade",
-            y="Words",
-            color="Phase",
-            barmode="group",
-            facet_col="cohort",
-            category_orders={"grade": GRADE_ORDER, "cohort": cohort_order, "Phase": ["Baseline", "Midline"]},
-            color_discrete_map={"Baseline": "#9aa4b2", "Midline": "#1f5cc4"},
-            title="Mean Words Correct by Grade and Cohort",
-            labels={"grade": "Grade", "Words": "Mean words correct"},
-        )
-        fig_words_grade.update_layout(legend_title_text="")
-        st.plotly_chart(fig_words_grade, use_container_width=True, key=f"{key_prefix}_words_grade_chart")
+    _render_blending_score_baseline_midline(
+        word_summary,
+        cohort_order,
+        label="Words",
+        expander_title="View word-gain summary table",
+        key_prefix=key_prefix,
+        key_suffix="words",
+    )
 
-        with st.expander("View word-gain summary table"):
-            st.dataframe(
-                word_summary.rename(
-                    columns={
-                        "cohort": "Cohort",
-                        "grade": "Grade",
-                        "matched_learners": "Matched Learners",
-                        "baseline_score": "Baseline Words",
-                        "midline_score": "Midline Words",
-                        "score_change": "Words Change",
-                    }
-                ).sort_values(["Cohort", "Grade"]),
-                use_container_width=True,
-                key=f"{key_prefix}_words_table",
-            )
+    grade_long = word_summary.melt(
+        id_vars=["cohort", "grade"],
+        value_vars=["baseline_score", "midline_score"],
+        var_name="Phase",
+        value_name="Words",
+    ).dropna(subset=["Words"])
+    grade_long["Phase"] = grade_long["Phase"].map({"baseline_score": "Baseline", "midline_score": "Midline"})
+    fig_words_grade = px.bar(
+        grade_long,
+        x="grade",
+        y="Words",
+        color="Phase",
+        barmode="group",
+        facet_col="cohort",
+        category_orders={"grade": GRADE_ORDER, "cohort": cohort_order, "Phase": ["Baseline", "Midline"]},
+        color_discrete_map={"Baseline": "#9aa4b2", "Midline": "#1f5cc4"},
+        title="Mean Words Correct by Grade and Cohort",
+        labels={"grade": "Grade", "Words": "Mean words correct"},
+    )
+    fig_words_grade.update_layout(legend_title_text="")
+    st.plotly_chart(fig_words_grade, use_container_width=True, key=f"{key_prefix}_words_grade_chart")
 
-    st.divider()
 
-    # 3. Word attainment ─────────────────────────────────────────────────────────
+def _render_blending_attainment(blending, cohort_order, key_prefix):
     st.subheader("Word Attainment")
     st.caption("Share of matched blending learners reading at or above a chosen midline word threshold, by cohort.")
     threshold = st.slider("Midline words correct threshold", 0, 60, 20, step=5, key=f"{key_prefix}_words_threshold")
@@ -976,9 +944,8 @@ def render_blending_tab(df_lang, matched_all, key_prefix="blending"):
     fig_dist.add_vline(x=0, line_dash="dash", line_color="#6b7280")
     st.plotly_chart(fig_dist, use_container_width=True, key=f"{key_prefix}_words_dist")
 
-    st.divider()
 
-    # 4. Non-words (midline only) ─────────────────────────────────────────────────
+def _render_blending_nonwords(blending, cohort_order, key_prefix):
     st.subheader("Non-words (midline only)")
     st.caption("Non-words were not captured at baseline — this is the midline level only, not a gain.")
     nonword_frame = blending[blending["cohort"].isin(cohort_order)].copy()
@@ -990,117 +957,97 @@ def render_blending_tab(df_lang, matched_all, key_prefix="blending"):
     )
     if nonword_summary.empty:
         st.info("No midline non-word data available for the current filters.")
-    else:
-        nonword_cols = st.columns(len(cohort_order))
-        nonword_means = nonword_summary.set_index("cohort")["midline_nonwords_total_correct"]
-        for col, cohort in zip(nonword_cols, cohort_order):
-            col.metric(f"{COHORT_LABELS[cohort]} avg non-words (midline)", fmt_float(nonword_means.get(cohort, pd.NA)))
+        return
 
-        fig_nonword = px.histogram(
-            nonword_frame.dropna(subset=["midline_nonwords_total_correct"]),
-            x="midline_nonwords_total_correct",
-            color="cohort",
-            barmode="overlay",
-            nbins=30,
-            opacity=0.6,
-            category_orders={"cohort": cohort_order},
-            color_discrete_map=COHORT_COLORS,
-            title="Distribution of Midline Non-word Scores by Cohort",
-            labels={"midline_nonwords_total_correct": "Midline non-words correct", "cohort": "Cohort"},
-        )
-        st.plotly_chart(fig_nonword, use_container_width=True, key=f"{key_prefix}_nonword_dist")
+    nonword_cols = st.columns(len(cohort_order))
+    nonword_means = nonword_summary.set_index("cohort")["midline_nonwords_total_correct"]
+    for col, cohort in zip(nonword_cols, cohort_order):
+        col.metric(f"{COHORT_LABELS[cohort]} avg non-words (midline)", fmt_float(nonword_means.get(cohort, pd.NA)))
 
-    st.divider()
+    fig_nonword = px.histogram(
+        nonword_frame.dropna(subset=["midline_nonwords_total_correct"]),
+        x="midline_nonwords_total_correct",
+        color="cohort",
+        barmode="overlay",
+        nbins=30,
+        opacity=0.6,
+        category_orders={"cohort": cohort_order},
+        color_discrete_map=COHORT_COLORS,
+        title="Distribution of Midline Non-word Scores by Cohort",
+        labels={"midline_nonwords_total_correct": "Midline non-words correct", "cohort": "Cohort"},
+    )
+    st.plotly_chart(fig_nonword, use_container_width=True, key=f"{key_prefix}_nonword_dist")
 
-    # 5. Letters (secondary) ───────────────────────────────────────────────────────
+
+def _render_blending_letters(blending, cohort_order, key_prefix):
     st.subheader("Letters (secondary)")
     st.caption("These learners entered blending strong on letters — did they hold or grow that? Baseline vs midline letters correct.")
     letter_summary = helpers.build_cohort_score_summary(blending, "letters_total_correct")
     letter_summary = letter_summary[letter_summary["cohort"].isin(cohort_order)] if not letter_summary.empty else letter_summary
     if letter_summary.empty:
         st.info("No letter data available for the current filters.")
-    else:
-        letters_overall = (
-            letter_summary.groupby("cohort", dropna=False)
-            .agg(baseline_score=("baseline_score", "mean"), midline_score=("midline_score", "mean"))
-            .reset_index()
-        )
-        letters_long = letters_overall.melt(
-            id_vars=["cohort"],
-            value_vars=["baseline_score", "midline_score"],
-            var_name="Phase",
-            value_name="Letters",
-        )
-        letters_long["Phase"] = letters_long["Phase"].map({"baseline_score": "Baseline", "midline_score": "Midline"})
-        fig_letters = px.bar(
-            letters_long,
-            x="cohort",
-            y="Letters",
-            color="Phase",
-            barmode="group",
-            text="Letters",
-            category_orders={"cohort": cohort_order, "Phase": ["Baseline", "Midline"]},
-            color_discrete_map={"Baseline": "#9aa4b2", "Midline": "#1f5cc4"},
-            title="Mean Letters Correct: Baseline vs Midline, by Cohort",
-            labels={"cohort": "Cohort", "Letters": "Mean letters correct"},
-        )
-        fig_letters.update_traces(texttemplate="%{text:.1f}", textposition="outside")
-        fig_letters.update_layout(legend_title_text="")
-        st.plotly_chart(fig_letters, use_container_width=True, key=f"{key_prefix}_letters_chart")
+        return
 
-        with st.expander("View letter summary table"):
-            st.dataframe(
-                letter_summary.rename(
-                    columns={
-                        "cohort": "Cohort",
-                        "grade": "Grade",
-                        "matched_learners": "Matched Learners",
-                        "baseline_score": "Baseline Letters",
-                        "midline_score": "Midline Letters",
-                        "score_change": "Letters Change",
-                    }
-                ).sort_values(["Cohort", "Grade"]),
-                use_container_width=True,
-                key=f"{key_prefix}_letters_table",
-            )
+    _render_blending_score_baseline_midline(
+        letter_summary,
+        cohort_order,
+        label="Letters",
+        expander_title="View letter summary table",
+        key_prefix=key_prefix,
+        key_suffix="letters",
+    )
 
-    st.divider()
 
-    # 6. By school & EA (word gains) ───────────────────────────────────────────────
+def _render_blending_by_school_ea(blending, key_prefix):
     st.subheader("Word Gains by School & EA")
     school_summary = helpers.build_school_gain_summary(blending)
     if school_summary.empty:
         st.info("No school-level blending data available.")
     else:
-        top_schools = school_summary.sort_values("words_change", ascending=False).head(20)
-        fig_school = px.bar(
-            top_schools,
-            x="words_change",
-            y="program_name",
-            color="language",
-            orientation="h",
-            hover_data=["grade", "matched_learners", "words_change"],
-            title="Top Word Gains by School, Language, and Grade (blending learners)",
-            labels={"words_change": "Avg word gain", "program_name": "School"},
-            color_discrete_map=LANGUAGE_COLORS,
+        school_min = max(1, min(30, int(school_summary["matched_learners"].max())))
+        min_school_learners = st.slider(
+            "Minimum matched blending learners per school/grade/language",
+            1,
+            school_min,
+            min(5, school_min),
+            key=f"{key_prefix}_school_min",
         )
-        fig_school.update_layout(yaxis={"categoryorder": "total ascending"})
-        st.plotly_chart(fig_school, use_container_width=True, key=f"{key_prefix}_school_chart")
-
-        with st.expander("View school word-gain table"):
-            st.dataframe(
-                school_summary[["program_name", "language", "grade", "matched_learners", "words_change"]].rename(
-                    columns={
-                        "program_name": "School",
-                        "language": "Language",
-                        "grade": "Grade",
-                        "matched_learners": "Matched Learners",
-                        "words_change": "Words Change",
-                    }
-                ),
-                use_container_width=True,
-                key=f"{key_prefix}_school_table",
+        # words-first view: sort the displayed table by word gain rather than the helper's default.
+        display_schools = school_summary[school_summary["matched_learners"] >= min_school_learners].sort_values(
+            "words_change", ascending=False
+        )
+        if display_schools.empty:
+            st.info("No school rows meet the selected minimum.")
+        else:
+            top_schools = display_schools.head(20)
+            fig_school = px.bar(
+                top_schools,
+                x="words_change",
+                y="program_name",
+                color="language",
+                orientation="h",
+                hover_data=["grade", "matched_learners", "words_change"],
+                title="Top Word Gains by School, Language, and Grade (blending learners)",
+                labels={"words_change": "Avg word gain", "program_name": "School"},
+                color_discrete_map=LANGUAGE_COLORS,
             )
+            fig_school.update_layout(yaxis={"categoryorder": "total ascending"})
+            st.plotly_chart(fig_school, use_container_width=True, key=f"{key_prefix}_school_chart")
+
+            with st.expander("View school word-gain table"):
+                st.dataframe(
+                    display_schools[["program_name", "language", "grade", "matched_learners", "words_change"]].rename(
+                        columns={
+                            "program_name": "School",
+                            "language": "Language",
+                            "grade": "Grade",
+                            "matched_learners": "Matched Learners",
+                            "words_change": "Words Change",
+                        }
+                    ),
+                    use_container_width=True,
+                    key=f"{key_prefix}_school_table",
+                )
 
     min_learners = st.slider("Minimum matched blending learners per EA", 1, 30, 5, key=f"{key_prefix}_ea_min")
     ea_summary = helpers.build_ea_gain_summary(blending, change_col="words_change", min_learners=min_learners)
@@ -1131,9 +1078,8 @@ def render_blending_tab(df_lang, matched_all, key_prefix="blending"):
             key=f"{key_prefix}_ea_table",
         )
 
-    st.divider()
 
-    # 7. Export ──────────────────────────────────────────────────────────────────
+def _render_blending_export(blending, key_prefix):
     st.subheader("Export")
     export_columns = {
         "participant_id": "participant_id",
@@ -1161,6 +1107,77 @@ def render_blending_tab(df_lang, matched_all, key_prefix="blending"):
             mime="text/csv",
             key=f"{key_prefix}_export_download",
         )
+
+
+def render_blending_tab(df_lang, matched_all, key_prefix="blending"):
+    """Orchestrate the Blending tab: derive the matched spine + cohort_order + shared captions,
+    apply the single empty-state precondition, then delegate to the _render_blending_* sections."""
+    st.header("Blending Groups")
+    st.caption(
+        "Matched baseline→midline learners who were in a Blending group at midline (the success "
+        "path: learners who moved from Letters into Blending count; learners who left Blending by "
+        "midline do not). Cohort is anchored to each learner's baseline school, like the rest of "
+        "the page. Headline metric is word reading — these learners have moved past letters."
+    )
+
+    # Single matched spine for every analytic section. blending already carries cohort = baseline_cohort.
+    blending = helpers.blending_matched_learners(matched_all)
+
+    # This tab spans Grade 1 & 2, so it gets its OWN grade control defaulting to all grades.
+    st.caption("This tab uses its own grade control and defaults to all grades so nothing is hidden.")
+    grade_values = [grade for grade in GRADE_ORDER if grade in blending["grade"].dropna().unique()] if not blending.empty else []
+    grade_choice = st.selectbox("Grade", ["All grades"] + grade_values, index=0, key=f"{key_prefix}_grade")
+    if grade_choice != "All grades" and not blending.empty:
+        blending = blending[blending["grade"] == grade_choice]
+
+    # Data-quality captions (these use df_lang, not the matched spine, and render regardless).
+    unrecognized = helpers.count_unrecognized_midline_tracks(df_lang)
+    if unrecognized:
+        st.caption(
+            f"⚠️ {fmt_int(unrecognized)} latest-midline rows had an unrecognized group track "
+            "(class name not matching the \"{EA}-{Letters|Blending}-Group {N}\" convention) and are excluded."
+        )
+
+    latest_lang = helpers.latest_assessment_per_phase(df_lang)
+    midline_blending_learners = 0
+    if not latest_lang.empty and "group_track" in latest_lang.columns:
+        midline = latest_lang[(latest_lang["assessment_type"] == "midline") & (latest_lang["group_track"] == "Blending")]
+        midline_blending_learners = midline["participant_id"].nunique()
+    unmatched_blending = max(0, midline_blending_learners - len(blending))
+    st.caption(
+        f"Of {fmt_int(midline_blending_learners)} distinct midline-blending learners, "
+        f"{fmt_int(unmatched_blending)} have no matched baseline and are excluded from the gain analysis below."
+    )
+
+    # Single shared precondition before any section renders.
+    if blending.empty:
+        st.info("No matched blending learners for the current filters.")
+        return
+
+    # Cohort split = Treatment vs SEF; include Control only if it actually has rows.
+    cohort_order = [cohort for cohort in ("treatment", "sef") if (blending["cohort"] == cohort).any()]
+    if (blending["cohort"] == "control").any():
+        cohort_order.append("control")
+        st.caption("A small number of control learners appear in blending groups and are shown alongside; the control sample is negligible.")
+
+    if not cohort_order:
+        st.info("No Treatment/SEF/Control blending learners for the current filters.")
+        return
+
+    st.divider()
+    _render_blending_summary(blending, cohort_order, key_prefix)
+    st.divider()
+    _render_blending_word_gain(blending, cohort_order, key_prefix)
+    st.divider()
+    _render_blending_attainment(blending, cohort_order, key_prefix)
+    st.divider()
+    _render_blending_nonwords(blending, cohort_order, key_prefix)
+    st.divider()
+    _render_blending_letters(blending, cohort_order, key_prefix)
+    st.divider()
+    _render_blending_by_school_ea(blending, key_prefix)
+    st.divider()
+    _render_blending_export(blending, key_prefix)
 
 
 # ── Orchestration ───────────────────────────────────────────────────────────
