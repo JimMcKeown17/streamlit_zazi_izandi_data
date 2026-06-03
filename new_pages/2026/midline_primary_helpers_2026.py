@@ -67,6 +67,55 @@ def add_cohort_column(df):
     return out
 
 
+def group_track_from_name(name):
+    """Classify a class_name into its learning track: 'Blending' / 'Letters' / 'Other'.
+
+    The naming convention is "{EA name}-{Letters|Blending}-Group {N}", so the track lives in a
+    hyphen-delimited segment. We parse that segment (case/whitespace-robust) rather than doing a
+    bare whole-string substring match, so an EA whose own name contains "letter"/"blend"
+    (e.g. "Blenda Smith-Letters-Group 1") cannot be misclassified. We fall back to a substring
+    check only when there is no clear hyphen segment to inspect.
+    """
+    if pd.isna(name):
+        return "Other"
+    text = str(name).strip()
+    if not text:
+        return "Other"
+
+    segments = [segment.strip().casefold() for segment in text.split("-")]
+    if len(segments) > 1:
+        if "blending" in segments:
+            return "Blending"
+        if "letters" in segments:
+            return "Letters"
+        return "Other"
+
+    # No hyphen segments to parse: fall back to a substring check on the whole string.
+    lowered = text.casefold()
+    if "blending" in lowered:
+        return "Blending"
+    if "letters" in lowered:
+        return "Letters"
+    return "Other"
+
+
+def add_group_track_column(df):
+    """Add a non-sensitive 'group_track' column derived from the raw class_name.
+
+    Must be called BEFORE mask_dataframe: for unauthenticated users class_name is replaced with
+    an alias, so the track ("Blending"/"Letters") cannot be derived after masking. Mirrors
+    add_cohort_column: if class_name is absent, group_track is "Other".
+    """
+    if df is None or df.empty:
+        return df if df is not None else pd.DataFrame()
+    out = df.copy()
+    if "class_name" in out.columns:
+        out["group_track"] = out["class_name"].map(group_track_from_name)
+    else:
+        out["group_track"] = "Other"
+    return out
+
+
 def cohort_counts():
     """Return the defined size of each cohort (post-precedence) for tab labels."""
     return {
@@ -166,6 +215,7 @@ def build_matched_assessment_pairs(df):
         "collected_by",
         "gender",
         "cohort",
+        "group_track",
         "response_date",
     ]
     available_metadata = [column for column in metadata_columns if column in latest.columns]
@@ -197,6 +247,42 @@ def build_matched_assessment_pairs(df):
             matched[column] = midline_values.combine_first(baseline_values)
 
     return matched
+
+
+def blending_matched_learners(matched_all):
+    """Return matched learners who were in a Blending group at MIDLINE.
+
+    A blending learner is defined by the midline track (the success path: a learner who moved from
+    Letters into Blending counts; one who left Blending by midline does not). Cohort is anchored to
+    baseline like the rest of the page; since the post-merge coalesce loop creates no bare 'cohort'
+    column, we set cohort = baseline_cohort explicitly. Empty-safe.
+    """
+    if matched_all is None or matched_all.empty:
+        return pd.DataFrame()
+    required = {"midline_group_track", "baseline_cohort"}
+    if not required.issubset(matched_all.columns):
+        return pd.DataFrame()
+
+    blending = matched_all[matched_all["midline_group_track"] == "Blending"].copy()
+    blending["cohort"] = blending["baseline_cohort"]
+    return blending
+
+
+def count_unrecognized_midline_tracks(df):
+    """Count each learner's latest MIDLINE rows whose group_track is 'Other' (unparseable class_name).
+
+    Surfaced as a data-quality caption so blending undercounts (from class names that don't follow
+    the "{EA}-{Letters|Blending}-Group {N}" convention) are visible. Empty-safe -> 0.
+    """
+    if df is None or len(df) == 0:
+        return 0
+    frame = df if "group_track" in df.columns else add_group_track_column(df)
+    latest = latest_assessment_per_phase(frame)
+    if latest.empty or "group_track" not in latest.columns:
+        return 0
+
+    midline = latest[latest["assessment_type"] == "midline"]
+    return int((midline["group_track"] == "Other").sum())
 
 
 def build_phase_score_summary(df, dimensions, score_col, agg="mean"):
@@ -393,20 +479,26 @@ def benchmark_by_school_summary(df, grade, threshold, phase="midline"):
     return summary.sort_values("percent", ascending=False).reset_index(drop=True)
 
 
-def build_ea_gain_summary(matched, min_learners=5):
-    """Mean letter gain per assessing EA (midline collector), filtered to a minimum sample."""
+def build_ea_gain_summary(matched, min_learners=5, change_col="letters_change"):
+    """Mean score gain per assessing EA (midline collector), filtered to a minimum sample.
+
+    Defaults to letter gain (change_col="letters_change") so existing callers are unaffected; the
+    blending by-EA view passes change_col="words_change". The output gain column is named change_col.
+    """
     if matched is None or matched.empty or "midline_collected_by" not in matched.columns:
+        return pd.DataFrame()
+    if change_col not in matched.columns:
         return pd.DataFrame()
 
     summary = (
         matched.groupby("midline_collected_by", dropna=False)
-        .agg(matched_learners=("participant_id", "nunique"), letters_change=("letters_change", "mean"))
+        .agg(matched_learners=("participant_id", "nunique"), **{change_col: (change_col, "mean")})
         .reset_index()
         .rename(columns={"midline_collected_by": "ea"})
     )
-    summary["letters_change"] = pd.to_numeric(summary["letters_change"], errors="coerce").round(1)
+    summary[change_col] = pd.to_numeric(summary[change_col], errors="coerce").round(1)
     summary = summary[summary["matched_learners"] >= min_learners]
-    return summary.sort_values("letters_change", ascending=False).reset_index(drop=True)
+    return summary.sort_values(change_col, ascending=False).reset_index(drop=True)
 
 
 def build_gender_gain_summary(matched):
@@ -494,6 +586,37 @@ def build_cohort_gain_summary(matched):
         .rename(columns={"baseline_cohort": "cohort"})
     )
     for column in ("baseline_letters", "midline_letters", "letters_change"):
+        summary[column] = pd.to_numeric(summary[column], errors="coerce").round(1)
+    return summary
+
+
+def build_cohort_score_summary(matched, score_col):
+    """Mean baseline/midline/gain of an arbitrary score by baseline cohort and grade.
+
+    Generic counterpart to build_cohort_gain_summary (which is letters-only and a live dependency
+    of the Treatment tab — left untouched). score_col is one of letters_total_correct /
+    nonwords_total_correct / words_total_correct. Output columns are generic:
+    cohort, grade, matched_learners, baseline_score, midline_score, score_change. Empty-safe.
+    """
+    if matched is None or matched.empty:
+        return pd.DataFrame()
+    change_col = CHANGE_COLUMNS.get(score_col)
+    required = {"baseline_cohort", "grade", f"baseline_{score_col}", f"midline_{score_col}"}
+    if change_col is None or not required.issubset(matched.columns):
+        return pd.DataFrame()
+
+    summary = (
+        matched.groupby(["baseline_cohort", "grade"], dropna=False)
+        .agg(
+            matched_learners=("participant_id", "nunique"),
+            baseline_score=(f"baseline_{score_col}", "mean"),
+            midline_score=(f"midline_{score_col}", "mean"),
+            score_change=(change_col, "mean"),
+        )
+        .reset_index()
+        .rename(columns={"baseline_cohort": "cohort"})
+    )
+    for column in ("baseline_score", "midline_score", "score_change"):
         summary[column] = pd.to_numeric(summary[column], errors="coerce").round(1)
     return summary
 

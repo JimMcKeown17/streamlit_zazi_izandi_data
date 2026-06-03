@@ -350,6 +350,263 @@ class CohortComparisonTests(unittest.TestCase):
         self.assertAlmostEqual(treat_base["Percent"], 0.0, places=1)   # 10, 20 < 25
 
 
+def _track_row(pid, phase, class_name, grade="Grade 1", words=0, nonwords=0, letters=0, date="2026-02-01", school="Abraham Levy Primary School"):
+    """A row whose class_name carries an explicit group track (no '{grade} - {school}' override)."""
+    return {
+        "response_id": f"{pid}-{phase}-{class_name}",
+        "participant_id": pid,
+        "assessment_type": phase,
+        "response_date": date,
+        "language": "English",
+        "grade": grade,
+        "program_name": school,
+        "class_name": class_name,
+        "collected_by": "EA One",
+        "gender": "",
+        "letters_total_correct": letters,
+        "nonwords_total_correct": nonwords,
+        "words_total_correct": words,
+    }
+
+
+class GroupTrackFromNameTests(unittest.TestCase):
+    def test_blending_segment(self):
+        self.assertEqual(helpers.group_track_from_name("Achuma Plaatjies-Blending-Group 1"), "Blending")
+
+    def test_letters_segment(self):
+        self.assertEqual(helpers.group_track_from_name("Achuma Plaatjies-Letters-Group 2"), "Letters")
+
+    def test_non_track_class_name_is_other(self):
+        self.assertEqual(helpers.group_track_from_name("Grade 1 - School"), "Other")
+
+    def test_blank_and_none_are_other(self):
+        self.assertEqual(helpers.group_track_from_name(""), "Other")
+        self.assertEqual(helpers.group_track_from_name(None), "Other")
+
+    def test_case_and_whitespace_variants(self):
+        self.assertEqual(helpers.group_track_from_name("  Achuma Plaatjies - blending - Group 1 "), "Blending")
+        self.assertEqual(helpers.group_track_from_name("achuma-LETTERS-group 3"), "Letters")
+
+    def test_ea_name_containing_blend_does_not_misclassify_letters_group(self):
+        # The EA's own name contains "blend" but the track segment is Letters.
+        self.assertEqual(helpers.group_track_from_name("Blenda Smith-Letters-Group 1"), "Letters")
+
+    def test_ea_name_containing_letter_does_not_misclassify_blending_group(self):
+        # The EA's own name contains "letter" but the track segment is Blending.
+        self.assertEqual(helpers.group_track_from_name("Letty Jones-Blending-Group 2"), "Blending")
+
+
+class AddGroupTrackColumnTests(unittest.TestCase):
+    def test_adds_group_track_column(self):
+        df = pd.DataFrame(
+            {
+                "class_name": [
+                    "Achuma Plaatjies-Blending-Group 1",
+                    "Achuma Plaatjies-Letters-Group 2",
+                    "Grade 1 - Some School",
+                ]
+            }
+        )
+        out = helpers.add_group_track_column(df)
+        self.assertEqual(list(out["group_track"]), ["Blending", "Letters", "Other"])
+
+    def test_missing_class_name_column_defaults_to_other(self):
+        df = pd.DataFrame({"participant_id": ["1", "2"]})
+        out = helpers.add_group_track_column(df)
+        self.assertEqual(list(out["group_track"]), ["Other", "Other"])
+
+    def test_empty_frame_is_empty_safe(self):
+        out = helpers.add_group_track_column(pd.DataFrame())
+        self.assertTrue(out.empty)
+
+    def test_group_track_survives_masking_while_class_name_is_aliased(self):
+        from data_privacy import mask_dataframe
+
+        df = pd.DataFrame(
+            {
+                "class_name": [
+                    "Achuma Plaatjies-Blending-Group 1",
+                    "Achuma Plaatjies-Letters-Group 2",
+                ],
+                "participant_id": ["100", "101"],
+            }
+        )
+        df = helpers.add_group_track_column(df)
+        masked = mask_dataframe(df, dataset_key="assessments_2026", authenticated=False)
+        # group_track is NOT a masked column, so it survives untouched.
+        self.assertEqual(list(masked["group_track"]), ["Blending", "Letters"])
+        # class_name itself is aliased to "Class ..." and no longer carries the track.
+        self.assertTrue(all(str(value).startswith("Class ") for value in masked["class_name"]))
+        self.assertNotIn("Achuma Plaatjies-Blending-Group 1", list(masked["class_name"]))
+
+
+class MatchedPairGroupTrackTests(unittest.TestCase):
+    def test_matched_pairs_carry_baseline_and_midline_group_track(self):
+        data = pd.DataFrame(
+            [
+                _track_row("T1", "baseline", "Achuma Plaatjies-Letters-Group 2", words=5, date="2026-02-01"),
+                _track_row("T1", "midline", "Achuma Plaatjies-Blending-Group 1", words=20, date="2026-05-01"),
+            ]
+        )
+        matched = build_matched_assessment_pairs(helpers.add_group_track_column(data))
+        self.assertIn("baseline_group_track", matched.columns)
+        self.assertIn("midline_group_track", matched.columns)
+        self.assertEqual(matched.iloc[0]["baseline_group_track"], "Letters")
+        self.assertEqual(matched.iloc[0]["midline_group_track"], "Blending")
+
+
+class BlendingMatchedLearnerTests(unittest.TestCase):
+    def _prep(self, data):
+        return build_matched_assessment_pairs(
+            helpers.add_group_track_column(helpers.add_cohort_column(data))
+        )
+
+    def test_selects_only_midline_blending_and_sets_cohort_to_baseline(self):
+        data = pd.DataFrame(
+            [
+                # Mover: baselined at a treatment school in Letters, midline in Blending -> included
+                _track_row("M1", "baseline", "EA A-Letters-Group 1", school="Abraham Levy Primary School", words=5, date="2026-02-01"),
+                _track_row("M1", "midline", "EA A-Blending-Group 1", school="Pendla Primary School", words=20, date="2026-05-01"),
+            ]
+        )
+        matched = self._prep(data)
+        blending = helpers.blending_matched_learners(matched)
+        self.assertEqual(set(blending["participant_id"]), {"M1"})
+        self.assertIn("cohort", blending.columns)
+        # cohort must equal the BASELINE cohort (treatment), not the midline one (control).
+        self.assertEqual(blending.iloc[0]["cohort"], "treatment")
+        self.assertEqual(blending.iloc[0]["baseline_cohort"], "treatment")
+        self.assertEqual(blending.iloc[0]["midline_cohort"], "control")
+
+    def test_track_switcher_matrix(self):
+        data = pd.DataFrame(
+            [
+                # baseline Letters / midline Blending -> included, cohort = baseline (treatment)
+                _track_row("LB", "baseline", "EA-Letters-Group 1", school="Abraham Levy Primary School", date="2026-02-01"),
+                _track_row("LB", "midline", "EA-Blending-Group 1", school="Abraham Levy Primary School", date="2026-05-01"),
+                # baseline Blending / midline Letters -> excluded
+                _track_row("BL", "baseline", "EA-Blending-Group 1", school="Abraham Levy Primary School", date="2026-02-01"),
+                _track_row("BL", "midline", "EA-Letters-Group 1", school="Abraham Levy Primary School", date="2026-05-01"),
+                # baseline Blending / midline Other -> excluded
+                _track_row("BO", "baseline", "EA-Blending-Group 1", school="Abraham Levy Primary School", date="2026-02-01"),
+                _track_row("BO", "midline", "Grade 1 - Abraham Levy", school="Abraham Levy Primary School", date="2026-05-01"),
+                # baseline Blending / midline Blending -> included
+                _track_row("BB", "baseline", "EA-Blending-Group 1", school="Abraham Levy Primary School", date="2026-02-01"),
+                _track_row("BB", "midline", "EA-Blending-Group 2", school="Abraham Levy Primary School", date="2026-05-01"),
+            ]
+        )
+        matched = self._prep(data)
+        blending = helpers.blending_matched_learners(matched)
+        self.assertEqual(set(blending["participant_id"]), {"LB", "BB"})
+        lb = blending[blending["participant_id"] == "LB"].iloc[0]
+        self.assertEqual(lb["cohort"], "treatment")
+
+    def test_empty_safe(self):
+        self.assertTrue(helpers.blending_matched_learners(pd.DataFrame()).empty)
+        self.assertTrue(helpers.blending_matched_learners(None).empty)
+        # missing required columns -> empty
+        self.assertTrue(
+            helpers.blending_matched_learners(pd.DataFrame({"participant_id": ["1"]})).empty
+        )
+
+
+class CohortScoreSummaryTests(unittest.TestCase):
+    def _matched(self):
+        data = pd.DataFrame(
+            [
+                _track_row("T1", "baseline", "EA-Blending-Group 1", school="Abraham Levy Primary School", words=10, date="2026-02-01"),
+                _track_row("T1", "midline", "EA-Blending-Group 1", school="Abraham Levy Primary School", words=30, date="2026-05-01"),
+                _track_row("T2", "baseline", "EA-Blending-Group 1", school="Abraham Levy Primary School", words=20, date="2026-02-01"),
+                _track_row("T2", "midline", "EA-Blending-Group 1", school="Abraham Levy Primary School", words=30, date="2026-05-01"),
+                _track_row("C1", "baseline", "EA-Blending-Group 1", school="Pendla Primary School", words=10, date="2026-02-01"),
+                _track_row("C1", "midline", "EA-Blending-Group 1", school="Pendla Primary School", words=15, date="2026-05-01"),
+            ]
+        )
+        return build_matched_assessment_pairs(helpers.add_cohort_column(data))
+
+    def test_words_score_summary_math(self):
+        summary = helpers.build_cohort_score_summary(self._matched(), "words_total_correct")
+        treat = summary[(summary["cohort"] == "treatment") & (summary["grade"] == "Grade 1")].iloc[0]
+        ctrl = summary[(summary["cohort"] == "control") & (summary["grade"] == "Grade 1")].iloc[0]
+        self.assertEqual(treat["matched_learners"], 2)
+        self.assertAlmostEqual(treat["baseline_score"], 15.0, places=1)  # (10 + 20) / 2
+        self.assertAlmostEqual(treat["midline_score"], 30.0, places=1)
+        self.assertAlmostEqual(treat["score_change"], 15.0, places=1)
+        self.assertEqual(ctrl["matched_learners"], 1)
+        self.assertAlmostEqual(ctrl["score_change"], 5.0, places=1)
+
+    def test_empty_safe(self):
+        self.assertTrue(helpers.build_cohort_score_summary(pd.DataFrame(), "words_total_correct").empty)
+        self.assertTrue(helpers.build_cohort_score_summary(None, "words_total_correct").empty)
+
+    def test_build_cohort_gain_summary_output_columns_unchanged(self):
+        # Regression guard: the shared letters-only helper must keep its exact contract.
+        summary = helpers.build_cohort_gain_summary(self._matched())
+        self.assertEqual(
+            list(summary.columns),
+            ["cohort", "grade", "matched_learners", "baseline_letters", "midline_letters", "letters_change"],
+        )
+
+
+class EaScoreGainSummaryTests(unittest.TestCase):
+    def _matched(self):
+        data = pd.DataFrame(
+            [
+                _track_row("T1", "baseline", "EA-Blending-Group 1", words=5, letters=10, date="2026-02-01"),
+                _track_row("T1", "midline", "EA-Blending-Group 1", words=25, letters=30, date="2026-05-01"),
+                _track_row("T2", "baseline", "EA-Blending-Group 1", words=10, letters=20, date="2026-02-01"),
+                _track_row("T2", "midline", "EA-Blending-Group 1", words=20, letters=30, date="2026-05-01"),
+            ]
+        )
+        return build_matched_assessment_pairs(helpers.add_cohort_column(data))
+
+    def test_words_change_when_requested(self):
+        summary = helpers.build_ea_gain_summary(self._matched(), min_learners=1, change_col="words_change")
+        self.assertIn("words_change", summary.columns)
+        self.assertNotIn("letters_change", summary.columns)
+        self.assertAlmostEqual(summary.iloc[0]["words_change"], 15.0, places=1)  # (20 + 10) / 2
+        self.assertEqual(summary.iloc[0]["matched_learners"], 2)
+
+    def test_default_call_still_produces_letters_change(self):
+        summary = helpers.build_ea_gain_summary(self._matched(), min_learners=1)
+        self.assertIn("letters_change", summary.columns)
+        self.assertNotIn("words_change", summary.columns)
+        self.assertAlmostEqual(summary.iloc[0]["letters_change"], 15.0, places=1)  # (20 + 10) / 2
+
+
+class UnrecognizedMidlineTrackCountTests(unittest.TestCase):
+    def test_counts_only_latest_midline_other_rows(self):
+        data = pd.DataFrame(
+            [
+                # Blending midline -> not counted
+                _track_row("A", "midline", "EA-Blending-Group 1", date="2026-05-01"),
+                # Unparseable midline -> counted
+                _track_row("B", "midline", "Grade 1 - Abraham Levy", date="2026-05-01"),
+                # Another unparseable midline -> counted
+                _track_row("C", "midline", "Random Class", date="2026-05-01"),
+                # Unparseable BASELINE row -> NOT counted (baseline phase)
+                _track_row("D", "baseline", "Grade 1 - Abraham Levy", date="2026-02-01"),
+            ]
+        )
+        count = helpers.count_unrecognized_midline_tracks(helpers.add_group_track_column(data))
+        self.assertEqual(count, 2)
+
+    def test_dedups_to_latest_midline_per_learner(self):
+        data = pd.DataFrame(
+            [
+                # Same learner: earlier midline unparseable, later midline blending -> latest wins, 0 counted
+                _track_row("E", "midline", "Random Class", date="2026-05-01"),
+                _track_row("E", "midline", "EA-Blending-Group 1", date="2026-05-10"),
+            ]
+        )
+        count = helpers.count_unrecognized_midline_tracks(helpers.add_group_track_column(data))
+        self.assertEqual(count, 0)
+
+    def test_empty_safe(self):
+        self.assertEqual(helpers.count_unrecognized_midline_tracks(pd.DataFrame()), 0)
+        self.assertEqual(helpers.count_unrecognized_midline_tracks(None), 0)
+
+
 class DescriptiveChartHelperTests(unittest.TestCase):
     def test_zero_letter_summary_per_phase(self):
         data = pd.DataFrame(
