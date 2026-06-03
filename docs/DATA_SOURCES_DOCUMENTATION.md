@@ -178,7 +178,7 @@ This document provides a comprehensive overview of all data sources used in the 
 | Page | Data Source | Loading Function | Source Type | Notes |
 |------|-------------|------------------|-------------|-------|
 | 2026 Baseline Primary Schools | **Database** | `load_assessments_2026()` / direct SQL | PostgreSQL (`assessments_2026`) | Surveys 815/816/817; grade derived from class_name via group API; includes Grouping QA tab with 2026-specific grouping logic and CSV export including group assignments |
-| 2026 Midline Primary School | **Database** | Direct SQL on `assessments_2026` + `midline_primary_helpers_2026.py` | PostgreSQL | Compares baseline surveys 815/816/817 with midline surveys 880/881/882 using latest learner rows per `participant_id` and phase |
+| 2026 Midline Primary School | **Database** | Direct SQL on `assessments_2026` + `midline_primary_helpers_2026.py` | PostgreSQL | Compares baseline surveys 815/816/817 with midline surveys 880/881/882 using latest learner rows per `participant_id` and phase. Split into **Treatment / Control / SEF** tabs via `cohort` derived from `data/2026_cohorts.py` (classified in the raw loader **before** masking, since the page is public). Treatment tab adds a treatment-vs-control comparison (matched, baseline-anchored) and an outstanding-midline tracker. SEF=10, Control=53 (Sapphire Road is SEF). |
 | 2026 ECD Baseline | **Database** | Direct SQL on `assessments_2026` | PostgreSQL | Survey 805; grade from free-text answer |
 | 2026 Sessions | **Database** | `load_sessions_2026()` | PostgreSQL (`sessions_2026`) | Auto-updated nightly |
 | 2026 Letter Progress | **Database** | Direct SQL on `sessions_2026` | PostgreSQL | Grade derived from class_name |

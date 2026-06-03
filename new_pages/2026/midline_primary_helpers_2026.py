@@ -1,3 +1,6 @@
+import importlib
+import re
+
 import pandas as pd
 
 
@@ -13,6 +16,64 @@ CHANGE_COLUMNS = {
     "nonwords_total_correct": "nonwords_change",
     "words_total_correct": "words_change",
 }
+
+
+_cohorts = importlib.import_module("data.2026_cohorts")
+
+
+def normalize_school_name(value):
+    """Normalise a school name for cohort matching: strip, collapse whitespace, uppercase."""
+    if pd.isna(value):
+        return ""
+    return re.sub(r"\s+", " ", str(value).strip()).upper()
+
+
+TREATMENT_SCHOOLS = {normalize_school_name(name) for name in _cohorts.treatment_schools}
+SEF_SCHOOLS = {normalize_school_name(name) for name in _cohorts.sef_schools}
+CONTROL_SCHOOLS = {normalize_school_name(name) for name in _cohorts.control_schools}
+
+
+def classify_cohort(program_name):
+    """Return 'treatment', 'sef', 'control', or 'other' for a school name.
+
+    SEF takes precedence so the (now removed) SAPPHIRE ROAD overlap always resolves to SEF,
+    and this matches whatever ordering the baseline page uses once the overlap is gone.
+    """
+    name = normalize_school_name(program_name)
+    if not name:
+        return "other"
+    if name in SEF_SCHOOLS:
+        return "sef"
+    if name in TREATMENT_SCHOOLS:
+        return "treatment"
+    if name in CONTROL_SCHOOLS:
+        return "control"
+    return "other"
+
+
+def add_cohort_column(df):
+    """Add a non-sensitive 'cohort' column derived from the raw program_name.
+
+    Must be called BEFORE mask_dataframe: for unauthenticated users program_name is
+    replaced with an alias, so cohort cannot be derived after masking.
+    """
+    if df is None or df.empty:
+        return df if df is not None else pd.DataFrame()
+    out = df.copy()
+    if "program_name" in out.columns:
+        out["cohort"] = out["program_name"].map(classify_cohort)
+    else:
+        out["cohort"] = "other"
+    return out
+
+
+def cohort_counts():
+    """Return the defined size of each cohort (post-precedence) for tab labels."""
+    return {
+        "treatment": len(TREATMENT_SCHOOLS),
+        "sef": len(SEF_SCHOOLS),
+        "control": len(CONTROL_SCHOOLS),
+    }
 
 
 def normalize_primary_assessments(df):
@@ -103,6 +164,8 @@ def build_matched_assessment_pairs(df):
         "program_name",
         "class_name",
         "collected_by",
+        "gender",
+        "cohort",
         "response_date",
     ]
     available_metadata = [column for column in metadata_columns if column in latest.columns]
@@ -125,7 +188,7 @@ def build_matched_assessment_pairs(df):
     for score_column, change_column in CHANGE_COLUMNS.items():
         matched[change_column] = matched[f"midline_{score_column}"] - matched[f"baseline_{score_column}"]
 
-    for column in ("language", "grade", "program_name", "class_name"):
+    for column in ("language", "grade", "program_name", "class_name", "gender"):
         midline_column = f"midline_{column}"
         baseline_column = f"baseline_{column}"
         if midline_column in matched.columns and baseline_column in matched.columns:
@@ -282,3 +345,181 @@ def unmatched_midline_learners(df):
     baseline_ids = set(latest[latest["assessment_type"] == "baseline"]["participant_id"])
     midline = latest[latest["assessment_type"] == "midline"].copy()
     return midline[~midline["participant_id"].isin(baseline_ids)].copy()
+
+
+def zero_letter_summary(df, grade):
+    """Percent of learners with zero letters correct, per phase, for a grade."""
+    latest = latest_assessment_per_phase(df)
+    if latest.empty:
+        return pd.DataFrame()
+    grade_df = latest[latest["grade"] == grade]
+    if grade_df.empty:
+        return pd.DataFrame()
+
+    rows = []
+    for phase_key, phase_label in PHASE_LABELS.items():
+        phase_df = grade_df[grade_df["assessment_type"] == phase_key]
+        total = len(phase_df)
+        zero = int((phase_df["letters_total_correct"] == 0).sum()) if total else 0
+        rows.append(
+            {
+                "Phase": phase_label,
+                "Learners": total,
+                "Zero Letters": zero,
+                "Percent": round((zero / total * 100), 1) if total else 0,
+            }
+        )
+    return pd.DataFrame(rows)
+
+
+def benchmark_by_school_summary(df, grade, threshold, phase="midline"):
+    """Percent of learners at/above a letter threshold per school, for one grade and phase."""
+    latest = latest_assessment_per_phase(df)
+    if latest.empty:
+        return pd.DataFrame()
+
+    subset = latest[(latest["grade"] == grade) & (latest["assessment_type"] == phase)].copy()
+    if subset.empty:
+        return pd.DataFrame()
+
+    subset["_at_or_above"] = (subset["letters_total_correct"] >= threshold).astype(int)
+    summary = (
+        subset.groupby("program_name", dropna=False)
+        .agg(learners=("participant_id", "nunique"), at_or_above=("_at_or_above", "sum"))
+        .reset_index()
+    )
+    summary["at_or_above"] = summary["at_or_above"].astype(int)
+    summary["percent"] = (summary["at_or_above"] / summary["learners"] * 100).round(1)
+    return summary.sort_values("percent", ascending=False).reset_index(drop=True)
+
+
+def build_ea_gain_summary(matched, min_learners=5):
+    """Mean letter gain per assessing EA (midline collector), filtered to a minimum sample."""
+    if matched is None or matched.empty or "midline_collected_by" not in matched.columns:
+        return pd.DataFrame()
+
+    summary = (
+        matched.groupby("midline_collected_by", dropna=False)
+        .agg(matched_learners=("participant_id", "nunique"), letters_change=("letters_change", "mean"))
+        .reset_index()
+        .rename(columns={"midline_collected_by": "ea"})
+    )
+    summary["letters_change"] = pd.to_numeric(summary["letters_change"], errors="coerce").round(1)
+    summary = summary[summary["matched_learners"] >= min_learners]
+    return summary.sort_values("letters_change", ascending=False).reset_index(drop=True)
+
+
+def build_gender_gain_summary(matched):
+    """Mean letter gain by gender (empty frame if no gender data is present)."""
+    if matched is None or matched.empty or "gender" not in matched.columns:
+        return pd.DataFrame()
+
+    gendered = matched.copy()
+    gendered["gender"] = gendered["gender"].fillna("").astype(str).str.strip()
+    gendered = gendered[gendered["gender"] != ""]
+    if gendered.empty:
+        return pd.DataFrame()
+
+    summary = (
+        gendered.groupby("gender", dropna=False)
+        .agg(matched_learners=("participant_id", "nunique"), letters_change=("letters_change", "mean"))
+        .reset_index()
+    )
+    summary["letters_change"] = pd.to_numeric(summary["letters_change"], errors="coerce").round(1)
+    return summary.sort_values("matched_learners", ascending=False).reset_index(drop=True)
+
+
+def outstanding_midline_by_school_grade(df):
+    """Treatment baseline learners still missing a midline, summarised by baseline school and grade.
+
+    Outstanding = a learner with a treatment baseline and no midline ANYWHERE (so a learner who
+    moved cohorts and was re-assessed elsewhere is not falsely flagged). percent_complete uses the
+    baseline-learner denominator.
+    """
+    if df is None or len(df) == 0:
+        return pd.DataFrame()
+    frame = df if "cohort" in df.columns else add_cohort_column(df)
+    latest = latest_assessment_per_phase(frame)
+    if latest.empty:
+        return pd.DataFrame()
+
+    midline_ids = set(latest[latest["assessment_type"] == "midline"]["participant_id"])
+    baseline = latest[(latest["assessment_type"] == "baseline") & (latest["cohort"] == "treatment")].copy()
+    if baseline.empty:
+        return pd.DataFrame()
+
+    baseline["_has_midline"] = baseline["participant_id"].isin(midline_ids).astype(int)
+    summary = (
+        baseline.groupby(["program_name", "grade"], dropna=False)
+        .agg(baseline_learners=("participant_id", "nunique"), midline_learners=("_has_midline", "sum"))
+        .reset_index()
+    )
+    summary["midline_learners"] = summary["midline_learners"].astype(int)
+    summary["outstanding"] = summary["baseline_learners"] - summary["midline_learners"]
+    summary["percent_complete"] = (summary["midline_learners"] / summary["baseline_learners"] * 100).round(1)
+    return summary.sort_values(["outstanding", "baseline_learners"], ascending=[False, False]).reset_index(drop=True)
+
+
+def outstanding_baseline_learners(df):
+    """Learner-level treatment baseline rows whose learner has no midline assessment anywhere."""
+    if df is None or len(df) == 0:
+        return pd.DataFrame()
+    frame = df if "cohort" in df.columns else add_cohort_column(df)
+    latest = latest_assessment_per_phase(frame)
+    if latest.empty:
+        return pd.DataFrame()
+
+    midline_ids = set(latest[latest["assessment_type"] == "midline"]["participant_id"])
+    baseline = latest[(latest["assessment_type"] == "baseline") & (latest["cohort"] == "treatment")].copy()
+    return baseline[~baseline["participant_id"].isin(midline_ids)].copy()
+
+
+def build_cohort_gain_summary(matched):
+    """Mean letter gain by baseline cohort and grade (treatment-vs-control comparison)."""
+    if matched is None or matched.empty:
+        return pd.DataFrame()
+    required = {"baseline_cohort", "grade", "letters_change"}
+    if not required.issubset(matched.columns):
+        return pd.DataFrame()
+
+    summary = (
+        matched.groupby(["baseline_cohort", "grade"], dropna=False)
+        .agg(
+            matched_learners=("participant_id", "nunique"),
+            baseline_letters=("baseline_letters_total_correct", "mean"),
+            midline_letters=("midline_letters_total_correct", "mean"),
+            letters_change=("letters_change", "mean"),
+        )
+        .reset_index()
+        .rename(columns={"baseline_cohort": "cohort"})
+    )
+    for column in ("baseline_letters", "midline_letters", "letters_change"):
+        summary[column] = pd.to_numeric(summary[column], errors="coerce").round(1)
+    return summary
+
+
+def benchmark_by_cohort_matched(matched, grade, threshold):
+    """Percent at/above a letter threshold for the SAME matched learners, by baseline cohort and phase."""
+    if matched is None or matched.empty or "baseline_cohort" not in matched.columns:
+        return pd.DataFrame()
+
+    grade_df = matched[matched["grade"] == grade]
+    if grade_df.empty:
+        return pd.DataFrame()
+
+    rows = []
+    for cohort_key, group in grade_df.groupby("baseline_cohort", dropna=False):
+        total = len(group)
+        for phase_key, phase_label in PHASE_LABELS.items():
+            column = f"{phase_key}_letters_total_correct"
+            above = int((group[column] >= threshold).sum()) if total and column in group.columns else 0
+            rows.append(
+                {
+                    "cohort": cohort_key,
+                    "Phase": phase_label,
+                    "Learners": total,
+                    "At/Above Benchmark": above,
+                    "Percent": round((above / total * 100), 1) if total else 0,
+                }
+            )
+    return pd.DataFrame(rows)
