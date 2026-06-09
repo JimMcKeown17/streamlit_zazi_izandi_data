@@ -9,3 +9,7 @@ data/ecd_data_*.json
 data/latest.json
 
 data/latest.csv
+
+# Python bytecode
+__pycache__/
+*.py[cod]
