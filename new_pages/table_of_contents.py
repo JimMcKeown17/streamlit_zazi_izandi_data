@@ -218,8 +218,14 @@ st.markdown("""
 ### 📋 2026 Baseline — Primary Schools
 **Public Access** - Live baseline assessment summaries for 2026 primary-school learners across languages and grades.
 
+### 📋 2026 Midline — Primary School
+**Public Access** - Baseline-vs-midline results for 2026 primary schools, split into Treatment / Control / SEF cohorts with matched-learner gains, benchmarks, and blending-group analysis.
+
 ### 📋 2026 Baseline — ECD
 **Public Access** - Live baseline summaries for 2026 ECD assessments.
+
+### 📋 2026 Midline — ECD
+**Public Access** - Cross-sectional baseline-vs-midline letters results for ECD centers (no learner matching — the baseline survey had no participant IDs).
 
 ### 📱 2026 Sessions
 **Public Access** - Session activity summaries for 2026 implementation with names masked when logged out.

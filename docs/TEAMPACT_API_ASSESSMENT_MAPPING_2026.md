@@ -33,13 +33,24 @@ The sync involves **two API calls** that are combined:
 | **880** | English | English Midline Full Assessment - 2026 |
 | **881** | Afrikaans | Afrikaans Midline Full Assessment - 2026 |
 | **882** | isiXhosa | IsiXhosa Midline Full Assessment - 2026 |
+| **891** | ECD | ZZ ECD Midline 2026 (**Path A** despite being ECD — see note below) |
 | **824** | N/A | Mentor Visits 2026 (separate sync) |
 
 ---
 
 ## Two Different Mapping Paths
 
-### Path A: Primary School Surveys (815, 816, 817, 880, 881, 882) — Requires Group Lookup
+### Path A: Primary-Style Surveys (815, 816, 817, 880, 881, 882, 891) — Requires Group Lookup
+
+> **Note on 891 (ZZ ECD Midline 2026):** although it is an ECD survey, it uses the NEW
+> primary-style structure — `participant_id` + `group_id` requiring the group lookup —
+> unlike the legacy ECD baseline 805 (Path B). Its config sets `is_ecd: False` for this
+> reason. Group names follow `"{Center}-PreR-Group {N}"` (e.g.
+> `"Green Apple ECD-PreR-Group 1"`), so grade resolves to `'PreR'` (see Grade Derivation).
+> Its single 60-cell EGRA grid classifies as `letters`; gender is not captured (stored
+> empty), unlike baseline 805. Because 891 has `assessment_type='midline'` and
+> `is_ecd=False`, it is part of `DEFAULT_SURVEY_IDS` — both `sync_assessments_2026` and
+> `sync_assessment_cells_2026` pick it up in their default (nightly) runs.
 
 Primary school survey responses do **NOT** include `class_name` or `program_name` directly. They provide:
 
@@ -86,6 +97,10 @@ GET /groups/59979 response:
 Grade is **NOT** a direct API field for primary surveys. It is extracted from `class_name` using this logic (in `extract_grade_from_class_name()`):
 
 ```python
+# ECD midline first: a clean hyphen segment equal to "prer" (or "pre r") → 'PreR'
+# e.g. "Green Apple ECD-PreR-Group 1" → 'PreR'
+# (segment check, not substring, so "Pre-Reading" can NOT match; placed before the
+# 'Grade R' check so a center name containing "Grade R" cannot shadow it)
 if 'Grade R' in class_name:   → 'Grade R'
 if 'Grade 1' in class_name:   → 'Grade 1'
 if 'Grade 2' in class_name:   → 'Grade 2'
@@ -111,9 +126,9 @@ Gender is **not available** from primary survey responses — stored as empty st
 
 ---
 
-### Path B: ECD Survey (805) — Direct Fields
+### Path B: Legacy ECD Baseline Survey (805 only) — Direct Fields
 
-ECD survey responses **DO** include `class_name` and `program_name` directly in the API response. No group lookup needed.
+ECD **baseline** survey responses **DO** include `class_name` and `program_name` directly in the API response. No group lookup needed. (In practice the synced 805 rows have these fields empty — center-level analysis is not possible for the ECD baseline.) The ECD **midline** (891) does NOT use this path — see Path A.
 
 However, learner identity (name, grade, gender) is in **free-text answers**, not in participant fields:
 
