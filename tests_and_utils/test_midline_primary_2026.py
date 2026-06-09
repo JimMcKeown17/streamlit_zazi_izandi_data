@@ -178,6 +178,66 @@ class MidlinePrimary2026HelperTests(unittest.TestCase):
         self.assertEqual(ea_one["unique_learners"], 1)
         self.assertEqual(ea_one["schools"], 1)
 
+    def test_build_daily_assessment_counts_counts_raw_rows_per_day_and_phase(self):
+        data = pd.DataFrame(
+            [
+                # Two baseline captures on the same day, including a repeat of the same
+                # learner — capture volume counts raw rows, not unique learners.
+                {
+                    "response_id": "baseline-1",
+                    "participant_id": "100",
+                    "assessment_type": "baseline",
+                    "response_date": "2026-02-01 09:00:00",
+                    "language": "English",
+                },
+                {
+                    "response_id": "baseline-2",
+                    "participant_id": "100",
+                    "assessment_type": "baseline",
+                    "response_date": "2026-02-01 14:30:00",
+                    "language": "English",
+                },
+                {
+                    "response_id": "baseline-3",
+                    "participant_id": "101",
+                    "assessment_type": "baseline",
+                    "response_date": "2026-02-02 10:00:00",
+                    "language": "isiXhosa",
+                },
+                {
+                    "response_id": "midline-1",
+                    "participant_id": "100",
+                    "assessment_type": "midline",
+                    "response_date": "2026-05-01 11:15:00",
+                    "language": "English",
+                },
+                # Undated row is dropped rather than crashing the chart.
+                {
+                    "response_id": "midline-undated",
+                    "participant_id": "101",
+                    "assessment_type": "midline",
+                    "response_date": None,
+                    "language": "isiXhosa",
+                },
+            ]
+        )
+
+        daily = helpers.build_daily_assessment_counts(data)
+
+        self.assertEqual(len(daily), 3)
+        self.assertEqual(daily["assessments"].sum(), 4)
+        first = daily.iloc[0]
+        self.assertEqual(first["date"], pd.Timestamp("2026-02-01"))
+        self.assertEqual(first["Phase"], "Baseline")
+        self.assertEqual(first["assessments"], 2)
+        midline = daily[daily["Phase"] == "Midline"].iloc[0]
+        self.assertEqual(midline["date"], pd.Timestamp("2026-05-01"))
+        self.assertEqual(midline["assessments"], 1)
+
+    def test_build_daily_assessment_counts_empty_safe(self):
+        self.assertTrue(helpers.build_daily_assessment_counts(pd.DataFrame()).empty)
+        self.assertTrue(helpers.build_daily_assessment_counts(None).empty)
+
 
 class CohortClassificationTests(unittest.TestCase):
     def test_normalize_school_name_strips_collapses_uppercases(self):

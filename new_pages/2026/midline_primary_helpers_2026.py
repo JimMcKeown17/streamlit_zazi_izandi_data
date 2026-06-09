@@ -362,6 +362,33 @@ def build_midline_completion_summary(df, dimension):
     return summary.sort_values(["assessments_completed", "unique_learners"], ascending=[False, False])
 
 
+def build_daily_assessment_counts(df):
+    """Count collected assessment response rows per day, split by phase.
+
+    Measures capture volume (fieldwork pacing), so it counts RAW response rows — repeat
+    assessments of the same learner count, unlike the latest-per-learner analytic helpers.
+    Rows without a parseable response_date are dropped. Returns columns:
+    date (day-floored Timestamp), Phase ("Baseline"/"Midline"), assessments. Empty-safe.
+    """
+    normalized = normalize_primary_assessments(df)
+    if normalized.empty or "response_date" not in normalized.columns:
+        return pd.DataFrame()
+
+    dated = normalized.dropna(subset=["response_date"]).copy()
+    if dated.empty:
+        return pd.DataFrame()
+
+    dated["date"] = dated["response_date"].dt.normalize()
+    dated["Phase"] = dated["assessment_type"].map(PHASE_LABELS)
+    return (
+        dated.groupby(["date", "Phase"], dropna=False)
+        .size()
+        .reset_index(name="assessments")
+        .sort_values("date")
+        .reset_index(drop=True)
+    )
+
+
 def build_school_gain_summary(matched):
     """Summarise matched-learner gains by school, language, and grade."""
     if matched is None or matched.empty:

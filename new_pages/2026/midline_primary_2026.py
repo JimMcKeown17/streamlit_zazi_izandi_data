@@ -1220,6 +1220,42 @@ def render_blending_tab(df_lang, matched_all, key_prefix="blending"):
     _render_blending_export(blending, key_prefix)
 
 
+# ── Daily capture volume (page-level, below the tabs) ───────────────────────
+
+def render_daily_capture_section(df, key_prefix="daily_capture"):
+    st.header("Assessments Captured per Day")
+    st.caption(
+        "Every collected baseline and midline response row on this page — all cohorts, grades, "
+        "and languages, repeat assessments included. Not affected by the filters above."
+    )
+    daily = helpers.build_daily_assessment_counts(df)
+    if daily.empty:
+        st.info("No dated assessment responses available.")
+        return
+
+    fig = px.bar(
+        daily,
+        x="date",
+        y="assessments",
+        color="Phase",
+        category_orders={"Phase": ["Baseline", "Midline"]},
+        color_discrete_map={"Baseline": "#9aa4b2", "Midline": "#1f5cc4"},
+        title="Assessments Captured per Day",
+        labels={"date": "Date", "assessments": "Assessments captured"},
+    )
+    fig.update_layout(legend_title_text="", bargap=0.1)
+    st.plotly_chart(fig, use_container_width=True, key=f"{key_prefix}_chart")
+
+    with st.expander("View daily capture table"):
+        table = daily.copy()
+        table["date"] = table["date"].dt.strftime("%Y-%m-%d")
+        st.dataframe(
+            table.rename(columns={"date": "Date", "assessments": "Assessments"}),
+            use_container_width=True,
+            key=f"{key_prefix}_table",
+        )
+
+
 # ── Orchestration ───────────────────────────────────────────────────────────
 
 def render_cohort_analysis(df_g, matched_all, cohort_key, grade):
@@ -1310,6 +1346,9 @@ def main():
         render_cohort_analysis(df_g, matched_all, "sef", grade)
     with tab_blending:
         render_blending_tab(df_lang, matched_all)
+
+    st.divider()
+    render_daily_capture_section(df)
 
 
 main()
