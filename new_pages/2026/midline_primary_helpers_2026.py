@@ -678,6 +678,28 @@ def build_cohort_score_summary(matched, score_col):
     return summary
 
 
+def build_cohort_overall_scores(matched, score_col):
+    """Learner-level pooled mean baseline/midline of score_col by cohort.
+
+    Re-averaging build_cohort_score_summary (per cohort+grade) would weight each grade equally
+    regardless of learner count, understating multi-grade cohorts. Pooling here matches the
+    learner-level 'Avg word gain' card. Output: cohort, baseline_score, midline_score. Empty-safe.
+    """
+    if matched is None or matched.empty:
+        return pd.DataFrame()
+    baseline_col, midline_col = f"baseline_{score_col}", f"midline_{score_col}"
+    if not {"cohort", baseline_col, midline_col}.issubset(matched.columns):
+        return pd.DataFrame()
+    overall = (
+        matched.groupby("cohort", dropna=False)
+        .agg(baseline_score=(baseline_col, "mean"), midline_score=(midline_col, "mean"))
+        .reset_index()
+    )
+    for column in ("baseline_score", "midline_score"):
+        overall[column] = pd.to_numeric(overall[column], errors="coerce").round(1)
+    return overall
+
+
 def benchmark_by_cohort_matched(matched, grade, threshold):
     """Percent at/above a letter threshold for the SAME matched learners, by baseline cohort and phase."""
     if matched is None or matched.empty or "baseline_cohort" not in matched.columns:

@@ -7,6 +7,7 @@ helpers = importlib.import_module("new_pages.2026.midline_primary_helpers_2026")
 build_matched_assessment_pairs = helpers.build_matched_assessment_pairs
 build_midline_completion_summary = helpers.build_midline_completion_summary
 build_phase_score_summary = helpers.build_phase_score_summary
+build_cohort_overall_scores = helpers.build_cohort_overall_scores
 
 
 class MidlinePrimary2026HelperTests(unittest.TestCase):
@@ -237,6 +238,19 @@ class MidlinePrimary2026HelperTests(unittest.TestCase):
     def test_build_daily_assessment_counts_empty_safe(self):
         self.assertTrue(helpers.build_daily_assessment_counts(pd.DataFrame()).empty)
         self.assertTrue(helpers.build_daily_assessment_counts(None).empty)
+
+    def test_build_cohort_overall_scores_pools_by_learner_not_grade(self):
+        blending = pd.DataFrame(
+            [{"cohort": "treatment", "baseline_words_total_correct": 0, "midline_words_total_correct": 4}]
+            + [{"cohort": "treatment", "baseline_words_total_correct": 12, "midline_words_total_correct": 20}] * 3
+        )
+        overall = build_cohort_overall_scores(blending, "words_total_correct")
+        row = overall[overall["cohort"] == "treatment"].iloc[0]
+        self.assertAlmostEqual(row["baseline_score"], 9.0)   # pooled, not 6.0
+        self.assertAlmostEqual(row["midline_score"], 16.0)
+
+    def test_build_cohort_overall_scores_empty_safe(self):
+        self.assertTrue(build_cohort_overall_scores(pd.DataFrame(), "words_total_correct").empty)
 
 
 class CohortClassificationTests(unittest.TestCase):

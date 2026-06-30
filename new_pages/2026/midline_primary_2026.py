@@ -894,20 +894,18 @@ def render_outstanding_section(df_lang, key_prefix="treatment_out"):
 
 # ── Blending tab ────────────────────────────────────────────────────────────
 
-def _render_blending_score_baseline_midline(summary, cohort_order, label, expander_title, key_prefix, key_suffix):
+def _render_blending_score_baseline_midline(summary, overall, cohort_order, label, expander_title, key_prefix, key_suffix):
     """Shared baseline-vs-midline grouped-bar + expander-table block for a cohort score summary.
 
     Used by both the Word-gain (label="Words") and Letters (label="Letters") sections, which are
     otherwise identical melt→px.bar→expander-table blocks differing only by the score label and
-    keys. ``summary`` is a build_cohort_score_summary output already filtered to ``cohort_order``.
+    keys. ``summary`` is a build_cohort_score_summary output already filtered to ``cohort_order``
+    (used for the expander table). ``overall`` is a build_cohort_overall_scores output (learner-
+    pooled, not a mean-of-grade-means) used for the grouped-bar chart.
     Distinct ``key_suffix`` values keep element IDs unique. Renders the overall chart and table;
     the Word-gain by-grade facet chart is rendered by its own section.
     """
-    overall = (
-        summary.groupby("cohort", dropna=False)
-        .agg(baseline_score=("baseline_score", "mean"), midline_score=("midline_score", "mean"))
-        .reset_index()
-    )
+    overall = overall[overall["cohort"].isin(cohort_order)] if not overall.empty else overall
     overall_long = overall.melt(
         id_vars=["cohort"],
         value_vars=["baseline_score", "midline_score"],
@@ -971,8 +969,10 @@ def _render_blending_word_gain(blending, cohort_order, key_prefix):
         st.info("No word-reading data available for the current filters.")
         return
 
+    word_overall = helpers.build_cohort_overall_scores(blending, "words_total_correct")
     _render_blending_score_baseline_midline(
         word_summary,
+        word_overall,
         cohort_order,
         label="Words",
         expander_title="View word-gain summary table",
@@ -1094,8 +1094,10 @@ def _render_blending_letters(blending, cohort_order, key_prefix):
         st.info("No letter data available for the current filters.")
         return
 
+    letter_overall = helpers.build_cohort_overall_scores(blending, "letters_total_correct")
     _render_blending_score_baseline_midline(
         letter_summary,
+        letter_overall,
         cohort_order,
         label="Letters",
         expander_title="View letter summary table",
