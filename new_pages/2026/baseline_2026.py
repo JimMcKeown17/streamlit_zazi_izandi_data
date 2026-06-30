@@ -18,6 +18,7 @@ from grouping_logic_2026 import (
     assign_groups_2026,
     build_group_size_summary,
 )
+from benchmark_utils import count_at_or_above
 
 _cohorts = importlib.import_module("data.2026_cohorts")
 treatment_schools = _cohorts.treatment_schools
@@ -330,11 +331,11 @@ def _benchmark_pie(df_grade, threshold, title, colors):
         st.warning(f"No data for {title}")
         return
 
-    above = len(df_grade[df_grade['letters_total_correct'] > threshold])
+    above = count_at_or_above(df_grade['letters_total_correct'], threshold)
     below = len(df_grade) - above
 
     fig = go.Figure(data=[go.Pie(
-        labels=[f'Above {threshold} LPM', f'At or Below {threshold} LPM'],
+        labels=[f'At/Above {threshold} LPM', f'Below {threshold} LPM'],
         values=[above, below],
         marker_colors=colors,
         textinfo='label+percent',

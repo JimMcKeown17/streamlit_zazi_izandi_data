@@ -3,6 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 from process_teampact_data import process_teampact_data
+from benchmark_utils import count_at_or_above
 import os
 import sys
 from datetime import datetime as dt
@@ -363,8 +364,8 @@ def display_2025_teampact():
             
             for i, grade in enumerate(['Grade 1', 'Grade 2']):
                 # Calculate data for this grade using dynamic threshold
-                above_threshold = df[(df['Grade'] == grade) & (df['Total cells correct - EGRA Letters'] > lpm_threshold)]
-                at_or_below_threshold = df[(df['Grade'] == grade) & (df['Total cells correct - EGRA Letters'] <= lpm_threshold)]
+                above_threshold = df[(df['Grade'] == grade) & (df['Total cells correct - EGRA Letters'] >= lpm_threshold)]
+                at_or_below_threshold = df[(df['Grade'] == grade) & (df['Total cells correct - EGRA Letters'] < lpm_threshold)]
                 total = df[df['Grade'] == grade]
                 
                 n_above_threshold = len(above_threshold)
@@ -373,7 +374,7 @@ def display_2025_teampact():
                 
                 if n_total > 0:
                     # Create pie chart data with dynamic labels
-                    labels = [f'Above {lpm_threshold}lpm', f'At or Below {lpm_threshold}lpm']
+                    labels = [f'At/Above {lpm_threshold}lpm', f'Below {lpm_threshold}lpm']
                     values = [n_above_threshold, n_at_or_below_threshold]
                     colors = ['#00cc44', '#ff4444']  # Green for above, red for below
                     
@@ -426,7 +427,7 @@ def display_2025_teampact():
                             ]
                             
                             if len(school_grade_data) > 0:
-                                above_count = len(school_grade_data[school_grade_data['Total cells correct - EGRA Letters'] > lpm_threshold])
+                                above_count = count_at_or_above(school_grade_data['Total cells correct - EGRA Letters'], lpm_threshold)
                                 total_count = len(school_grade_data)
                                 below_count = total_count - above_count
                                 percentage_above = (above_count / total_count * 100) if total_count > 0 else 0
@@ -435,11 +436,11 @@ def display_2025_teampact():
                                     'School': school,
                                     'Grade': grade,
                                     'Total Children': total_count,
-                                    f'Above {lpm_threshold}lpm': above_count,
+                                    f'At/Above {lpm_threshold}lpm': above_count,
                                     f'At/Below {lpm_threshold}lpm': below_count,
-                                    '% Above Threshold': f"{percentage_above:.1f}%"
+                                    '% Above Threshold': f"{percentage_above:.1f}%"  # key kept as-is; now means % at/above threshold
                                 })
-                    
+
                     if school_summary:
                         summary_df = pd.DataFrame(school_summary)
                         
@@ -462,7 +463,7 @@ def display_2025_teampact():
                             total_children = summary_df['Total Children'].sum()
                             st.metric("Total Children", total_children)
                         with col3:
-                            total_above = summary_df[f'Above {lpm_threshold}lpm'].sum()
+                            total_above = summary_df[f'At/Above {lpm_threshold}lpm'].sum()
                             overall_percentage = (total_above / total_children * 100) if total_children > 0 else 0
                             st.metric("Overall % Above Threshold", f"{overall_percentage:.1f}%")
                     else:
@@ -483,7 +484,7 @@ def display_2025_teampact():
                         school_data = grade_1_df[grade_1_df['Program Name'] == school]
                         
                         if len(school_data) > 0:
-                            above_count = len(school_data[school_data['Total cells correct - EGRA Letters'] > lpm_threshold])
+                            above_count = count_at_or_above(school_data['Total cells correct - EGRA Letters'], lpm_threshold)
                             total_count = len(school_data)
                             below_count = total_count - above_count
                             percentage_above = (above_count / total_count * 100) if total_count > 0 else 0
@@ -491,7 +492,7 @@ def display_2025_teampact():
                             grade_1_summary.append({
                                 'School': school,
                                 'Total Children': total_count,
-                                f'Above {lpm_threshold}lpm': above_count,
+                                f'At/Above {lpm_threshold}lpm': above_count,
                                 f'At/Below {lpm_threshold}lpm': below_count,
                                 '% Above Threshold': percentage_above
                             })
@@ -517,7 +518,7 @@ def display_2025_teampact():
                             total_children_g1 = sum([s['Total Children'] for s in grade_1_summary])
                             st.metric("Total Grade 1 Children", total_children_g1)
                         with col3:
-                            total_above_g1 = sum([s[f'Above {lpm_threshold}lpm'] for s in grade_1_summary])
+                            total_above_g1 = sum([s[f'At/Above {lpm_threshold}lpm'] for s in grade_1_summary])
                             overall_percentage_g1 = (total_above_g1 / total_children_g1 * 100) if total_children_g1 > 0 else 0
                             st.metric("Grade 1 % Above Threshold", f"{overall_percentage_g1:.1f}%")
                     else:

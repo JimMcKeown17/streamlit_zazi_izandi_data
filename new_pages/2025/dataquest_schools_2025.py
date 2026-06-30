@@ -1078,7 +1078,7 @@ def render_learning_outcomes_tab(
     st.plotly_chart(grade_chart, use_container_width=True)
 
     benchmark_df = (
-        compare_df.assign(above_benchmark=compare_df["Total cells correct - EGRA Letters"] > benchmark)
+        compare_df.assign(above_benchmark=compare_df["Total cells correct - EGRA Letters"] >= benchmark)
         .groupby(["Population", "Grade"], as_index=False)
         .agg(
             total=("response_id", "count"),
@@ -1095,8 +1095,8 @@ def render_learning_outcomes_tab(
         y="pct_above",
         color="Population",
         barmode="group",
-        title=f"Percent Above {benchmark} Letters by Grade",
-        labels={"pct_above": "Percent Above Benchmark"},
+        title=f"Percent At/Above {benchmark} Letters by Grade",
+        labels={"pct_above": "Percent At/Above Benchmark"},
     )
     benchmark_chart.update_traces(
         text=[f"{value:.1f}%" for value in benchmark_df["pct_above"]],

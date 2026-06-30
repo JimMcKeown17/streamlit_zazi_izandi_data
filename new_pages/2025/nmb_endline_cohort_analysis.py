@@ -17,6 +17,7 @@ if ROOT_DIR not in sys.path:
 from data_loader import load_assessments_endline_2025
 from data_loader import load_zazi_izandi_2025_tp
 from process_teampact_data import process_teampact_data
+from benchmark_utils import count_at_or_above
 
 # Load environment variables
 load_dotenv()
@@ -329,10 +330,10 @@ def render_overview_tab(df):
     # Baseline Grade 1 pie chart
     with col1_g1:
         if len(baseline_g1) > 0:
-            above_baseline = len(baseline_g1[baseline_g1['Total cells correct - EGRA Letters'] > grade1_threshold])
+            above_baseline = count_at_or_above(baseline_g1['Total cells correct - EGRA Letters'], grade1_threshold)
             below_baseline = len(baseline_g1) - above_baseline
             
-            labels = [f'Above {grade1_threshold}lpm', f'At or Below {grade1_threshold}lpm']
+            labels = [f'At/Above {grade1_threshold}lpm', f'Below {grade1_threshold}lpm']
             values = [above_baseline, below_baseline]
             colors = ['#00cc44', '#ff4444']
             
@@ -358,10 +359,10 @@ def render_overview_tab(df):
     # Endline Grade 1 pie chart
     with col2_g1:
         if len(endline_g1) > 0:
-            above_endline = len(endline_g1[endline_g1['Total cells correct - EGRA Letters'] > grade1_threshold])
+            above_endline = count_at_or_above(endline_g1['Total cells correct - EGRA Letters'], grade1_threshold)
             below_endline = len(endline_g1) - above_endline
             
-            labels = [f'Above {grade1_threshold}lpm', f'At or Below {grade1_threshold}lpm']
+            labels = [f'At/Above {grade1_threshold}lpm', f'Below {grade1_threshold}lpm']
             values = [above_endline, below_endline]
             colors = ['#00cc44', '#ff4444']
             
@@ -402,10 +403,10 @@ def render_overview_tab(df):
     # Baseline Grade R pie chart
     with col1_gr:
         if len(baseline_gr) > 0:
-            above_baseline = len(baseline_gr[baseline_gr['Total cells correct - EGRA Letters'] > gradeR_threshold])
+            above_baseline = count_at_or_above(baseline_gr['Total cells correct - EGRA Letters'], gradeR_threshold)
             below_baseline = len(baseline_gr) - above_baseline
             
-            labels = [f'Above {gradeR_threshold}lpm', f'At or Below {gradeR_threshold}lpm']
+            labels = [f'At/Above {gradeR_threshold}lpm', f'Below {gradeR_threshold}lpm']
             values = [above_baseline, below_baseline]
             colors = ['#22c55e', '#f87171']  # Lighter shades for Grade R
             
@@ -431,10 +432,10 @@ def render_overview_tab(df):
     # Endline Grade R pie chart
     with col2_gr:
         if len(endline_gr) > 0:
-            above_endline = len(endline_gr[endline_gr['Total cells correct - EGRA Letters'] > gradeR_threshold])
+            above_endline = count_at_or_above(endline_gr['Total cells correct - EGRA Letters'], gradeR_threshold)
             below_endline = len(endline_gr) - above_endline
             
-            labels = [f'Above {gradeR_threshold}lpm', f'At or Below {gradeR_threshold}lpm']
+            labels = [f'At/Above {gradeR_threshold}lpm', f'Below {gradeR_threshold}lpm']
             values = [above_endline, below_endline]
             colors = ['#22c55e', '#f87171']  # Lighter shades for Grade R
             
@@ -807,10 +808,10 @@ def render_overview_tab(df):
     # Baseline Grade 2 pie chart
     with col1_g2:
         if len(baseline_g2) > 0:
-            above_baseline = len(baseline_g2[baseline_g2['Total cells correct - EGRA Letters'] > grade2_threshold])
+            above_baseline = count_at_or_above(baseline_g2['Total cells correct - EGRA Letters'], grade2_threshold)
             below_baseline = len(baseline_g2) - above_baseline
             
-            labels = [f'Above {grade2_threshold}lpm', f'At or Below {grade2_threshold}lpm']
+            labels = [f'At/Above {grade2_threshold}lpm', f'Below {grade2_threshold}lpm']
             values = [above_baseline, below_baseline]
             colors = ['#00cc44', '#ff4444']
             
@@ -836,10 +837,10 @@ def render_overview_tab(df):
     # Endline Grade 2 pie chart
     with col2_g2:
         if len(endline_g2) > 0:
-            above_endline = len(endline_g2[endline_g2['Total cells correct - EGRA Letters'] > grade2_threshold])
+            above_endline = count_at_or_above(endline_g2['Total cells correct - EGRA Letters'], grade2_threshold)
             below_endline = len(endline_g2) - above_endline
             
-            labels = [f'Above {grade2_threshold}lpm', f'At or Below {grade2_threshold}lpm']
+            labels = [f'At/Above {grade2_threshold}lpm', f'Below {grade2_threshold}lpm']
             values = [above_endline, below_endline]
             colors = ['#00cc44', '#ff4444']
             
@@ -896,7 +897,7 @@ def render_overview_tab(df):
                     ]
                     
                     if len(school_grade_data) > 0:
-                        above_count = len(school_grade_data[school_grade_data['Total cells correct - EGRA Letters'] > lpm_threshold])
+                        above_count = count_at_or_above(school_grade_data['Total cells correct - EGRA Letters'], lpm_threshold)
                         total_count = len(school_grade_data)
                         below_count = total_count - above_count
                         percentage_above = (above_count / total_count * 100) if total_count > 0 else 0
@@ -905,11 +906,11 @@ def render_overview_tab(df):
                             'School': school,
                             'Grade': grade,
                             'Total Children': total_count,
-                            f'Above {lpm_threshold}lpm': above_count,
+                            f'At/Above {lpm_threshold}lpm': above_count,
                             f'At/Below {lpm_threshold}lpm': below_count,
-                            '% Above Threshold': f"{percentage_above:.1f}%"
+                            '% Above Threshold': f"{percentage_above:.1f}%"  # key kept as-is; now means % at/above threshold
                         })
-            
+
             if school_summary:
                 summary_df = pd.DataFrame(school_summary)
                 
@@ -930,7 +931,7 @@ def render_overview_tab(df):
                     total_children = summary_df['Total Children'].sum()
                     st.metric("Total Children", total_children)
                 with col3:
-                    total_above = summary_df[f'Above {lpm_threshold}lpm'].sum()
+                    total_above = summary_df[f'At/Above {lpm_threshold}lpm'].sum()
                     overall_percentage = (total_above / total_children * 100) if total_children > 0 else 0
                     st.metric("Overall % Above Threshold", f"{overall_percentage:.1f}%")
             else:
@@ -950,7 +951,7 @@ def render_overview_tab(df):
                     school_data = grade_1_df[grade_1_df['Program Name'] == school]
                     
                     if len(school_data) > 0:
-                        above_count = len(school_data[school_data['Total cells correct - EGRA Letters'] > lpm_threshold])
+                        above_count = count_at_or_above(school_data['Total cells correct - EGRA Letters'], lpm_threshold)
                         total_count = len(school_data)
                         below_count = total_count - above_count
                         percentage_above = (above_count / total_count * 100) if total_count > 0 else 0
@@ -958,7 +959,7 @@ def render_overview_tab(df):
                         grade_1_summary.append({
                             'School': school,
                             'Total Children': total_count,
-                            f'Above {lpm_threshold}lpm': above_count,
+                            f'At/Above {lpm_threshold}lpm': above_count,
                             f'At/Below {lpm_threshold}lpm': below_count,
                             '% Above Threshold': percentage_above
                         })
@@ -979,7 +980,7 @@ def render_overview_tab(df):
                         total_children_g1 = sum([s['Total Children'] for s in grade_1_summary])
                         st.metric("Total Grade 1 Children", total_children_g1)
                     with col3:
-                        total_above_g1 = sum([s[f'Above {lpm_threshold}lpm'] for s in grade_1_summary])
+                        total_above_g1 = sum([s[f'At/Above {lpm_threshold}lpm'] for s in grade_1_summary])
                         overall_pct_g1 = (total_above_g1 / total_children_g1 * 100) if total_children_g1 > 0 else 0
                         st.metric("Grade 1 % Above Threshold", f"{overall_pct_g1:.1f}%")
                 else:
@@ -1131,7 +1132,7 @@ def render_cohort_performance_tab(df):
             continue
         cohort_data = df_cohorts[df_cohorts['cohort_session_range'] == cohort]
         if len(cohort_data) > 0:
-            above = (cohort_data['Total cells correct - EGRA Letters'] > benchmark).sum()
+            above = (cohort_data['Total cells correct - EGRA Letters'] >= benchmark).sum()
             total = len(cohort_data)
             pct_above = (above / total * 100) if total > 0 else 0
             benchmark_stats.append({
@@ -1145,8 +1146,8 @@ def render_cohort_performance_tab(df):
         benchmark_df = pd.DataFrame(benchmark_stats)
         
         fig = px.bar(benchmark_df, x='Cohort', y='Percentage',
-                    title=f'Percentage of Students Above {benchmark} LPM by Cohort',
-                    labels={'Percentage': f'% Above {benchmark} LPM'},
+                    title=f'Percentage of Students At/Above {benchmark} LPM by Cohort',
+                    labels={'Percentage': f'% At/Above {benchmark} LPM'},
                     color='Percentage', color_continuous_scale='RdYlGn')
         fig.update_traces(text=[f"{pct:.1f}%<br>({above}/{total})" 
                                for pct, above, total in 
