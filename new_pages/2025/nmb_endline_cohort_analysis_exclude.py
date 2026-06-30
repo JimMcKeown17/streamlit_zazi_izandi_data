@@ -8,6 +8,9 @@ from datetime import datetime
 from dotenv import load_dotenv
 import sys
 import os
+import importlib
+
+nmb_helpers = importlib.import_module("new_pages.2025.nmb_endline_helpers")
 
 # Ensure the project root is on the import path
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -109,121 +112,8 @@ def get_cohort_order():
     return ['0-10', '11-20', '21-30', '31-40', '41+', '']
 
 def merge_baseline_endline(baseline_df, endline_df):
-    """
-    Merge baseline and endline data to enable filtering based on baseline scores
-    and score changes.
-    
-    Args:
-        baseline_df: Baseline assessment dataframe
-        endline_df: Endline assessment dataframe
-    
-    Returns:
-        Merged dataframe with baseline scores and improvement calculations
-    """
-    if baseline_df.empty or endline_df.empty:
-        return endline_df
-    
-    # Prepare baseline data
-    baseline_prep = baseline_df.copy()
-    baseline_prep['Learner Full Name'] = (baseline_prep['Learner First Name'].fillna('') + ' ' + 
-                                          baseline_prep['Learner Surname'].fillna('')).str.strip()
-    baseline_prep['Baseline Score'] = baseline_prep['Total cells correct - EGRA Letters']
-    
-    # Create matching key (Name + Grade + School)
-    baseline_prep['Match Key'] = (baseline_prep['Learner Full Name'].str.lower().str.strip() + '_' + 
-                                  baseline_prep['Grade'].fillna('').str.strip() + '_' + 
-                                  baseline_prep['Program Name'].fillna('').str.strip())
-    
-    # Prepare endline data
-    endline_prep = endline_df.copy()
-    endline_prep['Learner Full Name'] = endline_prep['Participant Name']
-    endline_prep['Endline Score'] = endline_prep['Total cells correct - EGRA Letters']
-    
-    endline_prep['Match Key'] = (endline_prep['Learner Full Name'].str.lower().str.strip() + '_' + 
-                                 endline_prep['Grade'].fillna('').str.strip() + '_' + 
-                                 endline_prep['Program Name'].fillna('').str.strip())
-    
-    # Perform left merge to keep all endline records
-    merged_df = endline_prep.merge(
-        baseline_prep[['Match Key', 'Baseline Score']],
-        on='Match Key',
-        how='left'
-    )
-    
-    # Calculate improvement (will be NaN for unmatched records)
-    merged_df['Improvement'] = merged_df['Endline Score'] - merged_df['Baseline Score']
-    
-    # Add flag to indicate if baseline data exists
-    merged_df['has_baseline_match'] = merged_df['Baseline Score'].notna()
-    
-    return merged_df
-
-def apply_outlier_exclusions(df, baseline_df=None):
-    """
-    Apply outlier exclusion flags to the dataframe.
-    
-    Three exclusion criteria:
-    1. Grade 1 children with baseline score >= 40
-    2. Children with score decline >= 10 letters (requires baseline match)
-    3. Specific underperforming EAs
-    
-    Args:
-        df: Endline dataframe (should have baseline data merged if available)
-        baseline_df: Optional baseline dataframe (for logging purposes)
-    
-    Returns:
-        DataFrame with exclusion flags added
-    """
-    df = df.copy()
-    
-    # List of EAs to exclude
-    eas_to_exclude = [
-        'Sinoxolo Sani',
-        'Thulani Mthombeni',
-        'Asanda Betsha',
-        'Lizalithetha Mhlobo',
-        'Siphosethu Mampangashe',
-        'Hlumela Ntloko',
-        'Lerato Njovane',
-        'Ntombizine Goqwana',
-        'Zikhona Tshakweni',
-        'Lucia Jacobs',
-        'Khahliso Sabasaba',
-        'Lithemba Mdunyelwa',
-        'Raeesa Ishmael',
-        'Kanyisa Matshaya'
-    ]
-    
-    # Initialize exclusion flags
-    df['exclude_high_baseline'] = False
-    df['exclude_score_decline'] = False
-    df['exclude_ea'] = False
-    
-    # Filter 1: Grade 1 with baseline >= 40
-    if 'Baseline Score' in df.columns:
-        df['exclude_high_baseline'] = (
-            (df['Grade'] == 'Grade 1') & 
-            (df['Baseline Score'] >= 40)
-        )
-    
-    # Filter 2: Score decline of 10 or more letters
-    if 'Improvement' in df.columns:
-        df['exclude_score_decline'] = (
-            (df['Improvement'].notna()) & 
-            (df['Improvement'] <= -10)
-        )
-    
-    # Filter 3: Specific EAs
-    df['exclude_ea'] = df['Collected By'].isin(eas_to_exclude)
-    
-    # Combined exclusion flag
-    df['exclude_outlier'] = (
-        df['exclude_high_baseline'] | 
-        df['exclude_score_decline'] | 
-        df['exclude_ea']
-    )
-    
-    return df
+    """Merge baseline scores onto endline rows (deduped key, no fan-out). See nmb_endline_helpers."""
+    return nmb_helpers.merge_baseline_onto_endline_left(baseline_df, endline_df)
 
 def display_nmb_endline_cohort_analysis():
     """Main function to display the cohort and quality analysis page"""
@@ -282,7 +172,7 @@ def display_nmb_endline_cohort_analysis():
             df = merge_baseline_endline(baseline_df, df)
             
             # Apply exclusion flags
-            df = apply_outlier_exclusions(df, baseline_df)
+            df = nmb_helpers.apply_outlier_exclusions(df, baseline_df)
             
             # Calculate exclusion counts before filtering
             count_high_baseline = df['exclude_high_baseline'].sum()
@@ -2046,21 +1936,23 @@ def render_data_explorer_tab(df):
         if baseline_already_merged:
             # Data already merged - show simplified view
             st.info("✅ Baseline data already merged due to outlier exclusion filter being active.")
-            
-            # Filter to only matched records
-            matched_df = filtered_df[filtered_df['has_baseline_match']].copy()
-            
+
+            # Re-match via helper (idempotent: drops stale Baseline Score/Improvement before merge,
+            # dedupes endline to latest response per participant_id).
+            matched_df = nmb_helpers.match_baseline_to_endline(load_baseline_data(), filtered_df)
+
             if len(matched_df) > 0:
                 # Summary metrics
                 st.markdown("##### 📊 Matching Summary")
                 col1, col2, col3, col4 = st.columns(4)
-                
+
                 with col1:
                     st.metric("Endline Records", f"{len(filtered_df):,}")
-                
+
                 with col2:
-                    st.metric("Matched Records", f"{len(matched_df):,}", 
-                             delta=f"{(len(matched_df)/len(filtered_df)*100):.1f}% of endline")
+                    _endline_learners_b1 = filtered_df['participant_id'].nunique() if 'participant_id' in filtered_df.columns else len(filtered_df)
+                    st.metric("Matched Records", f"{len(matched_df):,}",
+                             delta=f"{(len(matched_df)/_endline_learners_b1*100) if _endline_learners_b1 else 0:.1f}% of endline learners")
                 
                 with col3:
                     avg_improvement = matched_df['Improvement'].mean()
@@ -2161,66 +2053,38 @@ def render_data_explorer_tab(df):
         
         # Continue with original matching logic if baseline data wasn't already merged
         if not baseline_already_merged and not baseline_df.empty:
-            # Prepare baseline data
-            baseline_df['Learner Full Name'] = (baseline_df['Learner First Name'].fillna('') + ' ' + 
-                                               baseline_df['Learner Surname'].fillna('')).str.strip()
-            baseline_df['Baseline Score'] = baseline_df['Total cells correct - EGRA Letters']
-            
-            # Prepare endline data (use filtered_df which respects user filters)
-            endline_df = filtered_df.copy()
-            endline_df['Learner Full Name'] = endline_df['Participant Name']
-            endline_df['Endline Score'] = endline_df['Total cells correct - EGRA Letters']
-            
-            # Create matching keys (Name + Grade + School for more accurate matching)
-            baseline_df['Match Key'] = (baseline_df['Learner Full Name'].str.lower().str.strip() + '_' + 
-                                       baseline_df['Grade'].fillna('').str.strip() + '_' + 
-                                       baseline_df['Program Name'].fillna('').str.strip())
-            
-            endline_df['Match Key'] = (endline_df['Learner Full Name'].str.lower().str.strip() + '_' + 
-                                      endline_df['Grade'].fillna('').str.strip() + '_' + 
-                                      endline_df['Program Name'].fillna('').str.strip())
-            
-            # Perform merge
-            matched_df = endline_df.merge(
-                baseline_df[['Match Key', 'Baseline Score', 'Learner EMIS']],
-                on='Match Key',
-                how='inner'
-            )
-            
-            # Calculate improvement
-            matched_df['Improvement'] = matched_df['Endline Score'] - matched_df['Baseline Score']
-            matched_df['Improvement %'] = ((matched_df['Improvement'] / matched_df['Baseline Score']) * 100).round(1)
-            
-            # Replace inf values with NaN (for cases where baseline was 0)
-            matched_df['Improvement %'] = matched_df['Improvement %'].replace([float('inf'), float('-inf')], pd.NA)
-            
+            # Dedupe baseline (by name key) and endline (latest Response Date per participant_id),
+            # then INNER-match on name+grade+program.
+            matched_df = nmb_helpers.match_baseline_to_endline(baseline_df, filtered_df)
+
             # Summary metrics
             st.markdown("##### 📊 Matching Summary")
             col1, col2, col3, col4 = st.columns(4)
-            
+
             with col1:
                 st.metric("Baseline Records", f"{len(baseline_df):,}")
-            
+
             with col2:
-                st.metric("Endline Records", f"{len(endline_df):,}")
-            
+                st.metric("Endline Records", f"{len(filtered_df):,}")
+
             with col3:
                 match_count = len(matched_df)
-                match_rate = (match_count / len(endline_df) * 100) if len(endline_df) > 0 else 0
-                st.metric("Matched Records", f"{match_count:,}", 
-                         delta=f"{match_rate:.1f}% of endline")
+                _endline_learners_fb = filtered_df['participant_id'].nunique() if 'participant_id' in filtered_df.columns else len(filtered_df)
+                match_rate = (match_count / _endline_learners_fb * 100) if _endline_learners_fb else 0
+                st.metric("Matched Records", f"{match_count:,}",
+                         delta=f"{match_rate:.1f}% of endline learners")
             
             with col4:
-                avg_improvement = matched_df['Improvement'].mean()
+                avg_improvement = matched_df['Improvement'].mean() if match_count > 0 else 0
                 st.metric("Avg Improvement", f"{avg_improvement:+.1f} letters")
-            
+
             if match_count > 0:
                 st.divider()
-                
+
                 # Improvement statistics
                 st.markdown("##### 📈 Improvement Statistics")
                 col1, col2, col3, col4 = st.columns(4)
-                
+
                 with col1:
                     median_improvement = matched_df['Improvement'].median()
                     st.metric("Median Improvement", f"{median_improvement:+.1f} letters")
@@ -2365,7 +2229,7 @@ def render_data_explorer_tab(df):
                         ],
                         'Value': [
                             len(baseline_df),
-                            len(endline_df),
+                            len(filtered_df),
                             match_count,
                             f"{match_rate:.1f}",
                             f"{avg_improvement:.2f}",
@@ -2404,11 +2268,10 @@ def render_data_explorer_tab(df):
         col_full1, col_full2, col_full3 = st.columns(3)
         
         # Export 1: Full Matched Dataframe (if available)
+        # Both branches now produce a deduped matched_df, so the export always uses it directly.
         with col_full1:
-            if (baseline_already_merged and 'has_baseline_match' in filtered_df.columns and 
-                len(filtered_df[filtered_df['has_baseline_match']]) > 0):
-                # Use already merged data
-                full_matched_export = filtered_df[filtered_df['has_baseline_match']].copy()
+            if 'matched_df' in locals() and len(matched_df) > 0:
+                full_matched_export = matched_df.copy()
                 matched_csv_full = full_matched_export.to_csv(index=False).encode('utf-8')
                 st.download_button(
                     label="📥 Full Matched Dataset",
@@ -2417,17 +2280,6 @@ def render_data_explorer_tab(df):
                     mime='text/csv',
                     key='full_matched_download',
                     help=f"Download all {len(full_matched_export):,} matched learner records with baseline, endline, and all calculated fields"
-                )
-            elif not baseline_already_merged and 'matched_df' in locals() and len(matched_df) > 0:
-                # Use freshly matched data
-                matched_csv_full = matched_df.to_csv(index=False).encode('utf-8')
-                st.download_button(
-                    label="📥 Full Matched Dataset",
-                    data=matched_csv_full,
-                    file_name=f'full_matched_baseline_endline_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv',
-                    mime='text/csv',
-                    key='full_matched_download',
-                    help=f"Download all {len(matched_df):,} matched learner records with baseline, endline, and all calculated fields"
                 )
             else:
                 st.info("No matched data available for export")

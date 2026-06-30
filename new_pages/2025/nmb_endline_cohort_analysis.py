@@ -8,6 +8,9 @@ from datetime import datetime
 from dotenv import load_dotenv
 import sys
 import os
+import importlib
+
+nmb_helpers = importlib.import_module("new_pages.2025.nmb_endline_helpers")
 
 # Ensure the project root is on the import path
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
@@ -1850,38 +1853,9 @@ def render_data_explorer_tab(df):
         baseline_df = load_baseline_data()
         
         if not baseline_df.empty:
-            # Prepare baseline data
-            baseline_df['Learner Full Name'] = (baseline_df['Learner First Name'].fillna('') + ' ' + 
-                                               baseline_df['Learner Surname'].fillna('')).str.strip()
-            baseline_df['Baseline Score'] = baseline_df['Total cells correct - EGRA Letters']
-            
-            # Prepare endline data (use filtered_df which respects user filters)
-            endline_df = filtered_df.copy()
-            endline_df['Learner Full Name'] = endline_df['Participant Name']
-            endline_df['Endline Score'] = endline_df['Total cells correct - EGRA Letters']
-            
-            # Create matching keys (Name + Grade + School for more accurate matching)
-            baseline_df['Match Key'] = (baseline_df['Learner Full Name'].str.lower().str.strip() + '_' + 
-                                       baseline_df['Grade'].fillna('').str.strip() + '_' + 
-                                       baseline_df['Program Name'].fillna('').str.strip())
-            
-            endline_df['Match Key'] = (endline_df['Learner Full Name'].str.lower().str.strip() + '_' + 
-                                      endline_df['Grade'].fillna('').str.strip() + '_' + 
-                                      endline_df['Program Name'].fillna('').str.strip())
-            
-            # Perform merge
-            matched_df = endline_df.merge(
-                baseline_df[['Match Key', 'Baseline Score', 'Learner EMIS']],
-                on='Match Key',
-                how='inner'
-            )
-            
-            # Calculate improvement
-            matched_df['Improvement'] = matched_df['Endline Score'] - matched_df['Baseline Score']
-            matched_df['Improvement %'] = ((matched_df['Improvement'] / matched_df['Baseline Score']) * 100).round(1)
-            
-            # Replace inf values with NaN (for cases where baseline was 0)
-            matched_df['Improvement %'] = matched_df['Improvement %'].replace([float('inf'), float('-inf')], pd.NA)
+            # Dedupe baseline (by name key) and endline (latest Response Date per participant_id),
+            # then INNER-match on name+grade+program. Idempotent on already-merged endline frames.
+            matched_df = nmb_helpers.match_baseline_to_endline(baseline_df, filtered_df)
             
             # Summary metrics
             st.markdown("##### 📊 Matching Summary")
@@ -1891,25 +1865,25 @@ def render_data_explorer_tab(df):
                 st.metric("Baseline Records", f"{len(baseline_df):,}")
             
             with col2:
-                st.metric("Endline Records", f"{len(endline_df):,}")
+                st.metric("Endline Records", f"{len(filtered_df):,}")
             
             with col3:
                 match_count = len(matched_df)
-                match_rate = (match_count / len(endline_df) * 100) if len(endline_df) > 0 else 0
-                st.metric("Matched Records", f"{match_count:,}", 
-                         delta=f"{match_rate:.1f}% of endline")
+                endline_learners = filtered_df['participant_id'].nunique() if 'participant_id' in filtered_df.columns else len(filtered_df)
+                match_rate = (match_count / endline_learners * 100) if endline_learners else 0
+                st.metric("Matched Records", f"{match_count:,}", delta=f"{match_rate:.1f}% of endline learners")
             
             with col4:
-                avg_improvement = matched_df['Improvement'].mean()
+                avg_improvement = matched_df['Improvement'].mean() if match_count > 0 else 0
                 st.metric("Avg Improvement", f"{avg_improvement:+.1f} letters")
-            
+
             if match_count > 0:
                 st.divider()
-                
+
                 # Improvement statistics
                 st.markdown("##### 📈 Improvement Statistics")
                 col1, col2, col3, col4 = st.columns(4)
-                
+
                 with col1:
                     median_improvement = matched_df['Improvement'].median()
                     st.metric("Median Improvement", f"{median_improvement:+.1f} letters")
@@ -2054,7 +2028,7 @@ def render_data_explorer_tab(df):
                         ],
                         'Value': [
                             len(baseline_df),
-                            len(endline_df),
+                            len(filtered_df),
                             match_count,
                             f"{match_rate:.1f}",
                             f"{avg_improvement:.2f}",
