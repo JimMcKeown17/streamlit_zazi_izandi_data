@@ -59,9 +59,13 @@ def process_zz_data_midline(baseline, midline, sessions):
     midline = pd.merge(midline, sessions[['Mcode', 'Total Sessions']],
                        on="Mcode", suffixes=('', '_sessions'))
 
-    # Calculate 'Letters Learned'
+    # Calculate 'Letters Learned' from the recomputed 'Letters Known' (single source of truth),
+    # NOT the raw 'Midline Letters Known' source column — line 79 below overwrites
+    # 'Midline Letters Known' with 'Letters Known', so deriving from the source here left
+    # Midline Letters Known != Baseline Letters Known + Letters Learned. Both now derive from
+    # the same recomputed count.
     mask = midline['Captured'] == True
-    midline.loc[mask, 'Letters Learned'] = midline.loc[mask, 'Midline Letters Known'] - midline.loc[
+    midline.loc[mask, 'Letters Learned'] = midline.loc[mask, 'Letters Known'] - midline.loc[
         mask, 'Baseline Letters Known']
 
     # Calculate 'Egra Improvement Agg'
