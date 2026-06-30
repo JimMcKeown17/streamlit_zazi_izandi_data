@@ -485,6 +485,36 @@ def zero_letter_summary(df, grade):
     return pd.DataFrame(rows)
 
 
+def zero_letter_summary_by_grade(df):
+    """Percent of learners with zero letters correct, per phase and grade."""
+    latest = latest_assessment_per_phase(df)
+    if latest.empty or "grade" not in latest.columns:
+        return pd.DataFrame()
+
+    scored = latest.dropna(subset=["grade"]).copy()
+    scored["grade"] = scored["grade"].astype(str).str.strip()
+    scored = scored[scored["grade"] != ""]
+    if scored.empty:
+        return pd.DataFrame()
+
+    rows = []
+    for grade, grade_df in scored.groupby("grade", dropna=False):
+        for phase_key, phase_label in PHASE_LABELS.items():
+            phase_df = grade_df[grade_df["assessment_type"] == phase_key]
+            total = len(phase_df)
+            zero = int((phase_df["letters_total_correct"] == 0).sum()) if total else 0
+            rows.append(
+                {
+                    "grade": grade,
+                    "Phase": phase_label,
+                    "Learners": total,
+                    "Zero Letters": zero,
+                    "Percent": round((zero / total * 100), 1) if total else 0,
+                }
+            )
+    return pd.DataFrame(rows)
+
+
 def benchmark_by_school_summary(df, grade, threshold, phase="midline"):
     """Percent of learners at/above a letter threshold per school, for one grade and phase."""
     latest = latest_assessment_per_phase(df)

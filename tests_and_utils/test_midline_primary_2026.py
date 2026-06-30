@@ -684,6 +684,28 @@ class DescriptiveChartHelperTests(unittest.TestCase):
         self.assertAlmostEqual(base["Percent"], 50.0, places=1)
         self.assertEqual(mid["Zero Letters"], 0)
 
+    def test_zero_letter_summary_by_grade_includes_each_grade_and_phase(self):
+        data = pd.DataFrame(
+            [
+                _row("z1", "baseline", "Abraham Levy Primary School", "Grade R", 0, "2026-02-01"),
+                _row("z2", "baseline", "Abraham Levy Primary School", "Grade R", 5, "2026-02-01"),
+                _row("z3", "midline", "Abraham Levy Primary School", "Grade R", 0, "2026-05-01"),
+                _row("z4", "midline", "Abraham Levy Primary School", "Grade R", 7, "2026-05-01"),
+                _row("z5", "baseline", "Abraham Levy Primary School", "Grade 1", 0, "2026-02-01"),
+                _row("z6", "midline", "Abraham Levy Primary School", "Grade 1", 10, "2026-05-01"),
+            ]
+        )
+
+        summary = helpers.zero_letter_summary_by_grade(data)
+
+        self.assertEqual(set(summary["grade"]), {"Grade R", "Grade 1"})
+        grade_r_baseline = summary[(summary["grade"] == "Grade R") & (summary["Phase"] == "Baseline")].iloc[0]
+        grade_1_midline = summary[(summary["grade"] == "Grade 1") & (summary["Phase"] == "Midline")].iloc[0]
+        self.assertEqual(grade_r_baseline["Learners"], 2)
+        self.assertEqual(grade_r_baseline["Zero Letters"], 1)
+        self.assertAlmostEqual(grade_r_baseline["Percent"], 50.0, places=1)
+        self.assertEqual(grade_1_midline["Zero Letters"], 0)
+
     def test_benchmark_by_school_summary_percent(self):
         data = pd.DataFrame(
             [

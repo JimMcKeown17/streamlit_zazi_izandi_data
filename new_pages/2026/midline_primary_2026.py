@@ -38,6 +38,8 @@ SCORE_OPTIONS = {
 }
 COHORT_LABELS = {"treatment": "Treatment", "control": "Control", "sef": "SEF"}
 COHORT_COLORS = {"treatment": "#1f5cc4", "control": "#9aa4b2", "sef": "#2ca02c"}
+BENCHMARK_COHORT_LABELS = {"treatment": "Zazi iZandi", "control": "Control"}
+BENCHMARK_COHORT_COLORS = {"Zazi iZandi": "#1f5cc4", "Control": "#9aa4b2"}
 
 
 @st.cache_data(ttl=3600)
@@ -186,7 +188,7 @@ def render_summary_metrics(df, matched):
     cols[5].metric("Avg Letter Gain", fmt_float(avg_letters_gain))
 
 
-def render_phase_score_chart(df, key_prefix):
+def render_phase_score_chart(df, key_prefix, combined_df=None):
     st.header("Baseline vs Midline Scores")
     controls_left, controls_right = st.columns([1, 1])
     with controls_left:
@@ -221,6 +223,57 @@ def render_phase_score_chart(df, key_prefix):
     )
     fig.update_layout(legend_title_text="")
     st.plotly_chart(fig, use_container_width=True, key=f"{key_prefix}_phase_chart")
+
+    combined_source_df = combined_df if combined_df is not None else df
+    combined_summary = helpers.build_phase_score_summary(combined_source_df, ["grade"], score_col, agg=agg)
+    if not combined_summary.empty:
+        combined_chart_data = combined_summary.melt(
+            id_vars=["grade"],
+            value_vars=["Baseline", "Midline"],
+            var_name="Phase",
+            value_name="Score",
+        ).dropna(subset=["Score"])
+
+        st.caption(
+            "All-language view: grades aggregated across isiXhosa, English, and Afrikaans. "
+            "This chart ignores the top grade filter."
+        )
+        fig_combined = px.bar(
+            combined_chart_data,
+            x="grade",
+            y="Score",
+            color="Phase",
+            barmode="group",
+            category_orders={"grade": GRADE_ORDER},
+            title=f"{agg_label} {score_label} Correct by Grade (All Languages Combined)",
+            color_discrete_map={"Baseline": "#9aa4b2", "Midline": "#1f5cc4"},
+        )
+
+        for row in combined_summary.itertuples(index=False):
+            baseline_score = getattr(row, "Baseline", pd.NA)
+            midline_score = getattr(row, "Midline", pd.NA)
+            if pd.isna(baseline_score) or pd.isna(midline_score):
+                continue
+            score_change = float(midline_score) - float(baseline_score)
+            annotation_color = "#2ca25f" if score_change >= 0 else "#d62728"
+            fig_combined.add_annotation(
+                x=row.grade,
+                y=max(float(midline_score), float(baseline_score)),
+                text=f"{score_change:+.1f}",
+                showarrow=False,
+                yshift=16,
+                font={"color": annotation_color, "size": 14},
+            )
+
+        fig_combined.update_layout(legend_title_text="")
+        st.plotly_chart(fig_combined, use_container_width=True, key=f"{key_prefix}_phase_grade_chart")
+
+        with st.expander("View all-language grade summary table"):
+            st.dataframe(
+                combined_summary.sort_values("grade"),
+                use_container_width=True,
+                key=f"{key_prefix}_phase_grade_table",
+            )
 
     with st.expander("View score summary table"):
         st.dataframe(summary.sort_values(["language", "grade"]), use_container_width=True, key=f"{key_prefix}_phase_table")
@@ -354,29 +407,37 @@ def render_benchmark_by_school_section(df, key_prefix):
 def render_zero_letter_section(df, key_prefix):
     st.header("Zero-Letter Learners")
     st.caption("Share of learners who scored 0 letters correct — a vulnerability indicator.")
-    grade_options = [grade for grade in GRADE_ORDER if grade in df["grade"].dropna().unique()]
-    if not grade_options:
-        st.info("No grade data available.")
-        return
-    selected_grade = st.selectbox("Grade", grade_options, index=0, key=f"{key_prefix}_zero_grade")
-    summary = helpers.zero_letter_summary(df, selected_grade)
+    summary = helpers.zero_letter_summary_by_grade(df)
     if summary.empty:
-        st.info("No data for the selected grade.")
+        st.info("No zero-letter data available.")
         return
 
     fig = px.bar(
         summary,
-        x="Phase",
+        x="grade",
         y="Percent",
-        text="Percent",
-        title=f"{selected_grade}: Percent with 0 letters correct",
         color="Phase",
+        barmode="group",
+        text="Percent",
+        category_orders={"grade": GRADE_ORDER, "Phase": ["Baseline", "Midline"]},
+        title="Learners who could not sound a single letter (zero-letter learners)",
         color_discrete_map={"Baseline": "#d62728", "Midline": "#2ca02c"},
+        hover_data=["Learners", "Zero Letters"],
+        labels={"grade": "Grade", "Percent": "% of learners"},
     )
     fig.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
-    fig.update_layout(yaxis_range=[0, max(10, summary["Percent"].max() + 10)], showlegend=False)
+    fig.update_layout(
+        yaxis_range=[0, max(10, summary["Percent"].max() + 10)],
+        legend_title_text="",
+        yaxis_title="% of learners",
+    )
     st.plotly_chart(fig, use_container_width=True, key=f"{key_prefix}_zero_chart")
-    st.dataframe(summary, use_container_width=True, key=f"{key_prefix}_zero_table")
+
+    display = summary.copy()
+    display["_grade_order"] = display["grade"].map({grade: index for index, grade in enumerate(GRADE_ORDER)})
+    display["_phase_order"] = display["Phase"].map({"Baseline": 0, "Midline": 1})
+    display = display.sort_values(["_grade_order", "_phase_order", "grade"]).drop(columns=["_grade_order", "_phase_order"])
+    st.dataframe(display, use_container_width=True, key=f"{key_prefix}_zero_table")
 
 
 def render_ea_performance_section(matched, key_prefix):
@@ -683,21 +744,27 @@ def render_treatment_vs_control_section(df_lang, matched_all, key_prefix="treatm
             bench_threshold = st.slider("Letters correct threshold", 0, 60, default_threshold, step=5, key=f"{key_prefix}_bench_threshold")
         bench = helpers.benchmark_by_cohort_matched(cmp, bench_grade, bench_threshold)
         if not bench.empty:
+            bench = bench.copy()
+            bench["Cohort"] = bench["cohort"].map(BENCHMARK_COHORT_LABELS).fillna(bench["cohort"])
             fig_bench = px.bar(
                 bench,
                 x="Phase",
                 y="Percent",
-                color="cohort",
+                color="Cohort",
                 barmode="group",
                 text="Percent",
-                category_orders={"Phase": ["Baseline", "Midline"], "cohort": ["treatment", "control"]},
-                color_discrete_map=COHORT_COLORS,
+                category_orders={"Phase": ["Baseline", "Midline"], "Cohort": ["Zazi iZandi", "Control"]},
+                color_discrete_map=BENCHMARK_COHORT_COLORS,
                 hover_data=["Learners", "At/Above Benchmark"],
-                title=f"{bench_grade}: % at or above {bench_threshold} letters (matched learners, baseline→midline)",
+                title=f"{bench_grade}: at national benchmark ({bench_threshold} letters per minute)",
                 labels={"Percent": "% at/above benchmark"},
             )
             fig_bench.update_traces(texttemplate="%{text:.1f}%", textposition="outside")
-            fig_bench.update_layout(yaxis_range=[0, max(100, bench["Percent"].max() + 10)])
+            fig_bench.update_layout(
+                yaxis_range=[0, max(25, bench["Percent"].max() + 5)],
+                legend_title_text="",
+                yaxis_title="% at/above benchmark",
+            )
             st.plotly_chart(fig_bench, use_container_width=True, key=f"{key_prefix}_bench_chart")
 
     if not gain.empty:
@@ -1258,9 +1325,10 @@ def render_daily_capture_section(df, key_prefix="daily_capture"):
 
 # ── Orchestration ───────────────────────────────────────────────────────────
 
-def render_cohort_analysis(df_g, matched_all, cohort_key, grade):
+def render_cohort_analysis(df_lang, matched_all, cohort_key, grade):
     label = COHORT_LABELS[cohort_key]
-    df_cohort = df_g[df_g["cohort"] == cohort_key].copy()
+    df_cohort_all_grades = df_lang[df_lang["cohort"] == cohort_key].copy()
+    df_cohort = apply_grade_filter(df_cohort_all_grades, grade)
     if not matched_all.empty and "baseline_cohort" in matched_all.columns:
         matched = matched_all[matched_all["baseline_cohort"] == cohort_key].copy()
         if grade != "All grades":
@@ -1275,12 +1343,13 @@ def render_cohort_analysis(df_g, matched_all, cohort_key, grade):
     selected_school = render_school_filter(df_cohort, key_prefix=cohort_key)
     if selected_school != "All schools":
         df_cohort = df_cohort[df_cohort["program_name"] == selected_school]
+        df_cohort_all_grades = df_cohort_all_grades[df_cohort_all_grades["program_name"] == selected_school]
         if not matched.empty:
             matched = matched[matched["baseline_program_name"] == selected_school]
 
     render_summary_metrics(df_cohort, matched)
     st.divider()
-    render_phase_score_chart(df_cohort, cohort_key)
+    render_phase_score_chart(df_cohort, cohort_key, combined_df=df_cohort_all_grades)
     st.divider()
     render_matched_gain_section(matched, cohort_key)
     st.divider()
@@ -1288,7 +1357,7 @@ def render_cohort_analysis(df_g, matched_all, cohort_key, grade):
     st.divider()
     render_benchmark_by_school_section(df_cohort, cohort_key)
     st.divider()
-    render_zero_letter_section(df_cohort, cohort_key)
+    render_zero_letter_section(df_cohort_all_grades, cohort_key)
     st.divider()
     render_ea_performance_section(matched, cohort_key)
     st.divider()
@@ -1301,10 +1370,10 @@ def render_cohort_analysis(df_g, matched_all, cohort_key, grade):
     render_midline_completion_section(df_cohort, cohort_key)
 
 
-def render_treatment_tab(df_lang, df_g, matched_all, grade):
+def render_treatment_tab(df_lang, matched_all, grade):
     render_treatment_vs_control_section(df_lang, matched_all)
     st.divider()
-    render_cohort_analysis(df_g, matched_all, "treatment", grade)
+    render_cohort_analysis(df_lang, matched_all, "treatment", grade)
     st.divider()
     render_outstanding_section(df_lang)
 
@@ -1325,7 +1394,6 @@ def main():
     render_unmapped_caption(df)
     language, grade = render_global_filters(df)
     df_lang = apply_language_filter(df, language)
-    df_g = apply_grade_filter(df_lang, grade)
     matched_all = helpers.build_matched_assessment_pairs(df_lang)
     counts = helpers.cohort_counts()
 
@@ -1339,11 +1407,11 @@ def main():
         ]
     )
     with tab_treatment:
-        render_treatment_tab(df_lang, df_g, matched_all, grade)
+        render_treatment_tab(df_lang, matched_all, grade)
     with tab_control:
-        render_cohort_analysis(df_g, matched_all, "control", grade)
+        render_cohort_analysis(df_lang, matched_all, "control", grade)
     with tab_sef:
-        render_cohort_analysis(df_g, matched_all, "sef", grade)
+        render_cohort_analysis(df_lang, matched_all, "sef", grade)
     with tab_blending:
         render_blending_tab(df_lang, matched_all)
 
