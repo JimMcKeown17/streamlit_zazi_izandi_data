@@ -255,30 +255,21 @@ def render_overview_tab(df):
             'Grade 2': 37
         }
     
-    # Get endline scores for comparison
-    endline_scores_comparison = df_filtered.groupby('Grade').agg({
+    # Get endline scores for comparison (dedupe to latest row per learner first; reassessment
+    # duplicates otherwise inflate the by-grade means)
+    df_chart = nmb_helpers.dedupe_latest_per_learner(df_filtered)
+    endline_scores_comparison = df_chart.groupby('Grade').agg({
         'Total cells correct - EGRA Letters': stat_method_comparison
     }).reset_index()
+    endline_by_grade = dict(zip(endline_scores_comparison['Grade'],
+                                endline_scores_comparison['Total cells correct - EGRA Letters']))
+    comparison_rows = nmb_helpers.build_grade_comparison_rows(
+        baseline_scores, endline_by_grade, ['Grade R', 'Grade 1', 'Grade 2'])
     
-    # Create comparison dataframe
-    comparison_data = []
-    for grade in ['Grade R', 'Grade 1', 'Grade 2']:
-        baseline_score = baseline_scores.get(grade, 0)
-        endline_row = endline_scores_comparison[endline_scores_comparison['Grade'] == grade]
-        endline_score = endline_row['Total cells correct - EGRA Letters'].values[0] if len(endline_row) > 0 else 0
-        
-        comparison_data.append({
-            'Grade': grade,
-            'Period': 'Baseline (August)',
-            'Score': baseline_score
-        })
-        comparison_data.append({
-            'Grade': grade,
-            'Period': 'Endline (Oct)',
-            'Score': endline_score
-        })
-    
-    comparison_df = pd.DataFrame(comparison_data)
+    # Create comparison dataframe (only grades present in endline; no fabricated 0-bars)
+    comparison_data = nmb_helpers.build_baseline_endline_chart_rows(
+        comparison_rows, 'Baseline (August)', 'Endline (Oct)')
+    comparison_df = pd.DataFrame(comparison_data, columns=['Grade', 'Period', 'Score'])
     
     # Create grouped bar chart
     fig_comparison = px.bar(
@@ -298,20 +289,14 @@ def render_overview_tab(df):
     
     st.plotly_chart(fig_comparison, use_container_width=True)
     
-    # Calculate and display improvements
-    col1, col2, col3 = st.columns(3)
-    for i, grade in enumerate(['Grade R', 'Grade 1', 'Grade 2']):
-        baseline = baseline_scores[grade]
-        endline_row = endline_scores_comparison[endline_scores_comparison['Grade'] == grade]
-        endline = endline_row['Total cells correct - EGRA Letters'].values[0] if len(endline_row) > 0 else 0
-        improvement = endline - baseline
-        pct_improvement = (improvement / baseline * 100) if baseline > 0 else 0
-        
-        with [col1, col2, col3][i]:
+    # Calculate and display improvements (only grades present in endline; real ± sign)
+    cols = st.columns(max(len(comparison_rows), 1))
+    for col, row in zip(cols, comparison_rows):
+        with col:
             st.metric(
-                grade,
-                f"{endline:.1f}",
-                delta=f"+{improvement:.1f} ({pct_improvement:+.1f}%)",
+                row['grade'],
+                f"{row['endline']:.1f}",
+                delta=f"{row['improvement']:+.1f} ({row['pct_improvement']:+.1f}%)",
                 delta_color="normal"
             )
     

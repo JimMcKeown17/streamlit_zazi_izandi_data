@@ -93,3 +93,38 @@ def apply_outlier_exclusions(df, baseline_df=None):
     df['exclude_ea'] = df['Collected By'].isin(EAS_TO_EXCLUDE)
     df['exclude_outlier'] = df['exclude_high_baseline'] | df['exclude_score_decline'] | df['exclude_ea']
     return df
+
+
+def build_grade_comparison_rows(baseline_scores, endline_by_grade, grades):
+    """Baseline-vs-endline rows per grade, skipping grades with no endline data (no KeyError,
+    no fabricated 0 endline). improvement keeps its real sign; render formats with '{:+.1f}'."""
+    rows = []
+    for grade in grades:
+        if grade not in endline_by_grade:
+            continue
+        baseline = baseline_scores.get(grade)
+        if baseline is None:
+            continue
+        endline = endline_by_grade[grade]
+        improvement = endline - baseline
+        pct = (improvement / baseline * 100) if baseline else 0
+        rows.append({"grade": grade, "baseline": baseline, "endline": endline,
+                     "improvement": improvement, "pct_improvement": pct})
+    return rows
+
+
+def build_baseline_endline_chart_rows(comparison_rows, baseline_label, endline_label):
+    """Long-format {Grade, Period, Score} rows for the grouped bar chart, built only from
+    comparison_rows so grades absent from endline are never shown as 0 bars."""
+    chart_rows = []
+    for row in comparison_rows:
+        chart_rows.append({"Grade": row["grade"], "Period": baseline_label, "Score": row["baseline"]})
+        chart_rows.append({"Grade": row["grade"], "Period": endline_label, "Score": row["endline"]})
+    return chart_rows
+
+
+def dedupe_latest_per_learner(df):
+    """One row per learner (latest Response Date per participant_id), for learner-level by-grade
+    means like the comparison chart. Thin public wrapper over _dedupe_endline_latest; empty- and
+    missing-participant_id-safe (returns df unchanged when participant_id is absent)."""
+    return _dedupe_endline_latest(df)

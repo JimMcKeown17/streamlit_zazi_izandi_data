@@ -6,6 +6,9 @@ helpers = importlib.import_module("new_pages.2025.nmb_endline_helpers")
 match_baseline_to_endline = helpers.match_baseline_to_endline
 merge_baseline_onto_endline_left = helpers.merge_baseline_onto_endline_left
 apply_outlier_exclusions = helpers.apply_outlier_exclusions
+build_grade_comparison_rows = helpers.build_grade_comparison_rows
+build_baseline_endline_chart_rows = helpers.build_baseline_endline_chart_rows
+dedupe_latest_per_learner = helpers.dedupe_latest_per_learner
 
 
 def _baseline(rows):
@@ -89,3 +92,43 @@ class ExcludeDeclineFilterTests(unittest.TestCase):
         endline = pd.DataFrame([_end("P5", "2025-10-01", "Cebo Khumalo", "Grade 2", "Gamma", 15, "EA Three")])
         flagged = apply_outlier_exclusions(merge_baseline_onto_endline_left(baseline, endline))
         self.assertTrue(bool(flagged["exclude_score_decline"].iloc[0]))
+
+
+class GradeComparisonRowsTests(unittest.TestCase):
+    def test_skips_grade_absent_from_endline(self):
+        rows = build_grade_comparison_rows({"Grade R": 2, "Grade 1": 15, "Grade 2": 37},
+                                           {"Grade 1": 25}, ["Grade R", "Grade 1", "Grade 2"])
+        self.assertEqual([r["grade"] for r in rows], ["Grade 1"])
+
+    def test_missing_baseline_grade_does_not_crash(self):
+        rows = build_grade_comparison_rows({"Grade 1": 15}, {"Grade 1": 25, "Grade 2": 40},
+                                           ["Grade 1", "Grade 2"])
+        self.assertEqual({r["grade"] for r in rows}, {"Grade 1"})
+
+    def test_negative_improvement_keeps_sign(self):
+        rows = build_grade_comparison_rows({"Grade 1": 30}, {"Grade 1": 27}, ["Grade 1"])
+        self.assertEqual(rows[0]["improvement"], -3)
+        self.assertAlmostEqual(rows[0]["pct_improvement"], -10.0)
+
+    def test_chart_rows_emit_no_fabricated_grades(self):
+        rows = build_grade_comparison_rows({"Grade R": 2, "Grade 1": 15, "Grade 2": 37},
+                                           {"Grade 1": 25}, ["Grade R", "Grade 1", "Grade 2"])
+        chart_rows = build_baseline_endline_chart_rows(rows, "Baseline (August)", "Endline (Oct)")
+        self.assertEqual({r["Grade"] for r in chart_rows}, {"Grade 1"})
+        self.assertEqual({r["Period"] for r in chart_rows}, {"Baseline (August)", "Endline (Oct)"})
+
+
+class DedupeLatestPerLearnerTests(unittest.TestCase):
+    def test_keeps_latest_response_per_learner(self):
+        df = pd.DataFrame([
+            {"participant_id": "P1", "Response Date": "2025-10-01", "Grade": "Grade 1", "Total cells correct - EGRA Letters": 10},
+            {"participant_id": "P1", "Response Date": "2025-10-20", "Grade": "Grade 1", "Total cells correct - EGRA Letters": 18},
+            {"participant_id": "P2", "Response Date": "2025-10-05", "Grade": "Grade 1", "Total cells correct - EGRA Letters": 7},
+        ])
+        out = dedupe_latest_per_learner(df)
+        self.assertEqual(len(out), 2)
+        self.assertEqual(out[out["participant_id"] == "P1"]["Total cells correct - EGRA Letters"].iloc[0], 18)
+
+    def test_missing_participant_id_returns_unchanged(self):
+        df = pd.DataFrame([{"Grade": "Grade 1", "Total cells correct - EGRA Letters": 5}])
+        self.assertEqual(len(dedupe_latest_per_learner(df)), 1)
